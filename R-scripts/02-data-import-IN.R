@@ -7,7 +7,11 @@ install.packages("tidyverse")
 install.packages("readxl")
 install.packages("cowplot")
 install.packages("ggplot2")
+install.packages("usethis")
+install.packages("dplyr")
 
+
+library(dplyr)
 library(ggplot2)
 library(tidyverse)
 library(readxl)
@@ -41,8 +45,36 @@ june16_42 <- june16_42 %>%
 ##plot of wells together in facets by treatment
 june16_42 %>% 
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +  ## can remove the plus and next line to plot in one graph!
-  facet_wrap( ~ treatment)
+  facet_wrap(~treatment)
 
+## CALCULATING GROWTH RATE 
+## make a table with the growth rates per temperature
+### estimate growth rates, this code gets us the growth rate for one well, now need to scale this across each well
+library(devtools)
+install_github("ctkremer/mleTools")
+install_github("ctkremer/growthTools")
+library(growthTools)
+
+### filtered by one singular well
+b1 <- june16_42 %>% 
+  filter(well == "B2") %>% 
+  mutate(log_od = log(OD600)) %>% 
+  mutate(time_days = time / 86400) ### to get time in days
+
+##get.growth.rate function not found
+res <- get.growth.rate(b1$time_days,b1$log_od,plot.best.Q = TRUE,id = 'Population A')
+res$best.model
+res$best.slope
+
+### Ije's way 
+install.packages("growthrates")
+##packages required for growthrates
+install.packages("lattice")
+install.packages("deSolve")
+
+library(growthrates)
+
+str(june16_42)
 
 ### June 28th Growth Curves 
 ## 30 Degrees C
@@ -160,3 +192,8 @@ july01_25C <- july01_25C %>%
 july01_25C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 1st, 25C")
+
+##july 5th 
+## 30 C
+july05_30C <- read_excel("data-raw/July5_30deg.xlsx", sheet = "Sheet3", range = "A2:CL19")
+##40 C
