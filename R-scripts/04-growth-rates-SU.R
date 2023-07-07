@@ -3,7 +3,6 @@
 
 ###CODE FROM JOEY (SLACK)
 ### the very first growth curve, all flz/casp res strains
-### plotting growth curves from yeast data
 
 library(tidyverse)
 library(readxl)
@@ -75,10 +74,10 @@ view(june30_40)
 gr_june30_40A1 <- june30_40 %>% 
   filter(well == "A1") %>% 
   mutate(log_od = log(OD)) %>% 
-  mutate(time_days = time / 86400) %>% 
+  mutate(time_days = time / 86400) #%>% 
   view
 
-A1<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A1')
+A1<-get.growth.rate(gr_june30_40A1$time_days, gr_june30_40A1$log_od,plot.best.Q = TRUE,id = 'A1')
 A1$best.model
 #"gr.lagsat"
 A1$best.slope
@@ -90,7 +89,7 @@ gr_june30_40A2 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A2<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A2')
+A2<-get.growth.rate(gr_june30_40A2$time_days, gr_june30_40A2$log_od,plot.best.Q = TRUE,id = 'A2')
 A2$best.model
 #"gr.lagsat"
 A2$best.slope
@@ -102,11 +101,11 @@ gr_june30_40A3 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A3<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A3')
+A3<-get.growth.rate(gr_june30_40A3$time_days, gr_june30_40A3$log_od,plot.best.Q = TRUE,id = 'A3')
 A3$best.model
 #"gr.lagsat"
 A3$best.slope
-#8.76243
+#10.45224
 
 ###A4
 gr_june30_40A4 <- june30_40 %>% 
@@ -114,11 +113,11 @@ gr_june30_40A4 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A4<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A4')
+A4<-get.growth.rate(gr_june30_40A4$time_days, gr_june30_40A4$log_od,plot.best.Q = TRUE,id = 'A4')
 A4$best.model
 #"gr.lagsat"
 A4$best.slope
-#8.76243
+#10.12948
 
 ###A5
 gr_june30_40A5 <- june30_40 %>% 
@@ -126,11 +125,11 @@ gr_june30_40A5 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A5<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A5')
+A5<-get.growth.rate(gr_june30_40A5$time_days, gr_june30_40A5$log_od,plot.best.Q = TRUE,id = 'A5')
 A5$best.model
 #"gr.lagsat"
 A5$best.slope
-#8.76243
+#9.300395
 
 ###A6
 gr_june30_40A6 <- june30_40 %>% 
@@ -138,11 +137,11 @@ gr_june30_40A6 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A6<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A6')
+A6<-get.growth.rate(gr_june30_40A6$time_days, gr_june30_40A6$log_od,plot.best.Q = TRUE,id = 'A6')
 A6$best.model
 #"gr.lagsat"
 A6$best.slope
-#8.76243
+#9.390542
 
 ###A7         
 gr_june30_40A7 <- june30_40 %>% 
@@ -150,11 +149,11 @@ gr_june30_40A7 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A7<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A7')
+A7<-get.growth.rate(gr_june30_40A7$time_days, gr_june30_40A7$log_od,plot.best.Q = TRUE,id = 'A7')
 A7$best.model
 #"gr.lagsat"
 A7$best.slope                               
-#8.76243
+#8.741537
 
 ###A8
 gr_june30_40A8 <- june30_40 %>% 
@@ -162,14 +161,20 @@ gr_june30_40A8 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A8<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A8')
+A8<-get.growth.rate(gr_june30_40A8$time_days, gr_june30_40A8$log_od,plot.best.Q = TRUE,id = 'A8')
 A8$best.model
 #"gr.lagsat"
 A8$best.slope                               
-#8.76243
-
-###WHY ARE ALL OF THEM THE SAME???
+#5.309089
 
 ###AVERAGING GROWTH RATES
+#A1 8.956667
+#A2 8.76243
+#A3 10.45224
+#A4 9.300395
+#A5 9.300395
+#A6
+#A7
+#A8 
 mean(c(8.956667, 8.76243, 8.76243, 8.76243, 8.76243, 8.76243, 8.76243, 8.76243))
 #8.78671 
