@@ -8,6 +8,7 @@ library(janitor)
 install.packages("cowplot")
 library(cowplot) #this package is an add-on to ggplot which automatically gives a theme
 
+#June 30, 40 deg
 ###reading in June 30, 40 deg
 #couldn't find a way to exclude the temp row when doing mean
 #so ended up just selecting from B onwards when pulling in data
@@ -121,3 +122,9 @@ july5_30 %>%
   t() %>% 
   mean()
 #answer: 30.30562
+
+#July 4, 18 deg
+#this one was a long term manual read 
+#it was growing at 18 deg but the reads were taken at 25 
+#because the incubator can go to 18, but the plate reader can only go down to 25
+#so no accurate actual temp data to calculate
