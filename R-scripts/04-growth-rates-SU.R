@@ -90,7 +90,7 @@ gr_june30_40A2 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A2<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A1')
+A2<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A2')
 A2$best.model
 #"gr.lagsat"
 A2$best.slope
@@ -102,7 +102,7 @@ gr_june30_40A3 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A3<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A1')
+A3<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A3')
 A3$best.model
 #"gr.lagsat"
 A3$best.slope
@@ -114,7 +114,7 @@ gr_june30_40A4 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A4<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A1')
+A4<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A4')
 A4$best.model
 #"gr.lagsat"
 A4$best.slope
@@ -126,7 +126,7 @@ gr_june30_40A5 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A5<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A1')
+A5<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A5')
 A5$best.model
 #"gr.lagsat"
 A5$best.slope
@@ -138,7 +138,7 @@ gr_june30_40A6 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A6<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A1')
+A6<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A6')
 A6$best.model
 #"gr.lagsat"
 A6$best.slope
@@ -150,7 +150,7 @@ gr_june30_40A7 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A7<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A1')
+A7<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A7')
 A7$best.model
 #"gr.lagsat"
 A7$best.slope                               
@@ -162,7 +162,7 @@ gr_june30_40A8 <- june30_40 %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400)
 
-A8<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A1')
+A8<-get.growth.rate(gr_june30_40$time_days, gr_june30_40$log_od,plot.best.Q = TRUE,id = 'A8')
 A8$best.model
 #"gr.lagsat"
 A8$best.slope                               
