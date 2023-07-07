@@ -55,3 +55,69 @@ june28_30 %>%
   t() %>% 
   mean()
 #answer: 30.44719
+
+###June 28, 34 deg
+june28_34 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June28_34C.xlsx", range = "B40:CL137") %>% 
+  clean_names() %>% 
+  view()
+
+june28_34 %>% 
+  top_n(n = 1) %>% 
+  t() %>% 
+  mean()
+#answer: 34.13596
+
+###July 1, 25 deg
+july1_25 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July0123_25C.xlsx", range = "B40:CL137") %>%
+  clean_names() %>% 
+  view()
+
+july1_25 %>% 
+  top_n(n = 1) %>% 
+  t() %>% 
+  mean()
+#answer: 25.36742
+
+###July 6, 40.5 deg
+july6_40.5 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July0623_40.5C.xlsx", range = "B35:CS132") %>%
+  clean_names() %>% 
+  view()
+
+july6_40.5 %>% 
+  top_n(n = 1) %>% 
+  t() %>% 
+  mean()
+#answer: 40.53542
+
+###July 6, 37 deg
+july6_37 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July0623_37C.xlsx", range = "B35:CS132") %>%
+  clean_names() %>% 
+  view()
+
+july6_37 %>% 
+  top_n(n = 1) %>% 
+  t() %>% 
+  mean()
+#answer: 37.31042
+
+###July 5, 40 deg
+july5_40 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July0523_40C.xlsx", range = "B40:CL137") %>% 
+ clean_names() %>% 
+  view()
+
+july5_40 %>% 
+  top_n(n = 1) %>% 
+  t() %>% 
+  mean()
+#answer: 40.11685
+
+###July 5, 30 deg
+july5_30 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July0523_30C.xlsx", range = "B41:CL137") %>% 
+  clean_names() %>% 
+  view()
+
+july5_30 %>% 
+  top_n(n = 1) %>% 
+  t() %>% 
+  mean()
+#answer: 30.30562
