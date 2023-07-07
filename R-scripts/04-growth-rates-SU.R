@@ -2,6 +2,7 @@
 #GROWTH RATES
 
 ###CODE FROM JOEY (SLACK)
+### the very first growth curve, all flz/casp res strains
 ### plotting growth curves from yeast data
 
 library(tidyverse)
@@ -31,27 +32,27 @@ plate3 <- plate2 %>%
                                str_detect(well, "H1|H2|H3") ~ "blank",
                                TRUE ~ "water")) ### this is a shortcut to assign all the remaining wells to water
 
-## plot them all together
+## plot them all together (together)
 plate3 %>% 
-  ggplot(aes(x = time, y = OD, group = well, color = treatment)) + geom_line() +
+  ggplot(aes(x = time, y = OD, group = well, color = treatment)) + geom_line() 
   
-  ## plot in facets
+## plot in facets (every in each window)
   plate3 %>% 
-  ggplot(aes(x = time, y = OD, group = well, color = treatment)) + geom_line() +
-  facet_wrap( ~ treatment)
+  ggplot(aes(x = time, y = OD, group = well, color = treatment)) + geom_line() + facet_wrap( ~ treatment)
 
 
 ### estimate growth rates
 library(devtools)
-# install_github("ctkremer/mleTools") ## leaving these here so you can see how to install them
-# install_github("ctkremer/growthTools")
+install_github("ctkremer/mleTools") ## leaving these here so you can see how to install them
+install_github("ctkremer/growthTools")
 library(growthTools)
 
 
 b1 <- plate3 %>% 
   filter(well == "B2") %>% 
   mutate(log_od = log(OD)) %>% 
-  mutate(time_days = time / 86400) ### to get time in days
+  mutate(time_days = time / 86400) ### to get time in days (24*60*60)
+b1
 
 res<-get.growth.rate(b1$time_days,b1$log_od,plot.best.Q = TRUE,id = 'Population A')
 res$best.model
