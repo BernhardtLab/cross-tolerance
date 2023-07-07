@@ -76,6 +76,11 @@ library(growthrates)
 
 str(june16_42)
 
+##"easy linear method"
+splitted.data <- multisplit(june16_42, c("treatment", "OD600", "well"))
+dat <- splitted.data[[1]]
+
+
 ### June 28th Growth Curves 
 ## 30 Degrees C
 june28_30 <- read_excel("data-raw/June2823_30C.xlsx", range = "A40:CL137")
@@ -194,6 +199,9 @@ july01_25C %>%
   ggtitle("July 1st, 25C")
 
 ##july 5th 
-## 30 C
+## 30 C - ERROR MESSAGE IN EXCEL
 july05_30C <- read_excel("data-raw/July5_30deg.xlsx", sheet = "Sheet3", range = "A2:CL19")
+
 ##40 C
+
+
