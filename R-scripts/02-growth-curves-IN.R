@@ -47,7 +47,7 @@ june16_42 %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +  ## can remove the plus and next line to plot in one graph!
   facet_wrap(~treatment)
 
-## CALCULATING GROWTH RATE 
+## CALCULATING GROWTH RATE  - UNFINISHED
 ## make a table with the growth rates per temperature
 ### estimate growth rates, this code gets us the growth rate for one well, now need to scale this across each well
 library(devtools)
@@ -198,10 +198,130 @@ july01_25C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 1st, 25C")
 
+##July 4th
+##18C - manual reads
+july04_18C <- read_excel("data-raw/July0423_18C.xlsx", sheet = "Sheet2", range = "A2:I19")
+
+july04_18C <- july04_18C %>%
+  filter(`Time [h]` != "Temp. [°C]") %>% 
+  gather(2:9, key = time, value = OD600) %>% 
+  rename(well = `Time [h]`) %>% 
+  mutate(time = as.numeric(time))
+
+july04_18C <- july04_18C %>%
+  mutate(treatment = case_when(str_detect(well, "fRS585") ~ "fRS585",
+                               str_detect(well, "Blank") ~ "Blank"))
+
+july04_18C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
+  ggtitle("July 4th, 18C")
+
+
 ##july 5th 
 ## 30 C - ERROR MESSAGE IN EXCEL
-july05_30C <- read_excel("data-raw/July5_30deg.xlsx", sheet = "Sheet3", range = "A2:CL19")
+july05_30C <- read_excel("data-raw/July0523_30C.xlsx", sheet = "Sheet3", range = "A2:CL19")
+
+july05_30C <-july05_30C %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time))
+
+july05_30C <- july05_30C %>%
+  mutate(treatment = case_when(str_detect(well, "fRS585") ~ "fRS585",
+                               str_detect(well, "blank") ~ "Blank"))
+
+july05_30C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
+  ggtitle("July 5th, 30C - plate reader error")
 
 ##40 C
+july05_40C <- read_excel("data-raw/July0523_40C.xlsx", sheet = "Sheet3", range = "A2:CL19")
 
+july05_40C <- july05_40C %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time))
+
+july05_40C <- july05_40C %>%
+  mutate(treatment = case_when(str_detect(well, "fRS585") ~ "fRS585",
+                               str_detect(well, "blank") ~ "Blank"))
+
+july05_40C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
+  ggtitle("July 5th, 40C - REDO")
+
+##July 6th 
+## 37 C
+
+july06_37C <- read_excel("data-raw/July0623_37C.xlsx", sheet = "Sheet3", range = "A2:CL19")
+
+july06_37C <- july06_37C %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time))
+
+july06_37C <- july06_37C %>%
+  mutate(treatment = case_when(str_detect(well, "fRS585") ~ "fRS585",
+                               str_detect(well, "Blank") ~ "Blank"))
+
+july06_37C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
+  ggtitle("July 6th, 37C")
+
+##40.5C
+july06_40.5C <- read_excel("data-raw/July0623_40.5C.xlsx", sheet = "Sheet3", range = "A2:CL19")
+
+july06_40.5C <- july06_40.5C %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time))
+
+july06_40.5C <- july06_40.5C %>%
+  mutate(treatment = case_when(str_detect(well, "fRS585") ~ "fRS585",
+                               str_detect(well, "Blank") ~ "Blank"))
+
+july06_40.5C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
+  ggtitle("July 6th, 40.5C")
+
+##Overlayed Plot - UNFINISHED
+combined_data <- rbind(
+  data.frame(data = "july06_40.5C", july06_40.5C),
+  data.frame(data = "july06_37C", july06_37C),
+  data.frame(data = "july05_40C", july05_40C),
+  data.frame(data = "july05_30C", july05_30C),
+  data.frame(data = "july04_18C", july04_18C),
+  data.frame(data = "july01_25C", july01_25C),
+  data.frame(data = "june30_40C", june30_40C),
+  data.frame(data = "june29_41", june29_41),
+  data.frame(data = "june29_37", june29_37),
+  data.frame(data = "june28_34", june28_34),
+  data.frame(data = "june28_30", june28_30),
+)
+
+combined_plot <- ggplot() +
+  geom_line(data = july06_40.5C, aes(x = time, y = OD600, group = well, color = treatment))+
+  geom_line(data = july06_37C, aes(x = time, y = OD600, group = well, color = treatment)) +
+  geom_line(data = july05_40C, aes(x = time, y = OD600, group = well, color = treatment)) +
+  geom_line(data = july05_30C, aes(x = time, y = OD600, group = well, color = treatment)) +
+  geom_line(data = july04_18C, aes(x = time, y = OD600, group = well, color = treatment)) +
+  geom_line(data = july01_25C, aes(x = time, y = OD600, group = well, color = treatment)) +
+  geom_line(data = june30_40C, aes(x = time, y = OD600, group = well, color = treatment)) +
+  geom_line(data = june29_41, aes(x = time, y = OD600, group = well, color = treatment)) +
+  geom_line(data = june29_37, aes(x = time, y = OD600, group = well, color = treatment)) +
+  geom_line(data = june28_34, aes(x = time, y = OD600, group = well, color = treatment)) +
+  geom_line(data = june28_30, aes(x = time, y = OD600, group = well, color = treatment)) +
+  facet_wrap(~ data, ncol = 3)+
+  scale_color_manual(values = c("red", "blue", "green", "orange", "purple", "cyan", "yellow", "pink", "gray", "brown", "black")) +
+  labs(color = "Temperature")
+
+
+### how to clean up per temperature 
+print(combined_plot)
+
+  
 
