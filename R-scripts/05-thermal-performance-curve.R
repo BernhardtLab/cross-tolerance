@@ -12,7 +12,7 @@ theme_set(theme_cowplot())
 #graphing the temps on x, growth rates on y
 
 #READING IN TABLE
-growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx", range = "C1:D6") %>% 
+growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx", range = "C1:D7") %>% 
  view()
 
 grsw_graph <- growth_rates_summary_wip %>% 
