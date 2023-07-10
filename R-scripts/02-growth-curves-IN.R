@@ -288,40 +288,5 @@ july06_40.5C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 6th, 40.5C")
 
-##Overlayed Plot - UNFINISHED
-combined_data <- rbind(
-  data.frame(data = "july06_40.5C", july06_40.5C),
-  data.frame(data = "july06_37C", july06_37C),
-  data.frame(data = "july05_40C", july05_40C),
-  data.frame(data = "july05_30C", july05_30C),
-  data.frame(data = "july04_18C", july04_18C),
-  data.frame(data = "july01_25C", july01_25C),
-  data.frame(data = "june30_40C", june30_40C),
-  data.frame(data = "june29_41", june29_41),
-  data.frame(data = "june29_37", june29_37),
-  data.frame(data = "june28_34", june28_34),
-  data.frame(data = "june28_30", june28_30),
-)
-
-combined_plot <- ggplot() +
-  geom_line(data = july06_40.5C, aes(x = time, y = OD600, group = well, color = treatment))+
-  geom_line(data = july06_37C, aes(x = time, y = OD600, group = well, color = treatment)) +
-  geom_line(data = july05_40C, aes(x = time, y = OD600, group = well, color = treatment)) +
-  geom_line(data = july05_30C, aes(x = time, y = OD600, group = well, color = treatment)) +
-  geom_line(data = july04_18C, aes(x = time, y = OD600, group = well, color = treatment)) +
-  geom_line(data = july01_25C, aes(x = time, y = OD600, group = well, color = treatment)) +
-  geom_line(data = june30_40C, aes(x = time, y = OD600, group = well, color = treatment)) +
-  geom_line(data = june29_41, aes(x = time, y = OD600, group = well, color = treatment)) +
-  geom_line(data = june29_37, aes(x = time, y = OD600, group = well, color = treatment)) +
-  geom_line(data = june28_34, aes(x = time, y = OD600, group = well, color = treatment)) +
-  geom_line(data = june28_30, aes(x = time, y = OD600, group = well, color = treatment)) +
-  facet_wrap(~ data, ncol = 3)+
-  scale_color_manual(values = c("red", "blue", "green", "orange", "purple", "cyan", "yellow", "pink", "gray", "brown", "black")) +
-  labs(color = "Temperature")
-
-
-### how to clean up per temperature 
-print(combined_plot)
-
   
 
