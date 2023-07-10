@@ -11,7 +11,7 @@ theme_set(theme_cowplot())
 
 
 plate <- read_excel("data-raw/June1623_30C.xlsx", range = "A40:CL137")
-
+view(plate)
 plate2 <- plate %>% 
   filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD) %>% 
@@ -885,7 +885,8 @@ A9$best.slope
 gr_june28_34A10 <- june28_34 %>% 
   filter(well == "A10") %>% 
   mutate(log_od = log(OD)) %>% 
-  mutate(time_days = time / 86400) 
+  mutate(time_days = time / 86400) %>% 
+  view()
 
 A10<-get.growth.rate(gr_june28_34A10$time_days, gr_june28_34A10$log_od,plot.best.Q = TRUE,id = 'A10')
 A10$best.model
@@ -937,16 +938,23 @@ mean(c(8.887984, 9.143289, 8.895575, 9.047159, 9.002168, 8.989232, 10.67995, 8.9
 ###July 4, 18 deg
 #manual read
 #wip
-july4_18 <- read_excel("C:/Users/sveta/Downloads/July4_18deg.xlsx", sheet = 2, range = "B3:I11") %>% 
-  t() %>% 
-   view()
+july4_18 <- read_excel("C:/Users/sveta/Downloads/July4_18deg.xlsx", sheet = 2, range = "A2:I11") %>% 
+  filter(`Time [h]` != "Temp. [°C]") %>% 
+  rename(well = `Time [h]`) %>% 
+  gather(2:9, key = time, value = OD) %>% 
+  view()
 
-gr_july4_18B5 <- july4_18 %>% 
-  filter(well == "V1") %>% 
-  
-
-gr_june30_41A1 <- june30_41 %>% 
-  filter(well == "A1") %>% 
+###B5
+july4_18B5 <- july4_18 %>% 
+  filter(well == "B5") %>% 
   mutate(log_od = log(OD)) %>% 
-  mutate(time_days = time / 86400) %>% 
-  view
+  view()
+
+B5 <- get.growth.rate(july4_18B5$time,july4_18B5$log_od,plot.best.Q = TRUE,id = 'B5')
+#not converted to time in days
+#error: non-numeric argument to binary operator
+#doesn't give the graph
+res$best.model
+#"gr.lag"
+res$best.slope
+#1.321636
