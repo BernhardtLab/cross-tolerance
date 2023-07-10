@@ -708,3 +708,176 @@ A12$best.slope
 mean(c(7.879176, 7.871784, 10.26144, 8.070424, 7.978008, 8.026189, 7.912374, 9.871143,7.969469, 7.947368, 8.075332, 10.22589))
 #8.507383
 
+###June 28, 34 deg
+june28_34 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June28_34C.xlsx", range = "A40:CL137") %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(treatment = case_when(str_detect(well, "A") ~ "fRS585",
+                               str_detect(well, "B") ~ "blank"))
+view(june28_34)
+#12 replicates
+
+###A1
+gr_june28_34A1 <- june28_34 %>% 
+  filter(well == "A1") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) #%>% 
+view
+
+A1<-get.growth.rate(gr_june28_34A1$time_days, gr_june28_34A1$log_od,plot.best.Q = TRUE,id = 'A1')
+A1$best.model
+#"gr.lagsat"
+A1$best.slope
+#8.887984
+
+###A2
+gr_june28_34A2 <- june28_34 %>% 
+  filter(well == "A2") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) %>% 
+view
+
+A2<-get.growth.rate(gr_june28_34A2$time_days, gr_june28_34A2$log_od,plot.best.Q = TRUE,id = 'A2')
+A2$best.model
+#"gr.lagsat"
+A2$best.slope
+#9.143289
+
+###A3
+gr_june28_34A3 <- june28_34 %>% 
+  filter(well == "A3") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A3<-get.growth.rate(gr_june28_34A3$time_days, gr_june28_34A3$log_od,plot.best.Q = TRUE,id = 'A3')
+A3$best.model
+#"gr.lagsat"
+A3$best.slope
+#8.895575
+
+###A4
+gr_june28_34A4 <- june28_34 %>% 
+  filter(well == "A4") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A4<-get.growth.rate(gr_june28_34A4$time_days, gr_june28_34A4$log_od,plot.best.Q = TRUE,id = 'A4')
+A4$best.model
+#"gr.lagsat"
+A4$best.slope
+#9.047159
+
+###A5
+gr_june28_34A5 <- june28_34 %>% 
+  filter(well == "A5") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A5<-get.growth.rate(gr_june28_34A5$time_days, gr_june28_34A5$log_od,plot.best.Q = TRUE,id = 'A5')
+A5$best.model
+#"gr.lagsat"
+A5$best.slope
+#9.002168
+
+###A6
+gr_june28_34A6 <- june28_34 %>% 
+  filter(well == "A6") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A6<-get.growth.rate(gr_june28_34A6$time_days, gr_june28_34A6$log_od,plot.best.Q = TRUE,id = 'A6')
+A6$best.model
+#"gr.lagsat"
+A6$best.slope
+#8.989232
+
+###A7
+gr_june28_34A7 <- june28_34 %>% 
+  filter(well == "A7") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A7<-get.growth.rate(gr_june28_34A7$time_days, gr_june28_34A7$log_od,plot.best.Q = TRUE,id = 'A7')
+A7$best.model
+#"gr.lagsat"
+A7$best.slope
+#10.67995
+
+###A8
+gr_june28_34A8 <- june28_34 %>% 
+  filter(well == "A8") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A8<-get.growth.rate(gr_june28_34A8$time_days, gr_june28_34A8$log_od,plot.best.Q = TRUE,id = 'A8')
+A8$best.model
+#"gr.lagsat"
+A8$best.slope
+#8.9228
+
+###A9
+gr_june28_34A9 <- june28_34 %>% 
+  filter(well == "A9") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A9<-get.growth.rate(gr_june28_34A9$time_days, gr_june28_34A9$log_od,plot.best.Q = TRUE,id = 'A9')
+A9$best.model
+#"gr.lagsat"
+A9$best.slope
+#8.913923
+
+###A10
+gr_june28_34A10 <- june28_34 %>% 
+  filter(well == "A10") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A10<-get.growth.rate(gr_june28_34A10$time_days, gr_june28_34A10$log_od,plot.best.Q = TRUE,id = 'A10')
+A10$best.model
+#"gr.lagsat"
+A10$best.slope
+#9.008103
+
+###A11
+gr_june28_34A11 <- june28_34 %>% 
+  filter(well == "A11") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A11<-get.growth.rate(gr_june28_34A11$time_days, gr_june28_34A11$log_od,plot.best.Q = TRUE,id = 'A11')
+A11$best.model
+#"gr.lagsat"
+A11$best.slope
+#8.789357
+
+###A12
+gr_june28_34A12 <- june28_34 %>% 
+  filter(well == "A12") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A12<-get.growth.rate(gr_june28_34A12$time_days, gr_june28_34A12$log_od,plot.best.Q = TRUE,id = 'A12')
+A12$best.model
+#"gr.lagsat"
+A12$best.slope
+#8.718535
+
+#AVERGAING JUNE 28 34 DEG
+#A1 8.887984
+#A2 9.143289
+#A3 8.895575
+#A4 9.047159
+#A5 9.002168
+#A6 8.989232
+#A7 10.67995
+#A8 8.9228
+#A9 8.913923
+#A10 9.008103
+#A11 8.789357
+#A12 8.718535
+
+mean(c(8.887984, 9.143289, 8.895575, 9.047159, 9.002168, 8.989232, 10.67995, 8.9228, 8.913923, 9.008103, 8.789357, 8.718535))
+#9.083173
