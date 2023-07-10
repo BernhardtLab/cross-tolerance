@@ -881,3 +881,20 @@ A12$best.slope
 
 mean(c(8.887984, 9.143289, 8.895575, 9.047159, 9.002168, 8.989232, 10.67995, 8.9228, 8.913923, 9.008103, 8.789357, 8.718535))
 #9.083173
+
+###July 4, 18 deg
+#manual read
+#wip
+july4_18 <- read_excel("C:/Users/sveta/Downloads/July4_18deg.xlsx", sheet = 2, range = "B3:I11") %>% 
+  t() %>% 
+   view()
+
+gr_july4_18B5 <- july4_18 %>% 
+  filter(well == "V1") %>% 
+  
+
+gr_june30_41A1 <- june30_41 %>% 
+  filter(well == "A1") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) %>% 
+  view
