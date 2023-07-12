@@ -243,7 +243,8 @@ library(cowplot)
 theme_set(theme_cowplot())
 
 ## import well plate key
-wells <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = 2)
+wells <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = 2) #%>% 
+  view()
 
 ## define growth rate function
 fit_growth <- function(df){
@@ -274,21 +275,23 @@ plate_42 <- read_excel("data-raw/June1623_42C.xlsx", range = "A40:CL137") %>%
 all_plates <- bind_rows(plate_30, plate_42) %>% 
   mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
   mutate(log_od = log(OD)) %>% 
-  mutate(time_days = time / 86400) %>% 
-  view
+  mutate(time_days = time / 86400) 
 
 df_split2 <- all_plates %>% 
-  split(.$unique_well) %>% 
-  view ## here we split the data frame into little mini dataframes, splitting by "unique_well" which is combination of well and temperature
+  split(.$unique_well)  ## here we split the data frame into little mini dataframes, splitting by "unique_well" which is combination of well and temperature
 
 #stops working here
 output2 <- df_split2 %>%
-  map_df(fit_growth, .id = "unique_well") %>% 
-  view ## this map function allows us to apply the fit_growth function to each well 
+  map_df(fit_growth, .id = "unique_well") 
+## this map function allows us to apply the fit_growth function to each well 
+
+View(output2)
+View(wells)
 
 o3 <- output2 %>% 
   separate(unique_well, into = c("well", "temperature")) %>% 
   left_join(., wells)
+View(o3)
 
 o3 %>% 
   ggplot(aes(x = treatment, y = growth_rate, color = temperature)) + geom_point()
