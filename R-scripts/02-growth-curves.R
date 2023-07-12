@@ -288,5 +288,3 @@ july06_40.5C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 6th, 40.5C")
 
-  
-
