@@ -953,9 +953,124 @@ mean(c(8.887984, 9.143289, 8.895575, 9.047159, 9.002168, 8.989232, 10.67995, 8.9
 #need to change sheet, range, time from s to h, gather in the first function
 #for the rest, business as usual
 ======
-july4_18 <- read_excel("C:/Users/sveta/Downloads/July4_18deg.xlsx", sheet = 2, range = "B3:I11") %>% 
-  t() %>% 
-   view()
+  july4_18 <- read_excel("C:/Users/sveta/Downloads/July4_18deg.xlsx", sheet = 2, range = "A2:I11") %>% 
+  filter(`Time [h]` != "Temp. [°C]") %>% 
+  gather(2:9, key = time, value = OD) %>% 
+  rename(well = `Time [h]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  view()
+
+###B5
+july4_18B5 <- july4_18 %>% 
+  filter(well == "B5") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) %>% 
+  view()
+
+B5 <- get.growth.rate(july4_18B5$time,july4_18B5$log_od,plot.best.Q = TRUE,id = 'B5')
+B5$best.model
+#"gr.sat"
+B5$best.slope
+#0.1003318
+
+###B10
+july4_18B10 <- july4_18 %>% 
+  filter(well == "B10") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) #%>% 
+view()
+
+B10 <- get.growth.rate(july4_18B10$time,july4_18B10$log_od,plot.best.Q = TRUE,id = 'B10')
+B10$best.model
+#"gr.sat"
+B10$best.slope
+#0.09947257
+
+###C3
+july4_18C3 <- july4_18 %>% 
+  filter(well == "C3") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) 
+
+C3 <- get.growth.rate(july4_18C3$time,july4_18C3$log_od,plot.best.Q = TRUE,id = 'C3')
+C3$best.model
+#"gr.sat"
+C3$best.slope
+#0.09949161
+
+###D8
+july4_18D8 <- july4_18 %>% 
+  filter(well == "D8") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) 
+
+D8 <- get.growth.rate(july4_18D8$time,july4_18D8$log_od,plot.best.Q = TRUE,id = 'D8')
+D8$best.model
+#"gr.sat"
+D8$best.slope
+#0.09896106
+
+###E6
+july4_18E6 <- july4_18 %>% 
+  filter(well == "E6") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) 
+
+E6 <- get.growth.rate(july4_18E6$time,july4_18E6$log_od,plot.best.Q = TRUE,id = 'E6')
+E6$best.model
+#"gr.sat"
+E6$best.slope
+#0.1018986
+
+###F11
+july4_18F11 <- july4_18 %>% 
+  filter(well == "F11") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) 
+
+F11 <- get.growth.rate(july4_18F11$time,july4_18F11$log_od,plot.best.Q = TRUE,id = 'F11')
+F11$best.model
+#"gr.sat"
+F11$best.slope
+#0.0979968
+
+###G2
+july4_18G2 <- july4_18 %>% 
+  filter(well == "G2") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) 
+
+G2 <- get.growth.rate(july4_18G2$time,july4_18G2$log_od,plot.best.Q = TRUE,id = 'G2')
+G2$best.model
+#"gr.sat"
+G2$best.slope
+# 0.09764423
+
+###G7
+july4_18G7 <- july4_18 %>% 
+  filter(well == "G7") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) 
+
+G7 <- get.growth.rate(july4_18G7$time,july4_18G7$log_od,plot.best.Q = TRUE,id = 'G7')
+G7$best.model
+#"gr.sat"
+G7$best.slope
+
+#AVERAGING JULY 4 18 DEG
+#B5 0.1003318
+#B10 0.09947257
+#C3 0.09949161
+#D8 0.09896106
+#E6 0.1018986
+#F11 0.0979968
+#G2  0.09764423
+#G7 0.1009986
+
+mean(c(0.1003318, 0.09947257, 0.09949161, 0.09896106, 0.1018986, 0.0979968, 0.09764423, 0.1009986))
+#0.09959941
+
+
 >>>>>>> bb4bc9c41bf8acce42eabb94236504528c4099c5:R-scripts/04-growth-rates.R
 
 gr_july4_18B5 <- july4_18 %>% 
