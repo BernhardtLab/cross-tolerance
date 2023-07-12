@@ -904,17 +904,57 @@ gr_june30_41A1 <- june30_41 %>%
 ##july 1st, 8 replicates 
 library(dplyr)
 
-july01_25C <- read_excel("data-raw/July0123_25C.xlsx", sheet = "Sheet1") %>%
+library(growthTools)
+
+### plotting growth curves from yeast data
+
+library(tidyverse)
+library(readxl)
+library(cowplot)
+theme_set(theme_cowplot())
+
+## import well plate key
+wells <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = "01.07")
+
+## define growth rate function - reminder to as more about these lines of cone 
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+july01_25C <- read_excel("data-raw/July0123_25C.xlsx", range = "A40:CL137") %>%
   filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD600) %>% 
   rename(well = `Time [s]`) %>% 
-  mutate(time = as.numeric(time)) 
+  mutate(time = as.numeric(time)) %>%
+  mutate(temperature = 42)
+
+july01_25C_all <- july01_25C %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD600)) %>% 
+  mutate(time_days = time / 86400) 
+
+df_split2 <- july01_25C_all %>% 
+  split(.$unique_well) ## here we split the data frame into little mini dataframes, splitting by "unique_well" which is combination of well and temperature
+
+output2 <- df_split2 %>%
+  map_df(fit_growth, .id = "unique_well") ## this map function allows us to apply the fit_growth function to each well 
+
+o3 <- output2 %>% 
+  separate(unique_well, into = c("well", "temperature")) %>% 
+  left_join(., wells)
+## error in left join - possibly because I am only using one temperature?
+o3 %>% 
+  ggplot(aes(x = treatment, y = growth_rate, color = temperature)) + geom_point()
+
 
 ### did all code for each well using the same lines (913 - 923), just deleted and replaced with according well
-july01_25C_A4 <- july01_25C %>% 
-  filter(well == "A4") %>% 
-  mutate(log_od = log(OD600)) %>% 
-  mutate(time_days = time / 86400)
+
 
 
 A4 <- get.growth.rate(july01_25C_A4 $time_days, july01_25C_A4$log_od, plot.best.Q = TRUE,id = 'fRS585')
