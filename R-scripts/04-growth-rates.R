@@ -236,9 +236,7 @@ mean(c(8.956667, 8.76243, 10.45224, 10.12948, 9.300395,9.390542, 8.741537, 5.309
 ###COMPARING THIS CODE WITH JOEY'S CODE FROM SLACK SENT ON JULY 11
 ### estimate growth rates
 library(growthTools)
-
 ### plotting growth curves from yeast data
-
 library(tidyverse)
 library(readxl)
 library(cowplot)
@@ -246,7 +244,6 @@ theme_set(theme_cowplot())
 
 ## import well plate key
 wells <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = 2)
-
 
 ## define growth rate function
 fit_growth <- function(df){
@@ -259,13 +256,14 @@ fit_growth <- function(df){
   all
 }
 
-
 plate_30 <- read_excel("data-raw/June1623_30C.xlsx", range = "A40:CL137") %>% 
   filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD) %>% 
   rename(well = `Time [s]`) %>% 
   mutate(time = as.numeric(time)) %>% 
   mutate(temperature = 30)
+view(plate_30)
+
 plate_42 <- read_excel("data-raw/June1623_42C.xlsx", range = "A40:CL137") %>% 
   filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD) %>% 
@@ -276,13 +274,17 @@ plate_42 <- read_excel("data-raw/June1623_42C.xlsx", range = "A40:CL137") %>%
 all_plates <- bind_rows(plate_30, plate_42) %>% 
   mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
   mutate(log_od = log(OD)) %>% 
-  mutate(time_days = time / 86400) 
+  mutate(time_days = time / 86400) %>% 
+  view
 
 df_split2 <- all_plates %>% 
-  split(.$unique_well) ## here we split the data frame into little mini dataframes, splitting by "unique_well" which is combination of well and temperature
+  split(.$unique_well) %>% 
+  view ## here we split the data frame into little mini dataframes, splitting by "unique_well" which is combination of well and temperature
 
+#stops working here
 output2 <- df_split2 %>%
-  map_df(fit_growth, .id = "unique_well") ## this map function allows us to apply the fit_growth function to each well 
+  map_df(fit_growth, .id = "unique_well") %>% 
+  view ## this map function allows us to apply the fit_growth function to each well 
 
 o3 <- output2 %>% 
   separate(unique_well, into = c("well", "temperature")) %>% 
