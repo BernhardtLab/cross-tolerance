@@ -941,7 +941,7 @@ mean(c(8.887984, 9.143289, 8.895575, 9.047159, 9.002168, 8.989232, 10.67995, 8.9
 #then found the wells that had fRS585
 #renamed them manually on the excel file (fRS585 --> well plate number (ie B5, etc))
 #need to change sheet, range, time from s to h, gather in the first function
-#for the rest, bussiness as usual
+#for the rest, business as usual
 
 july4_18 <- read_excel("C:/Users/sveta/Downloads/July4_18deg.xlsx", sheet = 2, range = "A2:I11") %>% 
   filter(`Time [h]` != "Temp. [°C]") %>% 
