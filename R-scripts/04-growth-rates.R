@@ -233,6 +233,9 @@ A12$best.slope
 mean(c(8.956667, 8.76243, 10.45224, 10.12948, 9.300395,9.390542, 8.741537, 5.309089, 4.707004, 6.062713,9.335999))   
 # 8.286191
 
+###COMPARING THIS CODE WITH JOEY'S CODE FROM SLACK SENT ON JULY 11
+
+
 ###June 30, 41 deg
 june30_41 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June2923_41C.xlsx", range = "A40:CL137") %>%
   filter(`Time [s]` != "Temp. [°C]") %>% 
@@ -885,14 +888,14 @@ mean(c(8.887984, 9.143289, 8.895575, 9.047159, 9.002168, 8.989232, 10.67995, 8.9
 
 ###July 4, 18 deg
 #manual read
+#things here are because Sveta tried to merge 
 <<<<<<< HEAD:R-scripts/04-growth-rates-SU.R
 #downloaded the combined results (currently not in Git)
 #then found the wells that had fRS585
 #renamed them manually on the excel file (fRS585 --> well plate number (ie B5, etc))
 #need to change sheet, range, time from s to h, gather in the first function
 #for the rest, business as usual
-=======
-#wip
+======
 july4_18 <- read_excel("C:/Users/sveta/Downloads/July4_18deg.xlsx", sheet = 2, range = "B3:I11") %>% 
   t() %>% 
    view()
@@ -989,7 +992,3 @@ B10$best.slope
 #40.5*C
 #Blank (blue) - F2, D4, F6, B8, C9, D10, G11, G8
 #Culture (Purple) - D2, G4, C5, E5, E8, F10, B10, D11
-
-
-
-
