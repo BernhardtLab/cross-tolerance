@@ -279,7 +279,6 @@ View(all_plates)
 df_split2 <- all_plates %>% 
   split(.$unique_well)  ## here we split the data frame into little mini dataframes, splitting by "unique_well" which is combination of well and temperature
 
-#stops working here
 output2 <- df_split2 %>%
   map_df(fit_growth, .id = "unique_well") 
 ## this map function allows us to apply the fit_growth function to each well 
@@ -303,7 +302,7 @@ theme_set(theme_cowplot())
 new_code_june30_40 <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = 6) 
 View(new_code_june30_40)
 
-fit_growth <- function(df){
+fit_growth_june30 <- function(df){
   res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
   if(class(res)!="try-error"){
     out1 <- data.frame(best_model = res$best.model)
@@ -329,13 +328,13 @@ nc_june30_41 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-
   mutate(temperature = 41)
 view(nc_june30_41)
 
-all_plates <- bind_rows(nc_june30_40, nc_june30_41) %>% 
+all_plates_june30 <- bind_rows(nc_june30_40, nc_june30_41) %>% 
   mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400) 
-View(all_plates)
+View(all_plates_june30)
 
-df_split2 <- all_plates %>% 
+df_split2_june30 <- all_plates_june30 %>% 
   split(.$unique_well)
 
 output_june30 <- df_split2 %>%
@@ -344,10 +343,17 @@ View(output_june30)
 
 o_june30 <- output_june30 %>% 
   separate(unique_well, into = c("well", "temperature")) %>% 
-  left_join(., wells)
+  left_join(., new_code_june30_40)
 View(o_june30)
 
-#hmm???
+###COMPARING OLD VS NEW CODE
+#A1 40
+#OLD 8.956667     #gr.lagsat
+#NEW 8.956667224  #gr.lagsat
+#A1 41
+#OLD 1.248718     #gr.lagsat
+#NEW 1.248718362  #gr.lagsat
+#matches! yipee!
 
 ###June 30, 41 deg
 june30_41 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June2923_41C.xlsx", range = "A40:CL137") %>%
