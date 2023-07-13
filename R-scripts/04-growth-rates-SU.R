@@ -293,8 +293,61 @@ View(o3)
 o3 %>% 
   ggplot(aes(x = treatment, y = growth_rate, color = temperature)) + geom_point()
 
-###TRYING SAME THING ON MY OWN WITH JUNE 30, 40 DEG
+###TRYING SAME THING ON MY OWN WITH JUNE 30, 40 and 41 DEG
+library(growthTools)
+library(tidyverse)
+library(readxl)
+library(cowplot)
+theme_set(theme_cowplot())
 
+new_code_june30_40 <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = 6) 
+View(new_code_june30_40)
+
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+nc_june30_40 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June3023_40C.xlsx", range = "A40:CL137") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 40)
+view(nc_june30_40)
+
+nc_june30_41 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June2923_41C.xlsx", range = "A40:CL137") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 41)
+view(nc_june30_41)
+
+all_plates <- bind_rows(nc_june30_40, nc_june30_41) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(all_plates)
+
+df_split2 <- all_plates %>% 
+  split(.$unique_well)
+
+output_june30 <- df_split2 %>%
+  map_df(fit_growth, .id = "unique_well") 
+View(output_june30)
+
+o_june30 <- output_june30 %>% 
+  separate(unique_well, into = c("well", "temperature")) %>% 
+  left_join(., wells)
+View(o_june30)
+
+#hmm???
 
 ###June 30, 41 deg
 june30_41 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June2923_41C.xlsx", range = "A40:CL137") %>%
