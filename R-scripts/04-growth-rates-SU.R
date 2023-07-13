@@ -232,6 +232,70 @@ A12$best.slope
 mean(c(8.956667, 8.76243, 10.45224, 10.12948, 9.300395,9.390542, 8.741537, 5.309089, 4.707004, 6.062713,9.335999))   
 # 8.286191
 
+###COMPARING THIS CODE WITH JOEY'S CODE FROM SLACK SENT ON JULY 11
+### estimate growth rates
+library(growthTools)
+### plotting growth curves from yeast data
+library(tidyverse)
+library(readxl)
+library(cowplot)
+theme_set(theme_cowplot())
+
+## import well plate key
+wells <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = 2, range = "A1:B25") 
+View(wells)
+## define growth rate function
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+plate_30 <- read_excel("data-raw/June1623_30C.xlsx", range = "A40:CL137") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 30)
+view(plate_30)
+
+plate_42 <- read_excel("data-raw/June1623_42C.xlsx", range = "A40:CL137") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 42)
+
+all_plates <- bind_rows(plate_30, plate_42) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(all_plates)
+
+df_split2 <- all_plates %>% 
+  split(.$unique_well)  ## here we split the data frame into little mini dataframes, splitting by "unique_well" which is combination of well and temperature
+
+#stops working here
+output2 <- df_split2 %>%
+  map_df(fit_growth, .id = "unique_well") 
+## this map function allows us to apply the fit_growth function to each well 
+View(output2)
+
+o3 <- output2 %>% 
+  separate(unique_well, into = c("well", "temperature")) %>% 
+  left_join(., wells)
+View(o3)
+
+o3 %>% 
+  ggplot(aes(x = treatment, y = growth_rate, color = temperature)) + geom_point()
+
+###TRYING SAME THING ON MY OWN WITH JUNE 30, 40 DEG
+
+
 ###June 30, 41 deg
 june30_41 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June2923_41C.xlsx", range = "A40:CL137") %>%
   filter(`Time [s]` != "Temp. [°C]") %>% 
