@@ -208,4 +208,27 @@ mean(c(6.7881, 6.373724, 3.125253, 3.972342, 3.28597, 6.06593, 7.904557, 8.57369
 
 ##July 13th
 ## 41*C 48 hour read 
+july13_41C <- read_excel("data-raw/July1323_41C_48H.xlsx")%>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time))
+
+### did all code for each well using the same lines, just deleted and replaced with according well
+july13_41C_D11 <- july13_41C %>% 
+  filter(well == "D11") %>% 
+  mutate(log_od = log(OD600)) %>% 
+  mutate(time_days = time / 86400)
+
+D11 <- get.growth.rate(july13_41C_D11$time_days, july13_41C_D11$log_od, plot.best.Q = TRUE,id = 'fRS585')
+D11$best.model
+
+D11$best.slope
+#Culture (blue): D3, B4, G4, G7, D8, F9, B10, G11
+
+
+##July 14th - 30C
+
+#Culture (purple) - D2, F3, C4, D6, B7, E8, G9, C10
+
 
