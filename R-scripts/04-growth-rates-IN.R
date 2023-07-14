@@ -228,7 +228,34 @@ D11$best.slope
 
 
 ##July 14th - 30C
+july14_30C <- read_excel("data-raw/July1423_30C.xlsx", sheet = "Sheet2_no_chr", range = "A3:CS88")
 
-#Culture (purple) - D2, F3, C4, D6, B7, E8, G9, C10
+july14_30C <- july14_30C %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) ## error here NAs introduced by coercion 
 
+july14_30C_D2 <- july14_30C %>% 
+  filter(well == "C10") %>% 
+  mutate(log_od = log(OD600)) %>% 
+  mutate(time_days = time / 86400)
+
+D2 <- get.growth.rate(july14_30C_D2$time_days, july14_30C_D2$log_od, plot.best.Q = TRUE,id = 'fRS585')
+## WARNING MESSAGE + LOOKS WEIRD
+D2$best.model
+
+D2$best.slope
+
+#D2, 0.01724928
+#F3, 0.03782801
+#C4,0.006924409
+#D6,0.006924409
+#B7, 0.01913698
+#E8,0.0084912
+#G9, -0.009061736
+#C10 0.00436073
+
+mean(c(0.01724928, 0.03782801, 0.006924409, 0.006924409, 0.01913698, 0.0084912, -0.009061736, 0.00436073))
+#0.01148166
 
