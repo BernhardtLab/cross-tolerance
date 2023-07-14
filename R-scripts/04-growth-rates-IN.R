@@ -81,6 +81,69 @@ G2$best.slope
 
 #mean: 6.893954
 
+##July 5th 
+#40*C
+july05_40C <- read_excel("data-raw/July0523_40C.xlsx", range = "A40:CL137") %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) # %>% 
+##mutate(temperature = 42)
+
+### did all code for each well using the same lines, just deleted and replaced with according well
+july05_40C_G9 <- july05_40C %>% 
+  filter(well == "G9") %>% 
+  mutate(log_od = log(OD600)) %>% 
+  mutate(time_days = time / 86400)
+
+G9 <- get.growth.rate(july05_40C_G9$time_days, july05_40C_G9$log_od, plot.best.Q = TRUE,id = 'fRS585')
+G9$best.model
+
+G9$best.slope
+
+#B3, 10.18729
+#C9, 7.463965
+#D3, 9.723999
+#D6, 5.415899 - randomly very low compared to the rest
+#E11, 10.54608
+#F2, 7.591047
+#G4, 10.43612
+#G9, 10.63997
+
+mean(c(10.18729, 7.463965, 9.723999, 5.415899, 10.54608, 7.591047, 10.43612, 10.63997))
+##9.000546
+
+##30*C BAD READ 
+{
+july05_30C <- read_excel("data-raw/July0523_30C.xlsx", range = "A41:CL138") %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) 
+
+july05_30C_G11 <- july05_30C %>% 
+  filter(well == "G11") %>% 
+  mutate(log_od = log(OD600)) %>% 
+  mutate(time_days = time / 86400)
+
+G11 <- get.growth.rate(july05_30C_G11$time_days, july05_30C_G11$log_od, plot.best.Q = TRUE,id = 'fRS585')
+G11$best.model
+
+G11$best.slope
+
+#B5 0.03180882
+#D2 - 0.1986335
+#D7 0.07403113
+#D9 -0.06777814
+#E4 0.09235145
+#G3 0.2319891
+#G7 0.1713046
+#G11 0.1846953
+
+mean(c(0.03180882, -0.1986335, 0.07403113, -0.06777814, 0.09235145, 0.2319891, 0.1713046, 0.1846953))
+#0.0649711
+}
+
 ##July 6th 
 ##37*C
 july06_37C <- read_excel("data-raw/July0623_37C.xlsx", range = "A35:CT132") %>%
@@ -114,12 +177,35 @@ mean(c(8.051096, 8.119615, 11.44259, 10.72757, 10.68343, 11.225, 10.61753, 8.046
 ##9.864203
 
 #40.5*C
+july06_40.5C <- read_excel("data-raw/July0623_40.5C.xlsx", range = "A35:CS132") %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) # %>% 
+##mutate(temperature = 42)
 
-#D2, 
-#G4, 
-#C5, 
-#E5, 
-#E8, 
-#F10, 
-#B10, 
-#D11
+### did all code for each well using the same lines, just deleted and replaced with according well
+july06_40.5C_D11 <- july06_40.5C %>% 
+  filter(well == "D11") %>% 
+  mutate(log_od = log(OD600)) %>% 
+  mutate(time_days = time / 86400)
+
+D11 <- get.growth.rate(july06_40.5C_D11$time_days, july06_40.5C_D11$log_od, plot.best.Q = TRUE,id = 'fRS585')
+D11$best.model
+
+D11$best.slope
+#D2, 6.7881
+#G4, 6.373724
+#C5, 3.125253
+#E5, 3.972342
+#E8, 3.28597
+#F10, 6.06593
+#B10, 7.904557
+#D11, 8.573697
+
+mean(c(6.7881, 6.373724, 3.125253, 3.972342, 3.28597, 6.06593, 7.904557, 8.573697))
+##5.761197
+
+##July 13th
+## 41*C 48 hour read 
+
