@@ -1182,3 +1182,27 @@ G7$best.slope
 
 mean(c(0.1003318, 0.09947257, 0.09949161, 0.09896106, 0.1018986, 0.0979968, 0.09764423, 0.1009986))
 #0.09959941
+
+###JULY 14 30 DEG
+well_key_july14_30 <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = "14.07, 30 deg") 
+View(well_key_july14_30)
+
+fit_growth_july14 <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+july14_30deg <- read_excel(read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July14_30C.xlsx", sheet = "Sheet2_no_chr", range = "a3:cs88")
+View(july14_30deg)                        
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 30)
+view(july14_30deg)
+##????
