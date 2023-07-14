@@ -288,8 +288,7 @@ july06_40.5C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 6th, 40.5C")
 
-##July 13th 41C 48hr 
-
+##July 13th 41C 48hr
 july13_41C <- read_excel("data-raw/July1323_41C_48H.xlsx", sheet = "Sheet1", range = "A2:CT19")
 
 july13_41C <- july13_41C %>%
@@ -305,3 +304,24 @@ july13_41C <- july13_41C %>%
 july13_41C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 13th, 41C, 48hr")
+## Error: Must request at least one colour from a hue palette.
+
+##July 14th - 30C 
+july14_30C <- read_excel("data-raw/July1423_30C.xlsx", sheet = "Sheet3", range = "A2:CS19")
+
+july14_30C <- july14_30C %>%
+filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) ## error here NAs introduced by coercion 
+
+july14_30C <- july14_30C %>%
+  mutate(treatment = case_when(str_detect(well, "fRS585") ~ "fRS585",
+                               str_detect(well, "Blank") ~ "Blank"))
+
+july14_30C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
+  ggtitle("July 14th, 30C")
+### looks very very weird ...???
+## doesnt note blank and everything is grey 
+#another error with plate reader
