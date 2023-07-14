@@ -140,3 +140,14 @@ july13_41 %>%
   mean()
 
 ### getting an error code?? help
+
+##July 14, 30 deg
+july14_30 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July14_30C.xlsx", sheet = "Sheet2_no_chr", range = "b3:cs4")
+View(july14_30)
+
+july14_30 %>%
+  top_n(n = 1) %>%
+  t() %>%
+  mean()
+#Selecting by 85509.7
+#[1] 30.29688
