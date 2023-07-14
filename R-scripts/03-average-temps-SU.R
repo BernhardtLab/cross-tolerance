@@ -128,3 +128,15 @@ july5_30 %>%
 #it was growing at 18 deg but the reads were taken at 25 
 #because the incubator can go to 18, but the plate reader can only go down to 25
 #so no accurate actual temp data to calculate
+
+## July 13th 
+july13_41 <- read_excel("data-raw/July1323_41C_48H.xlsx", range = "B35:CS257") %>%
+  clean_names()%>%
+  view()
+
+july13_41 %>%
+  top_n(n = 2) %>%
+  t() %>%
+  mean()
+
+### getting an error code?? help
