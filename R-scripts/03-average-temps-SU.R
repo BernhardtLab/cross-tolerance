@@ -130,13 +130,12 @@ july5_30 %>%
 #so no accurate actual temp data to calculate
 
 ## July 13th 
-july13_41 <- read_excel("data-raw/July1323_41C_48H.xlsx", range = "B35:CS257") %>%
+july13_41 <- read_excel("data-raw/July1323_41C_48H.xlsx", range = "B36:Ct36") %>%
   clean_names()%>%
+  as.numeric() %>% 
   view()
 
 july13_41 %>%
-  top_n(n = 2) %>%
-  t() %>%
   mean()
 
 ### getting an error code?? help
