@@ -130,15 +130,17 @@ july5_30 %>%
 #so no accurate actual temp data to calculate
 
 ## July 13th 
-july13_41 <- read_excel("data-raw/July1323_41C_48H.xlsx", range = "B36:Ct36") %>%
+july13_41 <- read_excel("data-raw/July1323_41C_48H.xlsx", sheet = 3, range = "B2:gl19") %>%
   clean_names()%>%
-  as.numeric() %>% 
   view()
 
 july13_41 %>%
+  top_n(n=1) %>% 
+  t() %>% 
   mean()
-
-### getting an error code?? help
+#Selecting by x85509_7
+#[1] 40.98083
+#first temp value is 21.3 --> pull temps down
 
 ##July 14, 30 deg
 july14_30 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July14_30C.xlsx", sheet = "Sheet2_no_chr", range = "b3:cs4")
