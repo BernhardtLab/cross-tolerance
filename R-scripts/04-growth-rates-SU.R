@@ -1184,6 +1184,7 @@ mean(c(0.1003318, 0.09947257, 0.09949161, 0.09896106, 0.1018986, 0.0979968, 0.09
 #0.09959941
 
 ###JULY 14 30 DEG
+##IJE DID IT ON HER R SCRIPT
 well_key_july14_30 <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = "14.07, 30 deg") 
 View(well_key_july14_30)
 
@@ -1206,3 +1207,31 @@ View(july14_30deg)
   mutate(temperature = 30)
 view(july14_30deg)
 ##????
+
+###JULY 13, 41 DEG FOR 48 HOURS
+july13_41_well_key <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curve well labels.xlsx", sheet = "13.07, 41 deg, 48 hr")
+View(july13_41_well_key)
+
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+july13_41_gr <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1323_41C_48h.xlsx", sheet = 3, range = "a2:gl19") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 41)
+View(july13_41_gr)
+
+july13_41_gr_1 <- july13_41_gr %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(july13_41_gr_1)
