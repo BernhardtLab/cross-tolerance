@@ -1221,6 +1221,7 @@ fit_growth <- function(df){
   all <- bind_cols(out1, out2)
   all
 }
+ 
 
 july13_41_gr <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1323_41C_48h.xlsx", sheet = 3, range = "a2:gl19") %>% 
   filter(`Time [s]` != "Temp. [°C]") %>% 
@@ -1228,6 +1229,7 @@ july13_41_gr <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data
   rename(well = `Time [s]`) %>% 
   mutate(time = as.numeric(time)) %>% 
   mutate(temperature = 41)
+#error: nas introduced by coercion
 View(july13_41_gr)
 
 july13_41_gr_1 <- july13_41_gr %>% 
