@@ -289,14 +289,13 @@ july06_40.5C %>%
   ggtitle("July 6th, 40.5C")
 
 ##July 13th 41C 48hr
-july13_41C <- read_excel("data-raw/July1323_41C_48H.xlsx", sheet = "Sheet3", range = "A2:GL19")
+july13_41C <- read_excel("data-raw/July1323_41C_48H.xlsx", sheet = "Sheet1", range = "A2:CT19")
 
 july13_41C <- july13_41C %>%
   filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD600) %>% 
-  filter(is.numeric(OD600)) %>%
   rename(well = `Time [s]`) %>% 
-  mutate(time = as.numeric(time)) ##NAs introduced by coercion
+  mutate(time = as.numeric(time))
 
 july13_41C <- july13_41C %>%
   mutate(treatment = case_when(str_detect(well, "fRS585") ~ "fRS585",
@@ -305,7 +304,7 @@ july13_41C <- july13_41C %>%
 july13_41C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 13th, 41C, 48hr")
-## warning - removed 208 rows containing missing values 
+## Error: Must request at least one colour from a hue palette.
 
 ##July 14th - 30C 
 july14_30C <- read_excel("data-raw/July1423_30C.xlsx", sheet = "Sheet3", range = "A2:CS19")

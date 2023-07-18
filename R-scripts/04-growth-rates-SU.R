@@ -1237,3 +1237,40 @@ july13_41_gr_1 <- july13_41_gr %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400) 
 View(july13_41_gr_1)
+
+###JULY 17, 42 DEG, 72 HR
+july17_42_72hr_well_key <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curve well labels.xlsx", sheet = "17.07, 42 deg, 72 hr")
+View(july17_42_72hr_well_key)
+
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+july17_42_72hr <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100", skip = 1)
+View(july17_42_72hr)
+#how to skip time and just do overall time??
+
+%>% 
+  filter(!1) %>% 
+  view()
+  
+   filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 42)
+View(july17_42_72hr)
+
+all_plates <- bind_rows(july17_42_72hr) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(all_plates)
+
+

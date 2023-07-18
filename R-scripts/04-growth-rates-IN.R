@@ -207,38 +207,24 @@ mean(c(6.7881, 6.373724, 3.125253, 3.972342, 3.28597, 6.06593, 7.904557, 8.57369
 ##5.761197
 
 ##July 13th
-## 41*C 48 hour read ##EXCLUDE G11
-july13_41C <- read_excel("data-raw/July1323_41C_48H.xlsx", sheet = "Sheet1")%>%
+## 41*C 48 hour read 
+july13_41C <- read_excel("data-raw/July1323_41C_48H.xlsx")%>%
   filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD600) %>% 
-  filter(is.numeric(OD600)) %>%
   rename(well = `Time [s]`) %>% 
   mutate(time = as.numeric(time))
 
 ### did all code for each well using the same lines, just deleted and replaced with according well
-july13_41C_D3 <- july13_41C %>% 
-  filter(well == "G11") %>% 
+july13_41C_D11 <- july13_41C %>% 
+  filter(well == "D11") %>% 
   mutate(log_od = log(OD600)) %>% 
   mutate(time_days = time / 86400)
 
-D3 <- get.growth.rate(july13_41C_D3$time_days, july13_41C_D3$log_od, plot.best.Q = TRUE,id = 'fRS585')
-D3$best.model
+D11 <- get.growth.rate(july13_41C_D11$time_days, july13_41C_D11$log_od, plot.best.Q = TRUE,id = 'fRS585')
+D11$best.model
 
-D3$best.slope
-#D3 - 2.772583
-#B4 - 2.677185
-#G4 - 2.568138
-#G7 - 2.593191
-#D8 - 1.970546
-#F9 - 2.75412
-#B10 - 2.607848
-#G11 - 2.433683
-
-mean(c(2.772583, 2.677185, 2.568138, 2.593191, 1.970546, 2.75412, 2.607848))
-#2.563373 - without G11
-
-mean(c(2.772583, 2.677185, 2.568138, 2.593191, 1.970546, 2.75412, 2.607848, 2.433683))
-# 2.547162 - wiht G11
+D11$best.slope
+#Culture (blue): D3, B4, G4, G7, D8, F9, B10, G11
 
 
 ##July 14th - 30C
