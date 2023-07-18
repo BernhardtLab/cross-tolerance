@@ -49,6 +49,7 @@ growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tol
 #fixing y axis:
 grsw_graph3 <- growth_rates_summary_wip %>% 
    ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() +
+  scale_y_discrete(breaks = seq(0, 10, 1))
    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9))
 
 #adapted from bp + coord_cartesian(ylim=c(5, 7.5)) + 
