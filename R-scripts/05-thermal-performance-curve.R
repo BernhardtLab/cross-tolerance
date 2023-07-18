@@ -13,12 +13,12 @@ theme_set(theme_cowplot())
 
 ###GRAPHING AVG GROWTH RATES
 #reading in table
-growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx") %>% 
+growth_rates_summary_wip_1 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx") %>% 
   view()
 
 #code used to graph avg temp and avg growth rate
 grsw_graph <- growth_rates_summary_wip %>% 
-  ggplot(aes(x = `avg temp`, y = `avg growth rate`)) + geom_line()
+  ggplot(aes(x = `avg actual temp`, y = `avg growth rate`)) + geom_line()
 grsw_graph
 
 
@@ -40,6 +40,19 @@ growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tol
 #for 18 deg, 0.099 becomes 9.99 (r transforms into 9.9 e-2, then forgets about e-2 when graphing?)
  
 #fixing standard form and hopefully the discrete axis)
+ growth_rates_summary_wip_csv <- read_csv("data-raw/growth_rates_summary_wip.csv") %>% 
+   mutate(growth_rate = as.numeric(`growth rate`))
+ view(growth_rates_summary_wip_csv)
+ str(growth_rates_summary_wip_csv)
+ grsw_graph4 <-  growth_rates_summary_wip_csv %>% 
+   ggplot(aes(x = temp, y =growth_rate)) + geom_point() + geom_smooth()
+ 
+ 
+ growth_rates_summary_wip_2 <- read_excel("data-raw/growth_rates_summary_wip.xlsx",sheet = 2, col_types = c("numeric", "numeric"))
+View(growth_rates_summary_wip_2) 
+  str(growth_rates_summary_wip_2)
+
+ 
  growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx",sheet = 2, range = "a1:b73") %>% 
    format(scientific = FALSE) %>% 
    as.numeric() %>% 
@@ -75,8 +88,9 @@ format(growth_rates_summary_wip)
 View(growth_rates_summary_wip)
 
 #fixing y axis:
-grsw_graph3 <- growth_rates_summary_wip %>% 
-   ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() +
+grsw_graph3 <-  growth_rates_summary_wip_2 %>% 
+   ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() + geom_smooth()
++
   scale_y_discrete(breaks = seq(0, 10, 1))
    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9))
 
