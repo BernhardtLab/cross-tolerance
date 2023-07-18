@@ -1254,6 +1254,8 @@ fit_growth <- function(df){
 
 july17_42_72hr <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100", skip = 1)
 View(july17_42_72hr)
+#how to skip time and just do overall time??
+
 %>% 
   filter(!1) %>% 
   view()
