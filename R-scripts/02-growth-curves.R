@@ -326,3 +326,28 @@ july14_30C %>%
 ### looks very very weird ...???
 ## doesnt note blank and everything is grey 
 #another error with plate reader
+
+## July 17th, 42C
+july17_42C <- read_excel("data-raw/July1723_42C_72h.xlsx", sheet = "growthcurves", range = "A2:KH99")
+
+july17_42C <- july17_42C %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>%
+  mutate(time = as.numeric(time)) ## warning here NAs introduced by coercion 
+
+july17_42C <- july17_42C %>%
+  mutate(treatment = case_when(str_detect(well == "A20") ~ "fRS585",
+                               str_detect(well == "A26") ~ "fRS585",
+                               str_detect(well == "A43") ~ "fRS585",
+                               str_detect(well == "A48") ~ "fRS585",
+                               str_detect(well == "A73") ~ "fRS585",
+                               str_detect(well == "A80") ~ "fRS585",
+                               str_detect(well == "A83") ~ "fRS585",
+                               str_detect(well == "A87") ~ "fRS585",
+                               str_detect(well, "Blank") ~ "Blank"))
+
+july17_42C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
+  ggtitle("July 17th, 42C, 72 hour read")
+
