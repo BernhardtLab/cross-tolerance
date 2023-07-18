@@ -327,7 +327,7 @@ july14_30C %>%
 #another error with plate reader
 
 ## July 17th, 42C
-july17_42C <- read_excel("data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "A3:KH100")
+july17_42C <- read_excel("data-raw/July1723_42C_72h.xlsx", sheet = "growthcurves", range = "A2:KH99")
 
 july17_42C <- july17_42C %>%
   filter(`Time [s]` != "Temp. [°C]") %>% 
@@ -336,7 +336,14 @@ july17_42C <- july17_42C %>%
   mutate(time = as.numeric(time)) ## warning here NAs introduced by coercion 
 
 july17_42C <- july17_42C %>%
-  mutate(treatment = case_when(str_detect(well, "Culture") ~ "fRS585",
+  mutate(treatment = case_when(str_detect(well == "A20") ~ "fRS585",
+                               str_detect(well == "A26") ~ "fRS585",
+                               str_detect(well == "A43") ~ "fRS585",
+                               str_detect(well == "A48") ~ "fRS585",
+                               str_detect(well == "A73") ~ "fRS585",
+                               str_detect(well == "A80") ~ "fRS585",
+                               str_detect(well == "A83") ~ "fRS585",
+                               str_detect(well == "A87") ~ "fRS585",
                                str_detect(well, "Blank") ~ "Blank"))
 
 july17_42C %>%
