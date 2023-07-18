@@ -1185,28 +1185,6 @@ mean(c(0.1003318, 0.09947257, 0.09949161, 0.09896106, 0.1018986, 0.0979968, 0.09
 
 ###JULY 14 30 DEG
 ##IJE DID IT ON HER R SCRIPT
-well_key_july14_30 <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = "14.07, 30 deg") 
-View(well_key_july14_30)
-
-fit_growth_july14 <- function(df){
-  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
-  if(class(res)!="try-error"){
-    out1 <- data.frame(best_model = res$best.model)
-    out2 <- data.frame(growth_rate = res$best.slope)
-  }
-  all <- bind_cols(out1, out2)
-  all
-}
-
-july14_30deg <- read_excel(read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July14_30C.xlsx", sheet = "Sheet2_no_chr", range = "a3:cs88")
-View(july14_30deg)                        
-  filter(`Time [s]` != "Temp. [°C]") %>% 
-  gather(2:90, key = time, value = OD) %>% 
-  rename(well = `Time [s]`) %>% 
-  mutate(time = as.numeric(time)) %>% 
-  mutate(temperature = 30)
-view(july14_30deg)
-##????
 
 ###JULY 13, 41 DEG FOR 48 HOURS
 july13_41_well_key <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curve well labels.xlsx", sheet = "13.07, 41 deg, 48 hr")
@@ -1255,16 +1233,20 @@ fit_growth <- function(df){
 july17_42_72hr <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100", skip = 1)
 View(july17_42_72hr)
 #how to skip time and just do overall time??
+july17_42_72hr2 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100", skip = "Time [s]")
+View(july17_42_72hr2)
 
 %>% 
   filter(!1) %>% 
   view()
-  
+
+july17_42_72hr %>% 
    filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD) %>% 
   rename(well = `Time [s]`) %>% 
   mutate(time = as.numeric(time)) %>% 
   mutate(temperature = 42)
+#time [s] not found
 View(july17_42_72hr)
 
 all_plates <- bind_rows(july17_42_72hr) %>% 
@@ -1272,5 +1254,16 @@ all_plates <- bind_rows(july17_42_72hr) %>%
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 86400) 
 View(all_plates)
+
+#trying old code
+july17_42_72hr_old <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100") %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(treatment = case_when(str_detect(well, "A") ~ "fRS585",
+                               str_detect(well, "B") ~ "blank"))
+#time [s] not found?
+view(june29_37)
 
 
