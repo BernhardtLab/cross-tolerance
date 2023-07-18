@@ -39,13 +39,41 @@ growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tol
 #how to separate temps by colour
 #for 18 deg, 0.099 becomes 9.99 (r transforms into 9.9 e-2, then forgets about e-2 when graphing?)
  
-#fixing standard form 9and hopefully the discrete axis)
- growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx") %>% 
+#fixing standard form and hopefully the discrete axis)
+ growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx",sheet = 2, range = "a1:b73") %>% 
    format(scientific = FALSE) %>% 
    as.numeric() %>% 
    view()
-#??
  
+format(growth_rates_summary_wip, scientific = FALSE) %>% View(growth_rates_summary_wip)
+#??
+
+#trying scipen 
+install.packages("Tplyr")
+library(Tplyr)
+install.packages("settings")
+library(settings)
+
+require(settings)
+10/1000000
+#gives scientific notation
+options(scipen = 100, digits = 6)
+10/1000000
+#gives decimal
+settings::reset(options)
+10/1000000
+#gives decimal
+
+growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx", sheet = 2, range = "a1:b73") %>% 
+  options(scipen = 100, digits = 6) #invalid argument
+growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx", sheet = 2, range = "a1:b73") %>% 
+  options(scipen = 4) #invalid argument
+View(growth_rates_summary_wip)
+
+options(scipen = 6)
+format(growth_rates_summary_wip)
+View(growth_rates_summary_wip)
+
 #fixing y axis:
 grsw_graph3 <- growth_rates_summary_wip %>% 
    ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() +
@@ -58,12 +86,3 @@ grsw_graph3 <- growth_rates_summary_wip %>%
  
 grsw_graph3
 ##???
-
-#adding line of best fit
-grsw_graph4 <- growth_rates_summary_wip %>% 
-  ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() +
-
-grsw_graph4
-
- 
- 
