@@ -273,3 +273,8 @@ D2$best.slope
 mean(c(0.01724928, 0.03782801, 0.006924409, 0.006924409, 0.01913698, 0.0084912, -0.009061736, 0.00436073))
 #0.01148166
 
+##July 17th, 42C, 72hr read
+july17_42C <- read_excel("data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "A3:KH100")
+
+
+
