@@ -26,19 +26,27 @@ grsw_graph
 growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx", sheet = 2, range = "a1:b73") 
  view(growth_rates_summary_wip)
 
+#code used to graph avg temp and all growth rate data points
  grsw_graph2 <- growth_rates_summary_wip %>% 
    ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point()
+ 
  grsw_graph2
-#multiple issues 
-#how to separate temps by colour
+#multiple issues: 
 #how to get rid of so many growth rates - change scales
 #how to add line of curve
+#how to separate temps by colour
+#for 18 deg, 0.099 becomes 9.99 (r transforms into 9.9 e-2, then forgets about e-2 when graphing?)
  
- growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx", sheet = 3) 
- view(growth_rates_summary_wip)
+grsw_graph3 <- growth_rates_summary_wip %>% 
+   ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() +
+   scale_y_discrete(breaks=seq(0, 10, 0.25))
+
+#adapted from bp + coord_cartesian(ylim=c(5, 7.5)) + 
+#scale_y_continuous(breaks=seq(0, 10, 0.25))  # Ticks from 0-10, every .25
+#but just gets rid of any y values
  
-#code used to graph avg temp and all growth rate data points
-grsw_graph2 <- growth_rates_summary_wip %>% 
-  ggplot(aes(x = "avg temp", y = "growth rate 1")) + geom_point()
-() + geom_errorbar()
-grsw_graph2
+grsw_graph3
+##???
+ 
+ 
+ 
