@@ -21,6 +21,7 @@ grsw_graph <- growth_rates_summary_wip %>%
   ggplot(aes(x = `avg temp`, y = `avg growth rate`)) + geom_line()
 grsw_graph
 
+
 ###GRAPHING WITH VARIATION
 #reading in table
 growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx", sheet = 2, range = "a1:b73") 
@@ -33,13 +34,22 @@ growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tol
  grsw_graph2
 #multiple issues: 
 #how to get rid of so many growth rates - change scales
+ #r thinks that y is discrete???
 #how to add line of curve
 #how to separate temps by colour
 #for 18 deg, 0.099 becomes 9.99 (r transforms into 9.9 e-2, then forgets about e-2 when graphing?)
  
+#fixing standard form 9and hopefully the discrete axis)
+ growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx") %>% 
+   format(scientific = FALSE) %>% 
+   as.numeric() %>% 
+   view()
+#??
+ 
+#fixing y axis:
 grsw_graph3 <- growth_rates_summary_wip %>% 
    ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() +
-   scale_y_discrete(breaks=seq(0, 10, 0.25))
+   scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9))
 
 #adapted from bp + coord_cartesian(ylim=c(5, 7.5)) + 
 #scale_y_continuous(breaks=seq(0, 10, 0.25))  # Ticks from 0-10, every .25
@@ -47,6 +57,12 @@ grsw_graph3 <- growth_rates_summary_wip %>%
  
 grsw_graph3
 ##???
- 
+
+#adding line of best fit
+grsw_graph4 <- growth_rates_summary_wip %>% 
+  ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() +
+
+grsw_graph4
+
  
  
