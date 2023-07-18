@@ -337,17 +337,10 @@ july17_42C <- july17_42C %>%
   mutate(time = as.numeric(time)) ## warning here NAs introduced by coercion 
 
 july17_42C <- july17_42C %>%
-  mutate(treatment = case_when(str_detect(well == "A20") ~ "fRS585",
-                               str_detect(well == "A26") ~ "fRS585",
-                               str_detect(well == "A43") ~ "fRS585",
-                               str_detect(well == "A48") ~ "fRS585",
-                               str_detect(well == "A73") ~ "fRS585",
-                               str_detect(well == "A80") ~ "fRS585",
-                               str_detect(well == "A83") ~ "fRS585",
-                               str_detect(well == "A87") ~ "fRS585",
-                               str_detect(well, "Blank") ~ "Blank"))
+  mutate(treatment = case_when(str_detect(well, "D3|B4|G4|G7|D8|B10|F9|F11") ~ "fRS585",
+                               str_detect(well, "G2|C4|F4|B7|E6|C9|F10|D11") ~ "Blank"))
 
 july17_42C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 17th, 42C, 72 hour read")
-
+### weird NA line that is meant to be culture - grew well 
