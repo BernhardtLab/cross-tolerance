@@ -326,3 +326,17 @@ july14_30C %>%
 ### looks very very weird ...???
 ## doesnt note blank and everything is grey 
 #another error with plate reader
+
+## July 17th, 42C
+july17_42C <- read_excel("data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "A3:KH100")
+
+
+
+# G2
+#C4
+#F4
+#B7
+#E6
+#C9
+#F10
+#D11
