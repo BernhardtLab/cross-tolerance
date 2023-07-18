@@ -274,11 +274,11 @@ mean(c(0.01724928, 0.03782801, 0.006924409, 0.006924409, 0.01913698, 0.0084912, 
 #0.01148166
 
 ##July 17th, 42C, 72hr read
-july17_42C <- read_excel("data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "A3:KH100")
-
-
 ## import well plate key
-wells <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = "01.07")
+## trying joey's code - doesnt seem to work for me 
+{
+wells <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = "17.07, 42deg, 72hr")
+view(wells)
 
 ## define growth rate function
 fit_growth <- function(df){
@@ -290,22 +290,51 @@ fit_growth <- function(df){
   all <- bind_cols(out1, out2)
   all
 }
+}
 
-july01_25C <- read_excel("data-raw/July0123_25C.xlsx", range = "A40:CL137") %>%
+july17_42C <- read_excel("data-raw/July1723_42C_72h.xlsx", sheet = "growthcurves", range = "A2:KH99") %>%
   filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD600) %>% 
   rename(well = `Time [s]`) %>% 
-  mutate(time = as.numeric(time)) %>%
-  mutate(temperature = 42)
+  mutate(time = as.numeric(time))  ## %>% mutate(temperature = 42)
 
-july01_25C_all <- july01_25C %>% 
+july17_42C_D3 <- july17_42C %>% 
+  filter(well == "G11") %>% 
+  mutate(log_od = log(OD600)) %>% 
+  mutate(time_days = time / 86400)
+
+D3 <- get.growth.rate(july17_42C_D3$time_days, july17_42C_D3$log_od, plot.best.Q = TRUE,id = 'fRS585')
+## WEIRD MESSAGE AND THE MODEL IS "gr" INSTEAD OF BEING GR SAT OR LAGSAT
+
+D3$best.model
+
+D3$best.slope
+
+#D3 0.8318717
+#B4 0.5729508
+#G4 1.737785
+#G7 1.593799
+#D8 1.086119
+#B10 0.9639348
+#F9 1.675132
+#G11 3.156685 - the well that grew normally
+
+mean(c(0.8318717, 0.5729508, 1.737785, 1.593799, 1.086119, 0.9639348, 1.675132, 3.156685))
+# 1.452285
+
+##### error 
+{
+july17_42C_all <- july17_42C %>% 
   mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
   mutate(log_od = log(OD600)) %>% 
   mutate(time_days = time / 86400) 
+view(july17_42C_all)
 
-df_split2 <- july01_25C_all %>% 
-  split(.$unique_well) ## here we split the data frame into little mini dataframes, splitting by "unique_well" which is combination of well and temperature
 
+df_split2 <- july17_42C_all %>% 
+  split(.$unique_well)
+
+## error out1 not found
 output2 <- df_split2 %>%
   map_df(fit_growth, .id = "unique_well") ## this map function allows us to apply the fit_growth function to each well 
 
@@ -316,6 +345,6 @@ o3 <- output2 %>%
 o3 %>% 
   ggplot(aes(x = treatment, y = growth_rate, color = temperature)) + geom_point()
 
-
+}
 
 
