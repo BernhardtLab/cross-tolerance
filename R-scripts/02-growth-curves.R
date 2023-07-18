@@ -330,13 +330,17 @@ july14_30C %>%
 ## July 17th, 42C
 july17_42C <- read_excel("data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "A3:KH100")
 
+july17_42C <- july17_42C %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>%
+  mutate(time = as.numeric(time)) ## warning here NAs introduced by coercion 
 
+july17_42C <- july17_42C %>%
+  mutate(treatment = case_when(str_detect(well, "Culture") ~ "fRS585",
+                               str_detect(well, "Blank") ~ "Blank"))
 
-# G2
-#C4
-#F4
-#B7
-#E6
-#C9
-#F10
-#D11
+july17_42C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
+  ggtitle("July 17th, 42C, 72 hour read")
+
