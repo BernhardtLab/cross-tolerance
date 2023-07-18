@@ -1236,18 +1236,20 @@ View(july17_42_72hr)
 july17_42_72hr2 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100", skip = "Time [s]")
 View(july17_42_72hr2)
 
-%>% 
   filter(!1) %>% 
   view()
 
-july17_42_72hr %>% 
+july17_42_72hr_new <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100")
+View(july17_42_72hr_new)
+
+july17_42_72hr_new %>% 
    filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD) %>% 
   rename(well = `Time [s]`) %>% 
   mutate(time = as.numeric(time)) %>% 
   mutate(temperature = 42)
 #time [s] not found
-View(july17_42_72hr)
+View(july17_42_72hr_new)
 
 all_plates <- bind_rows(july17_42_72hr) %>% 
   mutate(unique_well = paste(well, temperature, sep = "_")) %>% 

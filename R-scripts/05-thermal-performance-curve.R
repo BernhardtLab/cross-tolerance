@@ -47,7 +47,6 @@ growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tol
  grsw_graph4 <-  growth_rates_summary_wip_csv %>% 
    ggplot(aes(x = temp, y =growth_rate)) + geom_point() + geom_smooth()
  
- 
  growth_rates_summary_wip_2 <- read_excel("data-raw/growth_rates_summary_wip.xlsx",sheet = 2, col_types = c("numeric", "numeric"))
 View(growth_rates_summary_wip_2) 
   str(growth_rates_summary_wip_2)
