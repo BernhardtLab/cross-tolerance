@@ -102,10 +102,28 @@ grsw_graph3
 
 ###NEWEST CODE AFTER JOEY HELPED
 #changed the excel so now more white spaces (smh)
+#WITH BOTH 41 DEG GROWTH CURVES
 gr_sum_wip_3 <-  read_excel("data-raw/growth_rates_summary_wip.xlsx",sheet = 2)
 View(gr_sum_wip_3)
 
 grsw_graph4 <- gr_sum_wip_3 %>% 
   ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() + geom_smooth()
-grsw_graph4 #uses 41 deg data from june 30
+grsw_graph4 #uses 41 deg data from june 30 (24 hr cycle) AND july 13 (48 hr cycle)
+
+#WITH JUNE 30 (24 HR) 41 DEG GROWTH CURVE ONLY
+gr_sum_wip_june_30 <- read_excel("data-raw/growth_rates_summary_wip.xlsx",sheet = "41_deg_from_june_30", range = "a1:b73")
+View(gr_sum_wip_june_30)
+
+grsw_graph5 <- gr_sum_wip_june_30 %>% 
+  ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() + geom_smooth()
+grsw_graph5 #with only 24 hr 41 deg data
+
+#WITH JULY 13 (48 HR) 41 DEG GROWTH CURVE ONLY
+gr_sum_wip_july_13 <- read_excel("data-raw/growth_rates_summary_wip.xlsx",sheet = "41_deg_from_july_13", range = "a1:b69")
+View(gr_sum_wip_july_13)
+
+grsw_graph6 <- gr_sum_wip_july_13 %>% 
+  ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() + geom_smooth()
+grsw_graph6 #with only 48 hr 41 deg data
+
 
