@@ -102,9 +102,10 @@ grsw_graph3
 
 ###NEWEST CODE AFTER JOEY HELPED
 #changed the excel so now more white spaces (smh)
-growth_rates <- read_excel("data-raw/growth_rates_summary_wip.xlsx", sheet = 2)
-View(growth_rates)
+gr_sum_wip_3 <-  read_excel("data-raw/growth_rates_summary_wip.xlsx",sheet = 2)
+View(gr_sum_wip_3)
 
-growth_rates %>% 
-  ggplot(aes( x = "temp", y = "growth rate")) + geom_point() + geom_smooth()
-#why is this not working.
+grsw_graph4 <- gr_sum_wip_3 %>% 
+  ggplot(aes(x = `temp`, y = `growth rate`)) + geom_point() + geom_smooth()
+grsw_graph4 #uses 41 deg data from june 30
+
