@@ -189,8 +189,43 @@ ggplot(d, aes(temp, rate)) +
        title = 'TPC')
 
 
-
 ##Now lets load in ThermPerf
 remotes::install_github("mdjbru-R-packages/thermPerf")
 library(thermPerf)
 
+
+##Playing with SPOCK Package 
+install.packages("remotes")
+remotes::install_github("labmccormick/SPOCK")
+
+install.packages("Sleuth3")
+install.packages("ggplot2")
+
+##following along with the pdf by David Gerard
+qplot(temp, rate, data = data_gr)
+
+class(data_gr$temp)
+data_gr$temp <- as.numeric(data_gr$temp)
+
+data_gr$rate <- as.numeric(data$`growth rate`)
+
+aout_alldiff <- aov(rate ~ temp, data = data_gr)
+aout_alldiff
+
+summary(aout_alldiff)
+
+ptout <- pairwise.t.test(x = data_gr$rate,
+                         g = data_gr$temp,
+                         p.adjust.method = "none")
+ptout
+
+data_gr$isSpock <- data_gr$temp == "Spock's"
+data_gr$isSpock
+## all false
+
+aout_otherssame <- aov(rate ~ isSpock, data = data_gr)
+
+anova(aout_otherssame, aout_alldiff)
+
+aout_allequal <- aov(rate ~ 1, data = data_gr)
+anova(aout_allequal, aout_otherssame, aout_alldiff)
