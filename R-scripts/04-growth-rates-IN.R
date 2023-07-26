@@ -361,6 +361,7 @@ output_july25_30C <- df_split  %>%
 View(output_july25_30C)
 
 ## had all the same values as Sveta except for B9
+## seems to be an error on my end; Sveta not getting the same results
 #B9 gr.lagsat, 8.87100531
 #C6 gr.lagsat, 9.10370912
 #D2 gr.lagsat, 9.22962295
