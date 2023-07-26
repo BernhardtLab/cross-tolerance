@@ -7,6 +7,7 @@
 library(tidyverse)
 library(readxl)
 library(cowplot)
+library(growthTools)
 theme_set(theme_cowplot())
 
 
@@ -1217,7 +1218,7 @@ july13_41_gr_1 <- july13_41_gr %>%
 View(july13_41_gr_1)
 
 ###JULY 17, 42 DEG, 72 HR
-july17_42_72hr_well_key <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curve well labels.xlsx", sheet = "17.07, 42 deg, 72 hr")
+july17_42_72hr_well_key <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Well label keys/17.07, 42deg, 72hr.xlsx")
 View(july17_42_72hr_well_key)
 
 fit_growth <- function(df){
@@ -1242,7 +1243,7 @@ View(july17_42_72hr2)
 july17_42_72hr_new <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100")
 View(july17_42_72hr_new)
 
-july17_42_72hr_new %>% 
+july17_42_72hr %>% 
    filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD) %>% 
   rename(well = `Time [s]`) %>% 
@@ -1268,4 +1269,57 @@ july17_42_72hr_old <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance
 #time [s] not found?
 view(june29_37)
 
+###JULY 25, 30 DEG
+july25_30_well_key <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Well label keys/25.07, 30 deg.xlsx")
+view(july25_30_well_key)
 
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+nc_july25_30 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July2523_30C.xlsx", range = "a35:ct132") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 30)
+view(nc_july25_30)
+
+all_plates_july25 <- bind_rows(nc_july25_30) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(all_plates_july25)
+
+df_split2_july25 <- all_plates_july25 %>% 
+  split(.$unique_well)
+
+output_july25 <- df_split2_july25  %>%
+  map_df(fit_growth, .id = "unique_well") 
+View(output_july25)
+
+o_july25 <- output_july25 %>% 
+  separate(unique_well, into = c("well", "temperature")) %>% 
+  left_join(., nc_july25_30)
+View(o_june30)
+#Error in `left_join()`:
+#! Can't join `x$temperature` with `y$temperature` due to incompatible types.
+#ℹ `x$temperature` is a <character>.
+#ℹ `y$temperature` is a <double>.
+#doesnt matter, can use output_july25 and the excel well key to find corresponding growth rates
+
+#SUMMARY OF JULY 25, 30 DEG
+#B9 6.720393 gr.sat
+#C6 9.103709 gr.lagsat
+#D2 9.229623 gr.lagsat
+#D8 9.092536 gr.lagsat
+#E3 9.117204 gr.lagsat
+#E10 8.920191 gr.lagsat
+#F5 9.085137 gr.lagsat
+#G8 6.76458 gr.sat
