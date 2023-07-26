@@ -163,3 +163,14 @@ july17_42_72hr_temp %>%
   mean()
 #Selecting by 86409.8...293
 #[1] 42.05973
+
+###July 25, 30 deg, 24 hr
+july25_30_temp <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July2523_30C.xlsx", sheet = 1, range = "b35:ct36")
+View(july25_30_temp)
+
+july25_30_temp %>% 
+  top_n(n = 1) %>%
+  t() %>%
+  mean()
+#Selecting by 86410.0
+#[1] 30.25567
