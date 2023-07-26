@@ -322,29 +322,55 @@ D3$best.slope
 mean(c(0.8318717, 0.5729508, 1.737785, 1.593799, 1.086119, 0.9639348, 1.675132, 3.156685))
 # 1.452285
 
-##### error 
-{
-july17_42C_all <- july17_42C %>% 
-  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
-  mutate(log_od = log(OD600)) %>% 
-  mutate(time_days = time / 86400) 
-view(july17_42C_all)
 
+##JULY 25TH, 30C
+wells <- read_excel("data-raw/Well label keys/25.07, 30 deg.xlsx")
+view(wells)
 
-df_split2 <- july17_42C_all %>% 
-  split(.$unique_well)
-
-## error out1 not found
-output2 <- df_split2 %>%
-  map_df(fit_growth, .id = "unique_well") ## this map function allows us to apply the fit_growth function to each well 
-
-o3 <- output2 %>% 
-  separate(unique_well, into = c("well", "temperature")) #%>% 
-#left_join(., wells)
-## error in left join - possibly because I am only using one temperature?
-o3 %>% 
-  ggplot(aes(x = treatment, y = growth_rate, color = temperature)) + geom_point()
-
+## define growth rate function
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
 }
 
+july25_30C <- read_excel("data-raw/July2523_30C.xlsx", sheet = "Sheet2", range = "A35:CT132") %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 30)
+
+
+all_july25_30C <- bind_rows(july25_30C) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(all_july25_30C)
+
+
+df_split <- all_july25_30C %>% 
+  split(.$unique_well)
+
+output_july25_30C <- df_split  %>%
+  map_df(fit_growth, .id = "unique_well") 
+View(output_july25_30C)
+
+## had all the same values as Sveta except for B9
+#B9 gr.lagsat, 8.87100531
+#C6 gr.lagsat, 9.10370912
+#D2 gr.lagsat, 9.22962295
+#D8 gr.lagsat, 9.09253647
+#E3 gr.lagsat, 9.11720363
+#E10 gr.lagsat, 8.92019110
+#F5 gr.lagsat, 9.08513701
+#G8 gr.stat, 6.76458000
+
+
+mean(c(8.87100531, 9.10370912, 9.22962295, 9.09253647, 9.11720363, 8.92019110, 9.08513701, 6.76458000))
+#8.772998
 
