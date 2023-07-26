@@ -344,3 +344,20 @@ july17_42C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 17th, 42C, 72 hour read")
 ### weird NA line that is meant to be culture - grew well 
+
+#July 26th, 30C
+july26_30C <- read_excel("data-raw/July2523_30C.xlsx", sheet = "Sheet2", range = "A35:CT132")
+
+july26_30C <- july26_30C %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>%
+  mutate(time = as.numeric(time)) 
+
+july26_30C <- july26_30C %>%
+  mutate(treatment = case_when(str_detect(well, "B9|C6|D2|D8|E3|E10|F5|G8") ~ "fRS585",
+                               str_detect(well, "B3|B6|C10|D4|E7|F11|G3|G6") ~ "Blank"))
+
+july26_30C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
+  ggtitle("July 26th, 30C")
