@@ -24,7 +24,7 @@ grsw_graph
 
 ###GRAPHING WITH VARIATION
 #reading in table
-growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx", sheet = 2, range = "a1:b73") 
+growth_rates_summary_wip <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth_rates_summary_wip.xlsx", sheet = "all") 
  view(growth_rates_summary_wip)
 
 #code used to graph avg temp and all growth rate data points
@@ -103,7 +103,7 @@ grsw_graph3
 ###NEWEST CODE AFTER JOEY HELPED
 #changed the excel so now more white spaces (smh)
 #WITH BOTH 41 DEG GROWTH CURVES
-gr_sum_wip_3 <-  read_excel("data-raw/growth_rates_summary_wip.xlsx",sheet = 2)
+gr_sum_wip_3 <-  read_excel("data-raw/growth_rates_summary_wip.xlsx",sheet = "all")
 View(gr_sum_wip_3)
 
 grsw_graph4 <- gr_sum_wip_3 %>% 
