@@ -229,3 +229,4 @@ anova(aout_otherssame, aout_alldiff)
 
 aout_allequal <- aov(rate ~ 1, data = data_gr)
 anova(aout_allequal, aout_otherssame, aout_alldiff)
+
