@@ -1326,3 +1326,58 @@ View(o_june30)
 
 mean(c(6.720393, 9.103709, 9.229623, 9.092536, 9.117204, 8.920191, 9.085137, 6.76458))
 #8.504172
+
+###JULY 25, 20 DEG (REP 2)
+nc_july25_20deg_wellkey <- read_excel("data-raw/Well label keys/25.07, 20 deg.xlsx") 
+View(nc_july25_20deg_wellkey)
+
+fit_growth_july25_20deg <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+nc_july25_20 <- read_excel("data-raw/July25_20C_rep2_combined_results.xlsx", sheet = 2) %>% 
+  filter(`Time` != "Temp. [°C]") %>% 
+  gather(2:8, key = time, value = OD) %>% 
+  rename(well = `Time`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 20)
+view(nc_july25_20)
+
+all_plates_july25 <- bind_rows(nc_july25_20) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) 
+View(all_plates_july25) 
+
+df_split2_july25 <- all_plates_july25 %>% 
+  split(.$unique_well)
+view(df_split2_july25) 
+
+output_july25 <- df_split2_july25  %>%
+  map_df(fit_growth, .id = "unique_well") 
+View(output_july25) 
+
+o_july25 <- output_july25 %>% 
+  separate(unique_well, into = c("well", "temperature")) %>% 
+  left_join(., nc_july25_20deg_wellkey)
+#error, doesnt matter, can use output_july25 and the excel well key to find corresponding growth rates
+
+###JULY 25 20 DEG REP 2 SUMMARY
+#best model for all is "gr"
+#B8 2.519681
+#C11 2.567301
+#C2 2.586895
+#D6 2.498283
+#E9 2.577801
+#F7 2.594931
+#G10 2.559925
+#G3 2.569177
+
+mean(c(2.519681, 2.567301, 2.586895, 2.498283, 2.577801, 2.594931, 2.559925, 2.569177))
+#2.559249
