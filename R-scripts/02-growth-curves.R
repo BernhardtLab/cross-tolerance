@@ -361,3 +361,19 @@ july25_30C <- july25_30C %>%
 july25_30C %>%
   ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +
   ggtitle("July 25th, 30C")
+
+#July 25th, 20C
+july25_20C <- read_excel("data-raw/July25_20C_rep2_combined_results.xlsx", sheet = "Sheet2")
+  
+july25_20C <- july25_20C %>%
+  filter(`Time` != "Temp. [°C]") %>% 
+  gather(2:9, key = time, value = OD600) %>% 
+  rename(well = `Time`) %>%
+  mutate(time = as.numeric(time)) 
+
+july25_20C <- july25_20C %>%
+  mutate(treatment = case_when(str_detect(well, "A2|A3|A4|A5|A6|A7|A8|A9") ~ "fRS585"))
+
+july25_20C %>%
+  ggplot(aes(x = time, y = OD600, group = well, color = "fRS585")) + geom_line() +
+  ggtitle("July 27th, 20C")
