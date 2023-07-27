@@ -371,7 +371,33 @@ View(output_july25_30C)
 #F5 gr.lagsat, 9.08513701
 #G8 gr.stat, 6.76458000
 
-
 mean(c(8.87100531, 9.10370912, 9.22962295, 9.09253647, 9.11720363, 8.92019110, 9.08513701, 6.76458000))
 #8.772998
 
+##July 25th, 20C 
+## wack
+wells_20C <- read_excel("data-raw/Well label keys/25.07, 20 deg.xlsx")
+view(wells_20C)
+
+july25_20C <- read_excel("data-raw/July25_20C_rep2_combined_results.xlsx", sheet = "Sheet2") %>%
+  filter(`Time` != "Temp. [°C]") %>% 
+  gather(2:9, key = time, value = OD) %>% 
+  rename(well = `Time`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 30)
+
+
+all_july25_20C <- bind_rows(july25_20C) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(all_july25_20C)
+
+
+df_split_1 <- all_july25_20C %>% 
+  split(.$unique_well)
+
+output_july25_20C <- df_split_1  %>%
+  map_df(fit_growth, .id = "unique_well") 
+View(output_july25_20C)
+## keep getting different results error with fit growth model? 
