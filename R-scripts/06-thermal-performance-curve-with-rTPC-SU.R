@@ -29,20 +29,20 @@ d <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth
   rename(rate = `growth rate`)
 view(d)
 
-mod = 'weibull_1995'
+mod = 'ratkowsky_1983'
 
-start_vals <- get_start_vals(d$temp, d$rate, model_name = 'weibull_1995')
+start_vals <- get_start_vals(d$temp, d$rate, model_name = 'ratkowsky_1983')
 start_vals
-low_lims <- get_lower_lims(d$temp, d$rate, model_name = 'weibull_1995')
-upper_lims <- get_upper_lims(d$temp, d$rate, model_name = 'weibull_1995')
+low_lims <- get_lower_lims(d$temp, d$rate, model_name = 'ratkowsky_1983')
+upper_lims <- get_upper_lims(d$temp, d$rate, model_name = 'ratkowsky_1983')
 
-fit_mod <- nls_multstart(rate~weibull_1995(temp = temp, a, topt, b, c), 
+fit_mod <- nls_multstart(rate~ratkowsky_1983(temp = temp, tmin, tmax, a, b), 
                             data = d,
                             iter = 500,
-                            start_lower = get_start_vals(d$temp, d$rate, model_name = 'weibull_1995') - 10,
-                            start_upper = get_start_vals(d$temp, d$rate, model_name = 'weibull_1995') + 10,
-                            lower = get_lower_lims(d$temp, d$rate, model_name = 'weibull_1995'),
-                            upper = get_upper_lims(d$temp, d$rate, model_name = 'weibull_1995'),
+                            start_lower = get_start_vals(d$temp, d$rate, model_name = 'ratkowsky_1983') - 10,
+                            start_upper = get_start_vals(d$temp, d$rate, model_name = 'ratkowsky_1983') + 10,
+                            lower = get_lower_lims(d$temp, d$rate, model_name = 'ratkowsky_1983'),
+                            upper = get_upper_lims(d$temp, d$rate, model_name = 'ratkowsky_1983'),
                             supp_errors = 'Y')
 fit_mod
 
@@ -58,7 +58,7 @@ ggplot(d, aes(temp, rate)) +
   theme_bw(base_size = 12) +
   labs(x = 'Temperature (ºC)',
        y = 'Growth rate',
-       title = 'model')
+       title = 'ratkowsky_1983')
 
 AIC(fit, fit_mod)
 
