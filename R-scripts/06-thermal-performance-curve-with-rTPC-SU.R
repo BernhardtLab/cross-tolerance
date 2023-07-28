@@ -24,20 +24,20 @@ d <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth
   rename(rate = `growth rate`)
 view(d)
 
-mod = 'delong_2017'
+mod = 'pawar_2018'
 
-start_vals <- get_start_vals(d$temp, d$rate, model_name = 'delong_2017')
+start_vals <- get_start_vals(d$temp, d$rate, model_name = 'pawar_2018')
 start_vals
-low_lims <- get_lower_lims(d$temp, d$rate, model_name = 'delong_2017')
-upper_lims <- get_upper_lims(d$temp, d$rate, model_name = 'delong_2017')
+low_lims <- get_lower_lims(d$temp, d$rate, model_name = 'pawar_2018')
+upper_lims <- get_upper_lims(d$temp, d$rate, model_name = 'pawar_2018')
 
-fit_mod <- nls_multstart(rate~delong_2017(temp = temp, c, eb, ef, tm, ehc), 
+fit_mod <- nls_multstart(rate~pawar_2018(temp = temp, r_tref, e, eh, topt), 
                             data = d,
                             iter = 500,
-                            start_lower = get_start_vals(d$temp, d$rate, model_name = 'delong_2017') - 10,
-                            start_upper = get_start_vals(d$temp, d$rate, model_name = 'delong_2017') + 10,
-                            lower = get_lower_lims(d$temp, d$rate, model_name = 'delong_2017'),
-                            upper = get_upper_lims(d$temp, d$rate, model_name = 'delong_2017'),
+                            start_lower = get_start_vals(d$temp, d$rate, model_name = 'pawar_2018') - 10,
+                            start_upper = get_start_vals(d$temp, d$rate, model_name = 'pawar_2018') + 10,
+                            lower = get_lower_lims(d$temp, d$rate, model_name = 'pawar_2018'),
+                            upper = get_upper_lims(d$temp, d$rate, model_name = 'pawar_2018'),
                             supp_errors = 'Y')
 fit_mod
 
