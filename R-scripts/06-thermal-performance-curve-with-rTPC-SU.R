@@ -29,20 +29,25 @@ d <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/growth
   rename(rate = `growth rate`)
 view(d)
 
-mod = 'ratkowsky_1983'
+##
+d <- read_excel("data-raw/growth_rates_summary_wip.xlsx", sheet = 2) %>%
+  rename(rate = `growth rate`)
+view(d)
 
-start_vals <- get_start_vals(d$temp, d$rate, model_name = 'ratkowsky_1983')
+mod = 'sharpeschoollow_1981'
+
+start_vals <- get_start_vals(d$temp, d$rate, model_name = 'sharpeschoollow_1981')
 start_vals
-low_lims <- get_lower_lims(d$temp, d$rate, model_name = 'ratkowsky_1983')
-upper_lims <- get_upper_lims(d$temp, d$rate, model_name = 'ratkowsky_1983')
+low_lims <- get_lower_lims(d$temp, d$rate, model_name = 'sharpeschoollow_1981')
+upper_lims <- get_upper_lims(d$temp, d$rate, model_name = 'sharpeschoollow_1981')
 
-fit_mod <- nls_multstart(rate~ratkowsky_1983(temp = temp, tmin, tmax, a, b), 
+fit_mod <- nls_multstart(rate~hinshelwood_1947(temp = temp, r_tref, e, el, tl), 
                             data = d,
                             iter = 500,
-                            start_lower = get_start_vals(d$temp, d$rate, model_name = 'ratkowsky_1983') - 10,
-                            start_upper = get_start_vals(d$temp, d$rate, model_name = 'ratkowsky_1983') + 10,
-                            lower = get_lower_lims(d$temp, d$rate, model_name = 'ratkowsky_1983'),
-                            upper = get_upper_lims(d$temp, d$rate, model_name = 'ratkowsky_1983'),
+                            start_lower = get_start_vals(d$temp, d$rate, model_name = 'sharpeschoollow_1981') - 10,
+                            start_upper = get_start_vals(d$temp, d$rate, model_name = 'sharpeschoollow_1981') + 10,
+                            lower = get_lower_lims(d$temp, d$rate, model_name = 'sharpeschoollow_1981'),
+                            upper = get_upper_lims(d$temp, d$rate, model_name = 'sharpeschoollow_1981'),
                             supp_errors = 'Y')
 fit_mod
 
@@ -58,7 +63,7 @@ ggplot(d, aes(temp, rate)) +
   theme_bw(base_size = 12) +
   labs(x = 'Temperature (ºC)',
        y = 'Growth rate',
-       title = 'ratkowsky_1983')
+       title = 'sharpeschoollow_1981')
 
 AIC(fit, fit_mod)
 
