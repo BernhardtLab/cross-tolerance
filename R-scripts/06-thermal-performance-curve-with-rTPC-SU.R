@@ -34,20 +34,20 @@ d <- read_excel("data-raw/growth_rates_summary_wip.xlsx", sheet = 2) %>%
   rename(rate = `growth rate`)
 view(d)
 
-mod = 'sharpeschoollow_1981'
+mod = 'sharpeschoolhigh_1981'
 
-start_vals <- get_start_vals(d$temp, d$rate, model_name = 'sharpeschoollow_1981')
+start_vals <- get_start_vals(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981')
 start_vals
-low_lims <- get_lower_lims(d$temp, d$rate, model_name = 'sharpeschoollow_1981')
-upper_lims <- get_upper_lims(d$temp, d$rate, model_name = 'sharpeschoollow_1981')
+low_lims <- get_lower_lims(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981')
+upper_lims <- get_upper_lims(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981')
 
-fit_mod <- nls_multstart(rate~hinshelwood_1947(temp = temp, r_tref, e, el, tl), 
+fit_mod <- nls_multstart(rate~sharpeschoolhigh_1981(temp = temp, r_tref, e, eh, th, tref = 15), 
                             data = d,
                             iter = 500,
-                            start_lower = get_start_vals(d$temp, d$rate, model_name = 'sharpeschoollow_1981') - 10,
-                            start_upper = get_start_vals(d$temp, d$rate, model_name = 'sharpeschoollow_1981') + 10,
-                            lower = get_lower_lims(d$temp, d$rate, model_name = 'sharpeschoollow_1981'),
-                            upper = get_upper_lims(d$temp, d$rate, model_name = 'sharpeschoollow_1981'),
+                            start_lower = get_start_vals(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981') - 10,
+                            start_upper = get_start_vals(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981') + 10,
+                            lower = get_lower_lims(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981'),
+                            upper = get_upper_lims(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981'),
                             supp_errors = 'Y')
 fit_mod
 
@@ -63,7 +63,7 @@ ggplot(d, aes(temp, rate)) +
   theme_bw(base_size = 12) +
   labs(x = 'Temperature (ºC)',
        y = 'Growth rate',
-       title = 'sharpeschoollow_1981')
+       title = 'sharpeschoolhigh_1981')
 
 AIC(fit, fit_mod)
 
