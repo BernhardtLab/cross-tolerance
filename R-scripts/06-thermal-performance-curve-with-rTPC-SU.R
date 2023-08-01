@@ -59,11 +59,12 @@ preds <- augment(fit_mod, newdata = new_data)
 
 ggplot(d, aes(temp, rate)) +
   geom_point() +
-  geom_line(aes(temp, .fitted), preds, col = 'purple', size = 2) +
+  geom_line(aes(temp, .fitted), preds, col = 'orange', size = 2) +
   theme_bw(base_size = 12) +
   labs(x = 'Temperature (ºC)',
-       y = 'Growth rate',
-       title = 'sharpeschoolhigh_1981')
+       y = 'Growth rate') +
+  theme(text=element_text(size=16, family="serif"))
+                          
 
 AIC(fit, fit_mod)
 
