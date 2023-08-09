@@ -59,7 +59,7 @@ preds <- augment(fit_mod, newdata = new_data)
 
 poster_graph <- ggplot(d, aes(temp, rate)) +
   geom_point() +
-  geom_line(aes(temp, .fitted), preds, col = 'orange', size = 2) +
+  geom_line(aes(temp, .fitted), preds, col = 'darkorange1', size = 2) +
   theme_bw(base_size = 12) +
   labs(x = 'Temperature (ºC)',
        y = 'Growth rate') +
