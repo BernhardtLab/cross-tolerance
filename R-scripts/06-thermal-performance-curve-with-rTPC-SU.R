@@ -57,14 +57,16 @@ calc_params(fit_mod) %>%
 new_data <- data.frame(temp = seq(min(d$temp), max(d$temp), 0.5))
 preds <- augment(fit_mod, newdata = new_data)
 
-ggplot(d, aes(temp, rate)) +
+poster_graph <- ggplot(d, aes(temp, rate)) +
   geom_point() +
   geom_line(aes(temp, .fitted), preds, col = 'orange', size = 2) +
   theme_bw(base_size = 12) +
   labs(x = 'Temperature (ºC)',
        y = 'Growth rate') +
   theme(text=element_text(size=16, family="serif"))
-                          
+poster_graph                         
+
+ggsave(plot = poster_graph, filename = "figures/poster_graph.jpg", width = 30.5, height = 16.3, units = "cm")
 
 AIC(fit, fit_mod)
 
