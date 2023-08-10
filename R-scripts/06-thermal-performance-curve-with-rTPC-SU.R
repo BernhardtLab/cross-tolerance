@@ -67,7 +67,7 @@ poster_graph <- ggplot(d, aes(temp, rate)) +
 poster_graph                         
 
 ggsave(plot = poster_graph, filename = "figures/poster_graph.jpg", width = 30.5, height = 16.3, units = "cm")
-
+#need to change size now
 AIC(fit, fit_mod)
 
 ###SUMMARY WITHOUT 20 AND 30 DEG:
