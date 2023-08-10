@@ -71,7 +71,8 @@ poster_graph <- ggplot(d, aes(temp, rate)) +
   geom_line(aes(temp, .fitted), preds, col = 'darkorange1', size = 2) +
   theme_bw(base_size = 12) +
   xlab('Temperature (ºC)')+
-  ylab(bquote('Population growth rate'(day^-1)))
+  ylab(bquote('Population growth rate  '(day^-1))) +
+  theme(text=element_text(size=14, family="sans serif"))
 poster_graph                         
 
 ggsave(plot = poster_graph, filename = "figures/poster_graph.jpg", width = 30.5, height = 16.3, units = "cm")
