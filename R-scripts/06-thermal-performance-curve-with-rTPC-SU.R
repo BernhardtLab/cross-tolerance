@@ -54,17 +54,9 @@ fit_mod
 calc_params(fit_mod) %>%
   mutate_all(round, 2)
 
-new_data <- data.frame(temp = seq(min(d$temp), max(d$temp), 0.5))
+new_data <- data.frame(temp = seq(min(d$temp), max(d$temp), 0.0001)) #originally 0.5
 preds <- augment(fit_mod, newdata = new_data)
 
-poster_graph <- ggplot(d, aes(temp, rate)) +
-  geom_point() +
-  geom_line(aes(temp, .fitted), preds, col = 'darkorange1', size = 2) +
-  theme_bw(base_size = 12) +
-  labs(x = 'Temperature (ºC)',
-       y = 'Population growth rate (day^-1)') +
-  theme(text=element_text(size=16, family="serif"))
-poster_graph
 #getting the superscript
 poster_graph <- ggplot(d, aes(temp, rate)) +
   geom_point() +
@@ -72,7 +64,7 @@ poster_graph <- ggplot(d, aes(temp, rate)) +
   theme_bw(base_size = 12) +
   xlab('Temperature (ºC)')+
   ylab(bquote('Population growth rate  '(day^-1))) +
-  theme(text=element_text(size=14, family="sans serif"))
+  theme(text=element_text(size=14, family="serif"))
 poster_graph                         
 
 ggsave(plot = poster_graph, filename = "figures/poster_graph.jpg", width = 30.5, height = 16.3, units = "cm")
