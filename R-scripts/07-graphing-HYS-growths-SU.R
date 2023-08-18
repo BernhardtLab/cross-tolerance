@@ -10,19 +10,20 @@ library(cowplot)
 hys1_37 <- read_excel ("data-raw/HYS_1/HYS_1.xlsx", sheet = "37") %>% 
   mutate(temperature = 37)
 view(hys1_37)
-
-#hys1_37 %>% 
-#  ggplot(aes(x = well, y = day1)) + geom_point()
+#on its own
+hys1_37 %>% 
+ ggplot(aes(x = well, y = day1)) + geom_point()
 
 hys1_42  <- read_excel ("data-raw/HYS_1/HYS_1.xlsx", sheet = "42") %>% 
   mutate(temperature = 42)
 view(hys1_42)
+#on its own
+hys1_42 %>% 
+  ggplot(aes(x = well, y = day1)) + geom_point()
 
-#hys1_42 %>% 
-#  ggplot(aes(x = well, y = day1)) + geom_point()
-
+#together
 hys1_both <- bind_rows(hys1_42, hys1_37) %>% 
-  mutate(unique_well = paste(well,temperature, sep = "_")) 
+  mutate(unique_well = paste(well,temperature, sep = "_")) %>% view()
 
 hys1_both %>% 
   ggplot (aes (x = well, y = day1, colour = factor(temperature), group = unique_well)) + 
