@@ -30,3 +30,6 @@ hys1_both %>%
   geom_point() +
   xlab('well') +
   ylab('OD600')
+#blank = well h12
+#blank values close together --> overlap --> looks as if only one dot, but with zoom in it's two
+#blank will not be h12 from now on (prob should change h12 --> blank in future?)
