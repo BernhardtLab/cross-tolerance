@@ -76,3 +76,15 @@ hys2_42alt %>%
   ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
   geom_point() +
   ggtitle('42 days 1 and 2')
+
+#grpahing 37
+hys2_37alt <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37alt") %>% 
+  mutate(temperature = 37) %>% 
+  mutate(unique_well = paste(well,day, sep = "_"))
+View(hys2_37alt)
+
+hys2_37alt %>% 
+  ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
+  geom_point() +
+  ggtitle('37 days 1 and 2')
+
