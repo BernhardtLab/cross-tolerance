@@ -33,3 +33,34 @@ hys1_both %>%
 #blank = well h12
 #blank values close together --> overlap --> looks as if only one dot, but with zoom in it's two
 #blank will not be h12 from now on (prob should change h12 --> blank in future?)
+
+
+#GRAPHING OD READS FROM HYS_2 DAY 1
+hys2_37 <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37") %>% 
+  mutate(temperature = 37)
+View(hys2_37)
+
+hys2_37 %>% 
+  ggplot(aes(x = well, y = day1, colour = factor(treatment))) + 
+  geom_point() +
+  ggtitle('37C')
+  
+hys2_42 <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "42") %>% 
+  mutate(temperature = 42)
+View(hys2_42)
+
+hys2_42 %>% 
+  ggplot(aes(x = well, y = day1, colour = factor(treatment))) + 
+  geom_point() +
+  ggtitle('42C')
+
+#both together
+hys2_both <- bind_rows(hys2_42, hys2_37) %>% 
+  mutate(unique_well = paste(well,temperature, sep = "_"))
+View(hys2_both)
+
+hys2_both %>% 
+  ggplot (aes (x = well, y = day1, colour = factor(temperature), group = unique_well)) + 
+  geom_point() +
+  ggtitle('both')
+#didn't colour code blanks vs culture, but evident that lowest od simlar in both temps is blanks
