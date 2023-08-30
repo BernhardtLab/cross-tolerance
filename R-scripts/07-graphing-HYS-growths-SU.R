@@ -66,6 +66,7 @@ hys2_both %>%
 #didn't colour code blanks vs culture, but evident that lowest od simlar in both temps is blanks
 
 #GRAPHING OD READS FROM HYS_2 DAY 2
+#graphing 42 - looking at difference between day 1 and day 2
 hys2_42alt <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "42alt") %>% 
   mutate(temperature = 42) %>% 
   mutate(unique_well = paste(well,day, sep = "_"))
@@ -75,16 +76,3 @@ hys2_42alt %>%
   ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
   geom_point() +
   ggtitle('42 days 1 and 2')
-
-
-hys2_37 %>% 
-  ggplot(aes(x = well, y = c())) + 
-  geom_point() +
-  ggtitle('37C')
-
-hys2_37 %>% 
-  ggplot(aes(x = well, y = 
-
-june16_42 %>% 
-  ggplot(aes(x = time, y = OD600, group = well, color = treatment)) + geom_line() +  ## can remove the plus and next line to plot in one graph!
-  facet_wrap(~treatment)
