@@ -75,7 +75,7 @@ View(hys2_42alt)
 hys2_42alt %>% 
   ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
   geom_point() +
-  ggtitle('42 days 1 and 2')
+  ggtitle('42 days 1 and 2') #separates by day
 
 #grpahing 37
 hys2_37alt <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37alt") %>% 
@@ -86,5 +86,73 @@ View(hys2_37alt)
 hys2_37alt %>% 
   ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
   geom_point() +
-  ggtitle('37 days 1 and 2')
+  ggtitle('37 days 1 and 2') #separates by day
 
+#separating by treatment
+hys2_42alt <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "42alt") %>% 
+  mutate(temperature = 42) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+View(hys2_42alt)
+
+hys2_42alt %>% 
+  ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
+  geom_point(aes(shape = treatment), size = 4) +
+  theme_minimal() +
+  ggtitle('42 days 1 and 2') #separates by day and treatment
+
+hys2_37alt <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37alt") %>% 
+  mutate(temperature = 37) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+View(hys2_37alt)
+
+hys2_37alt %>% 
+  ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
+  geom_point(aes(shape = treatment), size = 4) +
+  theme_minimal() +
+  ggtitle('37 days 1 and 2') #separates by day and treatment
+
+#both days
+hys2_bothalt <- bind_rows(hys2_42alt, hys2_37alt) 
+View(hys2_bothalt)
+
+#hys2_bothalt %>% 
+#  ggplot(aes(x = well, y = OD, colour = factor(day), group = unique_well)) +
+#  geom_point (fill = "black",
+#              size = 4,
+#              shape = 21)
+
+hys2_bothalt %>% 
+  ggplot(aes(x = well, y = OD, colour = day, group = unique_well)) +
+  scale_shape_manual(values = c(21, 23)) +
+  geom_point (aes(shape = treatment, fill = temperature), size = 4, ) +
+  theme_minimal() +
+  ggtitle("HYS2 days 1 and 2, 37 and 42 deg") #separates by day, treatment, temp
+
+#joey said to fix the temp scale in legend, do factor(temperature)
+hys2_bothalt %>% 
+  ggplot(aes(x = well, y = OD, colour = day, group = unique_well)) +
+  scale_shape_manual(values = c(21, 23)) +
+  geom_point (aes(shape = treatment, fill = factor(temperature)), size = 4, ) +
+  theme_minimal() +
+  ggtitle("HYS2 days 1 and 2, 37 and 42 deg") #but how change colour for temp??
+
+install.packages("wesanderson")
+library(wesanderson)
+install.packages("hrbrthemes")
+library(hrbrthemes) # for plot themes
+#library(gapminder) # for data
+#library(ggbump) # for the bump plot
+
+#?wes_palette
+#?`wesanderson-package`
+#?wes_palette
+
+hys2_bothalt %>% 
+  ggplot(aes(x = well, y = OD, colour = day, group = unique_well)) +
+  scale_shape_manual(values = c(21, 23)) +
+  geom_point (aes(shape = treatment, size = 4, fill = factor(temperature),  stroke = 2))+
+  scale_fill_manual(values=wes_palette(n=2, name="GrandBudapest2")) +
+  scale_colour_manual(values=wes_palette(n=2, name="Cavalcanti1")) +
+  theme_minimal() +
+  ggtitle("HYS2 days 1 and 2, 37 and 42 deg")
+#the legend for factor(temperature) doesn't match what's on the graph tho...
