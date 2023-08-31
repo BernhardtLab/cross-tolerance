@@ -156,3 +156,43 @@ hys2_bothalt %>%
   theme_minimal() +
   ggtitle("HYS2 days 1 and 2, 37 and 42 deg")
 #the legend for factor(temperature) doesn't match what's on the graph tho...
+
+#HYS2 DAY3 GRAPHS
+hys2_42alt <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "42alt") %>% 
+  mutate(temperature = 42) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+View(hys2_42alt)
+
+hys2_42alt %>% 
+  ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
+  geom_point(aes(shape = treatment), size = 4) +
+  theme_minimal() +
+  ggtitle('42 days 1, 2, 3')
+
+hys2_37alt <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37alt") %>% 
+  mutate(temperature = 37) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+View(hys2_37alt)
+
+hys2_37alt %>% 
+  ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
+  geom_point(aes(shape = treatment), size = 4) +
+  theme_minimal() +
+  ggtitle('37 days 1, 2, 3')
+
+#day on x axis and facet wrap by well
+hys2_42alt %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_y") +
+  ggtitle('42 days 1, 2, 3')
+
+hys2_37alt %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap("well") +
+  geom_line(group_by = "well") +
+  ggtitle('37 days 1, 2, 3')
+
