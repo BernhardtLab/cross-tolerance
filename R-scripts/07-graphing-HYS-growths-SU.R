@@ -202,7 +202,6 @@ sept1_37 <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37alt") %>%
   mutate(temperature = 37) %>% 
   mutate(unique_well = paste(well,day,treatment, sep = "_"))
 
-
 sept1_37 %>% 
   ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
   geom_point(aes(shape = treatment), size = 4) +
@@ -214,6 +213,7 @@ sept1_37 %>%
   geom_point(aes(shape = treatment), size = 2) +
   theme_minimal() +
   facet_wrap(~well, scales = "free_y") +
+  geom_line(aes(x = day, y = OD, group = well)) +
   ggtitle('37 days 1-4')
 
 #42C
@@ -232,4 +232,5 @@ sept1_42 %>%
   geom_point(aes(shape = treatment), size = 2) +
   theme_minimal() +
   facet_wrap(~well, scales = "free_y") +
+  geom_line(aes(x = day, y = OD, group = well)) +
   ggtitle('42 days 1-4')
