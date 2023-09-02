@@ -196,6 +196,11 @@ hys2_37alt %>%
   geom_line(group_by = "well") +
   ggtitle('37 days 1, 2, 3')
 
+
+##Ijeoma Nwaofr
+# September 1st, 2023
+
+
 ##HYS 2 Day 4
 #37C
 sept1_37 <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37alt") %>% 
@@ -234,3 +239,42 @@ sept1_42 %>%
   facet_wrap(~well, scales = "free_y") +
   geom_line(aes(x = day, y = OD, group = well)) +
   ggtitle('42 days 1-4')
+
+##Sept 2nd - HYS 2 Day 5
+#37C
+sept2_37 <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37alt") %>% 
+  mutate(temperature = 37) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+
+sept2_37 %>% 
+  ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
+  geom_point(aes(shape = treatment), size = 4) +
+  theme_minimal() +
+  ggtitle('37 days 1-5')
+
+sept2_37 %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_y") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle('37 days 1-5')
+
+#42C
+sept2_42 <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "42alt") %>% 
+  mutate(temperature = 42) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+
+sept2_42 %>% 
+  ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
+  geom_point(aes(shape = treatment), size = 4) +
+  theme_minimal() +
+  ggtitle('42 Days 1 - 5')
+
+sept2_42 %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_y") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle('42 days 1-5')
