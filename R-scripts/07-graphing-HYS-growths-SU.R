@@ -280,7 +280,7 @@ sept2_42 %>%
   ggtitle('42 days 1-5')
 
 
-##Sept 3nd - HYS 2 Day 6
+##Sept 3nd - HYS 2 Day 6 - seeing contamination in some wells + major decreases in other wells :(
 #37C
 sept3_37 <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37alt") %>% 
   mutate(temperature = 37) %>% 
