@@ -349,6 +349,7 @@ sept4_42 %>%
   ggtitle('42 days 1-7')
 
 ##September 4th - Day 7
+## changed code to scales = free_x to better visualize data 
 #37C
 sept5_37 <- read_excel ("data-raw/HYS2/HYS2.xlsx", sheet = "37alt") %>% 
   mutate(temperature = 37) %>% 
