@@ -377,3 +377,37 @@ sept5_42 %>%
   geom_line(aes(x = day, y = OD, group = well)) +
   ggtitle('42 days 1-8')
 
+
+##HYS3
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(readxl)
+library(cowplot)
+
+#37C
+sept17_34 <- read_excel ("data-raw/HYS3/HYS3.xlsx", sheet = "34") %>% 
+  mutate(temperature = 34) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+
+sept17_34 %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_x") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle('34 days 1-4')
+
+#42C
+sept17_41 <- read_excel ("data-raw/HYS3/HYS3.xlsx", sheet = "41") %>% 
+  mutate(temperature = 41) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+
+
+sept17_41 %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_x") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle('41 days 1-4')
