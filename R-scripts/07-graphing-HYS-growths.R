@@ -411,3 +411,4 @@ sept17_41 %>%
   facet_wrap(~well, scales = "free_x") +
   geom_line(aes(x = day, y = OD, group = well)) +
   ggtitle('41 days 1-4')
+#B2 weird --> contaminated? the rest is no growth
