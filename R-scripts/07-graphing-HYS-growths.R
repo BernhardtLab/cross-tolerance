@@ -412,3 +412,84 @@ sept18_41 %>%
   geom_line(aes(x = day, y = OD, group = well)) +
   ggtitle('41 days 1-5')
 #B2 weird --> contaminated
+
+###TRIAL - SVETA
+#high temp
+#2*24, 180-20
+high_180_20 <- read_excel ("data-raw/Trials/Oct13_trial_forR.xlsx", sheet = "41_180-20") %>% 
+  mutate(temperature = 42) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+View(high_180_20)
+
+high_180_20 %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_x") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle('high temp 180-20')
+
+#2*24, 190-10
+high_190_10 <- read_excel ("data-raw/Trials/Oct13_trial_forR.xlsx", sheet = "41_190-10") %>% 
+  mutate(temperature = 42) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+View(high_190_10)
+
+high_190_10 %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_x") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle('high temp 190-10')
+
+#1*48
+high_48hr <- read_excel ("data-raw/Trials/Oct13_trial_forR.xlsx", sheet = "41_48hr") %>% 
+  mutate(temperature = 42) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+View(high_48hr)
+
+high_48hr %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_x") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle('high temp 48 hr')
+
+#ctrl temp
+ctrl_180_20 <- read_excel ("data-raw/Trials/Oct13_trial_forR.xlsx", sheet = "35_180-20") %>% 
+  mutate(temperature = 35) %>% 
+  mutate(unique_well = paste(well,day,treatment, sep = "_"))
+View(ctrl_180_20)
+
+ctrl_180_20 %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_x") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle('ctrl temp 180_20')
+
+#different orientation
+new_high_180_20 <- high_180_20 %>% 
+  mutate(replicate = "180_20") %>% 
+  mutate(unique_well = paste(well,day,treatment,replicate, sep = "_")) %>% 
+  View()
+new_high_190_10 %>% 
+  mutate(replicate = "190_10") %>% 
+  mutate(unique_well = paste(well,day,treatment,replicate, sep = "_")) 
+
+
+high_190_10 %>% 
+  mutate(replicate = "190_10") %>% 
+  mutate(unique_well = paste(well,day,treatment,replicate, sep = "_")) %>% 
+  ggplot(aes( x = well, y = OD, colour = factor(replicate), group = unique_well))+
+  geom_point(aes(shape = treatment), size = 4) 
+
+
+hys2_37alt %>% 
+  ggplot(aes( x = well, y = OD, colour = factor(day), group = unique_well))+
+  geom_point(aes(shape = treatment), size = 4) +
+  theme_minimal() +
+  ggtitle('37 days 1 and 2') #separates by day and treatment
