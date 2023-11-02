@@ -62,26 +62,28 @@ hys4_combined %>%
   xlab('well')+
   ylab('OD600')
 
-
 hys4_combined %>% 
-  ggplot(aes( x = hours, y = OD, colour = treatment, group = unique_well)) +
+  ggplot(aes( x = hours, y = OD, colour = temperature, group = unique_well)) +
   geom_point(aes(shape = treatment), size = 2) +
   theme_minimal() +
   facet_wrap(~well, scales = "free_x") +
   geom_line(aes(x = hours, y = OD, group = well))
 
-##
-sept5_37 %>% 
-  ggplot(aes( x = day, y = OD, colour = treatment, group = unique_well))+
-  geom_point(aes(shape = treatment), size = 2) +
-  theme_minimal() +
-  facet_wrap(~well, scales = "free_x") +
-  geom_line(aes(x = day, y = OD, group = well)) +
-  ggtitle('37 days 1-8')
-##
+hys4_combined %>% 
+  ggplot(aes(x = well, y = OD, colour = hours, group = unique_well)) +
+  scale_shape_manual(values = c(21, 23)) +
+  geom_point (aes(shape = treatment, size = 4, fill = factor(temperature),  stroke = 2)) +
+  scale_fill_manual(values=wes_palette(n=2, name="GrandBudapest2")) +
+  scale_colour_manual(values=wes_palette(n=2, name="Cavalcanti1")) +
+  theme_minimal()
+
+library(wesanderson)
 hys2_bothalt %>% 
   ggplot(aes(x = well, y = OD, colour = day, group = unique_well)) +
   scale_shape_manual(values = c(21, 23)) +
-  geom_point (aes(shape = treatment, fill = temperature), size = 4, ) +
+  geom_point (aes(shape = treatment, size = 4, fill = factor(temperature),  stroke = 2))+
+  scale_fill_manual(values=wes_palette(n=2, name="GrandBudapest2")) +
+  scale_colour_manual(values=wes_palette(n=2, name="Cavalcanti1")) +
   theme_minimal() +
-  ggtitle("HYS2 days 1 and 2, 37 and 42 deg") #separates by day, treatment, temp
+  ggtitle("HYS2 days 1 and 2, 37 and 42 deg")
+#where is the time??
