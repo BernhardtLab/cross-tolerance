@@ -6,6 +6,34 @@ library(tidyverse)
 library(readxl)
 library(cowplot)
 
+#HYS8
+#frs152 ctrl
+hys8_frs152_ctrl <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/auris_and_albicans/HYS8.xlsx", sheet = "FRS152_CTRL") %>% 
+  mutate (temperature = "ctrl") %>%
+  mutate (strain = "frs152")
+View(hys8_frs152_ctrl)
+hys8_frs152_ctrl %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment)) +
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_x") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle("hys8_frs152_ctrl")
+
+#frs152 trt
+hys8_frs152_trt <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/auris_and_albicans/HYS8.xlsx", sheet = "FRS152_TRT") %>% 
+  mutate (temperature = "trt") %>%
+  mutate (strain = "frs152")
+View(hys8_frs152_trt)
+hys8_frs152_trt %>% 
+  ggplot(aes( x = day, y = OD, colour = treatment)) +
+  geom_point(aes(shape = treatment), size = 2) +
+  theme_minimal() +
+  facet_wrap(~well, scales = "free_x") +
+  geom_line(aes(x = day, y = OD, group = well)) +
+  ggtitle("hys8_frs152_trt")
+
+
 #HYS7
 #frs1 ctrl
 hys7_frs1_ctrl <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/auris_and_albicans/HYS7.xlsx", sheet = "frs1_ctrl") %>% 
