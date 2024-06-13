@@ -27,8 +27,37 @@ View(copy_of23)
 
 copy_of23_a <- copy_of23 %>% 
   filter(`time` != "T° 600") %>% 
-  gather(3:98, key = time, value = OD600) %>% 
-  rename(well = `time`) %>% 
-  mutate(time = as.numeric(time))
+  gather(??, key = time, value = OD600) #%>%  
+  rename(well = `time`)
 
-#c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11
+#filter(`number` != "Time") %>%
+#gather(3:98, key = time, value = OD600) %>% 
+View(copy_of23_a)
+
+copy_of23_b <- copy_of23_a %>% 
+  mutate(treatment = case_when(str_detect(well, "A1") ~ "YPD",
+                               str_detect(well, "B") ~ "FRS152",
+                               str_detect(well, "C") ~ "FRS1",
+                               str_detect(well, "D") ~ "FRS585_30",
+                               str_detect(well, "E") ~ "FRS585_37",
+                               str_detect(well, "F") ~ "YPD",
+                               str_detect(well, "G") ~ "YPD",
+                               str_detect(well, "h") ~ "YPD",))
+View(copy_of23_b)
+
+#running old code
+june16_42 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curves/June1623_42C.xlsx", range = "A40:CL137")
+View(june16_42)
+
+june16_42_a <- june16_42 %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) #%>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time))
+View(june16_42_a)
+
+#trying pivot longer
+#june16_42_p <- june16_42 %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>%
+  pivot_longer(c(`Time [s]`, A1))
+#View(june16_42_p)
