@@ -119,7 +119,7 @@ View(june16_42)
 
 june16_42_a <- june16_42 %>% 
   filter(`Time [s]` != "Temp. [°C]") %>% 
-  gather(2:90, key = time, value = OD600) #%>% 
+  gather(2:90, key = time, value = OD600) %>% 
   rename(well = `Time [s]`) %>% 
   mutate(time = as.numeric(time))
 View(june16_42_a)
