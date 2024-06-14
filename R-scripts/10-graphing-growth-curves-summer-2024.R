@@ -36,6 +36,16 @@ copy_of23_b <- copy_of23 %>%
   gather(key = time, value = OD600, 2:98)
 View(copy_of23_b)
 
+#copy_of23_b <- copy_of23_a %>% 
+  #mutate(treatment = case_when(str_detect(well, "A1") ~ "YPD",
+                               str_detect(well, "B") ~ "FRS152",
+                               str_detect(well, "C") ~ "FRS1",
+                               str_detect(well, "D") ~ "FRS585_30",
+                               str_detect(well, "E") ~ "FRS585_37",
+                               str_detect(well, "F") ~ "YPD",
+                               str_detect(well, "G") ~ "YPD",
+                               str_detect(well, "h") ~ "YPD",))
+#View(copy_of23_b)
 ####
 with_number <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curves/summer2024/June11.2024.42C.Shaking.xlsx", sheet = "transposed_withtoprow") %>% 
   clean_names()
@@ -68,25 +78,41 @@ graph <- with_number_b %>%
   facet_wrap(~well)
 graph
 
-#%>% 
-  gather(2:98, key = time, value = OD600) #%>%  
-  rename(well = `time`)
+#scraps
+ # gather(2:98, key = time, value = OD600) #%>%  
+#  rename(well = `time`)
 
 #filter(`number` != "Time") %>%
 #gather(3:98, key = time, value = OD600) %>% 
 
 
-copy_of23_b <- copy_of23_a %>% 
-  mutate(treatment = case_when(str_detect(well, "A1") ~ "YPD",
-                               str_detect(well, "B") ~ "FRS152",
-                               str_detect(well, "C") ~ "FRS1",
-                               str_detect(well, "D") ~ "FRS585_30",
-                               str_detect(well, "E") ~ "FRS585_37",
-                               str_detect(well, "F") ~ "YPD",
-                               str_detect(well, "G") ~ "YPD",
-                               str_detect(well, "h") ~ "YPD",))
-View(copy_of23_b)
+###
+#trying raw
+trials42 <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curves/summer2024/June11.2024.42C.Shaking.xlsx", sheet = "raw") %>% 
+  clean_names()
+View(trials42)
 
+str(trials42)
+#time in POSIXCT format
+
+trials42_a <- trials42 %>% 
+  select(-t_600) 
+View(trials42_a)
+trials42_a %>% ggplot(aes(time, a1)) + geom_line() #just one well no treatment
+
+trials42_b <- trials42 %>% 
+  select(-t_600) %>% 
+  gather(key = time, value = OD600, 2:97)
+
+View(trials42_b)
+
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time))
+
+
+  ###
 #running old code
 june16_42 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curves/June1623_42C.xlsx", range = "A40:CL137")
 View(june16_42)
