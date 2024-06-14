@@ -27,12 +27,54 @@ View(copy_of23)
 
 copy_of23_a <- copy_of23 %>% 
   filter(`time` != "T° 600") %>% 
-  gather(??, key = time, value = OD600) #%>%  
+  gather(key = time, value = OD600) %>% 
+  rename(well = `time`) 
+View(copy_of23_a)
+
+copy_of23_b <- copy_of23 %>% 
+  filter(`time` != "T° 600") %>% 
+  gather(key = time, value = OD600, 2:98)
+View(copy_of23_b)
+
+####
+with_number <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curves/summer2024/June11.2024.42C.Shaking.xlsx", sheet = "transposed_withtoprow") %>% 
+  clean_names()
+View(with_number)
+
+with_number_a <- with_number %>% 
+  filter(`number` != "T° 600") %>% 
+  filter(`number` != "Time") %>% 
+  gather(key = time, value = OD600, 2:98) %>% 
+  rename(well = `number`) %>% 
+  rename(time_sec = `time`)
+View(with_number_a)
+  
+with_number_b <- with_number_a %>% 
+  mutate(treatment = case_when(str_detect(well, "A") ~ "YPD",
+                               str_detect(well, "B") ~ "FRS152",
+                               str_detect(well, "C") ~ "FRS1",
+                               str_detect(well, "D") ~ "FRS585_30",
+                               str_detect(well, "E") ~ "FRS585_37",
+                               str_detect(well, "F") ~ "YPD",
+                               str_detect(well, "G") ~ "YPD",
+                               str_detect(well, "H") ~ "YPD",
+                               ))
+View(with_number_b)
+#did not do all 1 and 12 are blanks!
+
+graph <- with_number_b %>% 
+  ggplot(aes(x = time_sec, y = OD600, group = well, color = treatment)) + 
+  geom_line() +
+  facet_wrap(~well)
+graph
+
+#%>% 
+  gather(2:98, key = time, value = OD600) #%>%  
   rename(well = `time`)
 
 #filter(`number` != "Time") %>%
 #gather(3:98, key = time, value = OD600) %>% 
-View(copy_of23_a)
+
 
 copy_of23_b <- copy_of23_a %>% 
   mutate(treatment = case_when(str_detect(well, "A1") ~ "YPD",
