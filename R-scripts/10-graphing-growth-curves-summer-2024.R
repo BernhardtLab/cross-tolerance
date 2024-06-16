@@ -20,14 +20,25 @@ trials42_frs152 %>%
   ggplot(aes(time, b1))+
   geom_point()
 
+
+june16_42_a <- june16_42 %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD600) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time))
+View(june16_42_a)
+
 #copying old code
 copy_of23 <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curves/summer2024/June11.2024.42C.Shaking.xlsx", sheet = "transposed") %>% 
   clean_names()
 View(copy_of23)
 
+str(copy_of23)
+
 copy_of23_a <- copy_of23 %>% 
   filter(`time` != "T° 600") %>% 
-  gather(key = time, value = OD600) %>% 
+  mutate(time = as.numeric(time)) #%>% 
+  gather(2:98, key = time, value = OD600) %>% 
   rename(well = `time`) 
 View(copy_of23_a)
 
@@ -52,11 +63,24 @@ with_number <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-
 View(with_number)
 
 with_number_a <- with_number %>% 
+  filter(`time` != "T° 600") %>% 
+  filter(`time` != "Time_old") %>% 
+  gather(key = time, value = OD600, 2:98) %>% 
+  rename(well = `time`) #%>% 
+  rename(time_sec = `time`) #%>% 
+  mutate(time_sec = as.numeric(time_sec))
+
+View(with_number_a)
+
+with_number_a <- with_number %>% 
   filter(`number` != "T° 600") %>% 
   filter(`number` != "Time") %>% 
-  gather(key = time, value = OD600, 2:98) %>% 
+  gather(key = number, value = OD600, 2:98) 
+#%>% 
   rename(well = `number`) %>% 
-  rename(time_sec = `time`)
+  rename(time_sec = `time`) %>% 
+  mutate(time_sec = as.numeric(time_sec))
+
 View(with_number_a)
   
 with_number_b <- with_number_a %>% 
