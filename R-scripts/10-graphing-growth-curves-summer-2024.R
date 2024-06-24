@@ -158,6 +158,13 @@ View(june16_42_a)
   
 ###---------------------------------------------------------------------
 #let's do this again, now using the algae script (RFU import Joey) 
+  library(readxl)
+  library(tidyverse)
+  library(cowplot)
+  theme_set(theme_cowplot())
+  library(janitor)
+  library(lubridate)
+  
 june16_42_1 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curves/summer2024/June11.2024.42C.Shaking.xlsx", sheet = "raw") %>% 
     clean_names()
 View(june16_42_1)
@@ -172,13 +179,13 @@ str(june16_42_1)
 meh <- as.numeric(june16_42_1$time)
 str(meh)
 
-june16_42_2 <- june16_42_1 %>% 
+#june16_42_2 <- june16_42_1 %>% 
   select(-t_600) %>% 
   as.numeric(june16_42_1$time) %>% 
   gather(key = time, value = od600, 2:97)
 #list' object cannot be coerced to type 'double'
 
-june16_42_2 <- june16_42_1 %>% 
+#june16_42_2 <- june16_42_1 %>% 
   select(-t_600) %>% 
   unlist(june16_42_1$time) %>% 
   as.numeric(june16_42_1$time) %>% 
@@ -199,6 +206,44 @@ View(hehe) #97 observations of 1 variable
 hehe2 <- rep(hehe, times = 96)
 View(hehe2) #list of length 96
 
-june16_42_3 <- june16_42_2 %>% 
-  mutate(time = hehe2)
+hehe3 <- hehe %>% 
+  clean_names() %>% 
+  mutate(as.character(june16_42_1_time)) %>% 
+  rename(chr_time = "as.character(june16_42_1_time)")
+str(hehe3)  
+View(hehe3)
+
+hehe4 <- hehe3 %>% 
+  separate(chr_time, c('year', 'month', 'day', 'hour', 'min', "sec"))
+View(hehe4)
+
+time <- data.frame(hehe4$hour, hehe4$min, hehe4$sec) %>% 
+  rename(hour = "hehe4.hour") %>% 
+  rename(min = "hehe4.min") %>% 
+  rename(sec = "hehe4.sec") %>% 
+  mutate(time = paste(hour, min, sec, sep = " ")) %>% 
+  mutate(time2 = hms(time))
+View(time)
+str(time)
+#how to make this repeat
+goodtime <- time$time2
+str(goodtime)
+View(goodtime)
+
+hehe5 <- rep(goodtime, times = 96)
+View(hehe5)
+
+june16_42_2$time2 <- hehe5
+View(june16_42_2)
+#omg
+
+june16_42_2 %>% 
+  rename(well = time) %>% 
+  ggplot(aes(x = time2, y = od600, group = well)) + geom_point()
+#yipee
+
+june16_42_2 %>% 
+  rename(well = time) %>% View()
+  ggplot(aes(x = time2, y = od600, colour = well)) + geom_point()
+#error in fortify
 
