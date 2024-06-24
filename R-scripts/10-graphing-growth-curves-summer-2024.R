@@ -153,3 +153,52 @@ View(june16_42_a)
   filter(`Time [s]` != "Temp. [°C]") %>%
   pivot_longer(c(`Time [s]`, A1))
 #View(june16_42_p)
+
+  
+  
+###---------------------------------------------------------------------
+#let's do this again, now using the algae script (RFU import Joey) 
+june16_42_1 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curves/summer2024/June11.2024.42C.Shaking.xlsx", sheet = "raw") %>% 
+    clean_names()
+View(june16_42_1)
+
+#fixing time, sneaky way
+june16_42_1$Time %>% 
+  mutate(time = hms::as_hms(Time)) #nope
+
+#gather, take bazillion
+str(june16_42_1)
+
+meh <- as.numeric(june16_42_1$time)
+str(meh)
+
+june16_42_2 <- june16_42_1 %>% 
+  select(-t_600) %>% 
+  as.numeric(june16_42_1$time) %>% 
+  gather(key = time, value = od600, 2:97)
+#list' object cannot be coerced to type 'double'
+
+june16_42_2 <- june16_42_1 %>% 
+  select(-t_600) %>% 
+  unlist(june16_42_1$time) %>% 
+  as.numeric(june16_42_1$time) %>% 
+  gather(key = time, value = od600, 1:97)
+#no applicable method for 'gather' applied to an object of class "c('double', 'numeric')"
+#View(june16_42_2)  
+
+
+june16_42_2 <- june16_42_1 %>% 
+  select(-t_600) %>% 
+  gather(key = time, value = od600, 2:97)
+View(june16_42_2) #doens't have time column
+
+#making time column by repeating time from the sheet
+hehe <- data.frame(june16_42_1$time)
+View(hehe) #97 observations of 1 variable
+
+hehe2 <- rep(hehe, times = 96)
+View(hehe2) #list of length 96
+
+june16_42_3 <- june16_42_2 %>% 
+  mutate(time = hehe2)
+
