@@ -246,4 +246,11 @@ june16_42_2 %>%
   rename(well = time) %>% View()
   ggplot(aes(x = time2, y = od600, colour = well)) + geom_point()
 #error in fortify
+  
+###-----------------------------------------------------------------------------
+a <- june16_42_1 %>% 
+    clean_names() %>% 
+    select(-t_600) %>% 
+    gather(
 
+View(a)
