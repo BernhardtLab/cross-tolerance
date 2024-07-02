@@ -170,8 +170,8 @@ june16_42_1 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-r
 View(june16_42_1)
 
 #fixing time, sneaky way
-june16_42_1$Time %>% 
-  mutate(time = hms::as_hms(Time)) #nope
+june16_42_1 %>% 
+  mutate(time = hms::as_hms(time)) #nope
 
 #gather, take bazillion
 str(june16_42_1)
