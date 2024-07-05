@@ -248,9 +248,46 @@ june16_42_2 %>%
 #error in fortify
   
 ###-----------------------------------------------------------------------------
-a <- june16_42_1 %>% 
-    clean_names() %>% 
-    select(-t_600) %>% 
-    gather(
+#LET'S DO THIS 
+  library(readxl)
+  library(tidyverse)
+  library(cowplot)
+  theme_set(theme_cowplot())
+  library(janitor)
+  library(lubridate)
+  
+june16_42_1 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curves/summer2024/June11.2024.42C.Shaking.xlsx", sheet = "raw") %>% 
+    clean_names()
+View(june16_42_1)
+  
+#fixing time, sneaky way
+june16_42_1 %>% 
+  mutate(time = hms::as_hms(time)) %>% 
+  mutate(time = as.character(time)) %>% 
+  mutate(date_time = paste(date, time, sep = " ")) %>% 
+  mutate(date_time2 = ymd_hms(date_time))
+View(june16_42_1)
+str(june16_42_1)
 
-View(a)
+
+june16_42_aa <- june16_42_1 %>% 
+  mutate(as.character(time)) %>%
+  rename(chr_time = "as.character(time)")
+
+june16_42_aa %>% 
+  mutate(chr_time = ymd_hms(time)) %>% 
+  str()
+
+june16_42_bb <- june16_42_aa %>% 
+  separate(chr_time, c('year', 'month', 'day', 'hour', 'min', "sec"))
+
+time <- data.frame(june16_42_bb$hour, june16_42_bb$min, june16_42_bb$sec) %>% 
+  rename(hour = "june16_42_bb.hour") %>% 
+  rename(min = "june16_42_bb.min") %>% 
+  rename(sec = "june16_42_bb.sec") %>% 
+  mutate(time = paste(hour, min, sec, sep = " ")) %>% 
+  mutate(time2 = hms(time))  
+View(time)
+
+join_june16 <- full_join(time, june16_42_1)
+
