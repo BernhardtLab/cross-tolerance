@@ -118,6 +118,7 @@ combined_data <- combined_data %>%
 #write_csv(auris_evolution, "data-processed/auris_evolution.csv")
 
 ## quick tings <- NOT WORKING NEED PLATE LAYOUT - BLANKS AND CULTURE
+## 35 evolv or 43/44C evolved at 44C or 43/44
 
 combined_data %>%
   ggplot(aes(x = time_elapsed, y = OD600, color = evol_temp, group = treatment)) +
@@ -126,7 +127,7 @@ combined_data %>%
   facet_wrap(~temp, scales = "free_y") +  
   theme_minimal()
 
-### HYS4 INSTABILITY NGLABRATA ------
+### HYS4 INSTABILITY NGLABRATUS ------
 files_ng <- c(list.files("data-raw/hys4-instability-nglabrata", full.names = TRUE))
 
 # contain the full file paths of all .xlsx files in the folder
@@ -215,3 +216,6 @@ times_ng2 <- times_ng2 %>%
 ## glabrata csv
 glabrata_evolution <- left_join(clean_ng2, times_ng2, by = c("generation"))
 #write_csv(glabrata_evolution, "data-processed/glabrata_evolution.csv")
+
+
+##de evolved glabratus 
