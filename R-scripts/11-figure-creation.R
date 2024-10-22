@@ -104,15 +104,23 @@ alltimes3 <- all_times2 %>%
   mutate(time_elapsed = round(as.numeric(difftime(date_time, min(date_time), units = "hours"))))
 
 auris_evolution <- left_join(clean_plates2, alltimes3, by = c("generation", "evol_temp","temp"))
+
+plate_layout <- read_excel("data-raw/HYS4.xlsx", sheet = "plate_layout")
+#join by well if not there = EMPTY
+
+combined_data <- left_join(plate_layout, auris_evolution, by = "well")
+
+# Replace rows with missing values in 'auris_evolution' columns as 'EMPTY'
+combined_data <- combined_data %>%
+  mutate(across(everything(), ~replace_na(.x, "EMPTY")))
+
 ## auris csv
 #write_csv(auris_evolution, "data-processed/auris_evolution.csv")
 
 ## quick tings <- NOT WORKING NEED PLATE LAYOUT - BLANKS AND CULTURE
-ggplot(auris_evolution, aes(time_elapsed, OD600)) =
-  geom_point(color = )
 
-auris_evolution %>%
-  ggplot(aes(x = time_elapsed, y = OD600, color = evol_temp)) +
+combined_data %>%
+  ggplot(aes(x = time_elapsed, y = OD600, color = evol_temp, group = treatment)) +
   geom_point()+
   geom_smooth(method = "loess", se = FALSE) + 
   facet_wrap(~temp, scales = "free_y") +  
