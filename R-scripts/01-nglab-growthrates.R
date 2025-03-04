@@ -2,7 +2,7 @@
 # Ijeoma Nwafor 
 # march 3
 
-library(readxl)
+
 library(tidyverse)
 library(cowplot)
 theme_set(theme_cowplot())

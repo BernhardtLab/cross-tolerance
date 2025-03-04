@@ -1,3 +1,5 @@
+## FILE PATHS WERE UPDATED ON MARCH 3RD - DATA IMPORTS WONT FUNCTION
+
 # working with thermal performance curves
 #ijeoma nwafor
 #july 19th, 2023

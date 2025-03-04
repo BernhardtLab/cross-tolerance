@@ -1,3 +1,5 @@
+## FILE PATHS WERE UPDATED ON MARCH 3RD - DATA IMPORTS WONT FUNCTION
+
 #growth curves summer 2024
 library(dplyr)
 library(ggplot2)
