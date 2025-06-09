@@ -1,3 +1,5 @@
+## FILE PATHS WERE UPDATED ON MARCH 3RD - DATA IMPORTS WONT FUNCTION
+
 ## Ijeoma Nwafor
 ## July 3rd, 2023
 # Growth Curves for Preliminary Data of June Temperature Reads

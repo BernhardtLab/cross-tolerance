@@ -1,4 +1,4 @@
-
+## FILE PATHS WERE UPDATED ON MARCH 3RD - DATA IMPORTS WONT FUNCTION
 
 ### plotting growth curves from yeast data
 

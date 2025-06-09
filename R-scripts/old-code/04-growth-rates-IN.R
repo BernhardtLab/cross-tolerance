@@ -1,3 +1,5 @@
+## FILE PATHS WERE UPDATED ON MARCH 3RD - DATA IMPORTS WONT FUNCTION
+
 ## 04-GROWTH-RATES-IN.R
 ## July 12, 2023 - starting voer after meeting and problems with pulling
 ##july 1st, 8 replicates 

@@ -1,5 +1,6 @@
+## FILE PATHS WERE UPDATED ON MARCH 3RD - DATA IMPORTS WONT FUNCTION
+
 #SVETA
-#July 9th, 2023
 #GROWTH RATES
 
 ###CODE FROM JOEY (SLACK)
@@ -8,11 +9,12 @@
 library(tidyverse)
 library(readxl)
 library(cowplot)
+library(growthTools)
 theme_set(theme_cowplot())
 
 
 plate <- read_excel("data-raw/June1623_30C.xlsx", range = "A40:CL137")
-
+view(plate)
 plate2 <- plate %>% 
   filter(`Time [s]` != "Temp. [°C]") %>% 
   gather(2:90, key = time, value = OD) %>% 
@@ -280,7 +282,6 @@ View(all_plates)
 df_split2 <- all_plates %>% 
   split(.$unique_well)  ## here we split the data frame into little mini dataframes, splitting by "unique_well" which is combination of well and temperature
 
-#stops working here
 output2 <- df_split2 %>%
   map_df(fit_growth, .id = "unique_well") 
 ## this map function allows us to apply the fit_growth function to each well 
@@ -294,8 +295,68 @@ View(o3)
 o3 %>% 
   ggplot(aes(x = treatment, y = growth_rate, color = temperature)) + geom_point()
 
-###TRYING SAME THING ON MY OWN WITH JUNE 30, 49 DEG
+###TRYING SAME THING ON MY OWN WITH JUNE 30, 40 and 41 DEG
+library(growthTools)
+library(tidyverse)
+library(readxl)
+library(cowplot)
+theme_set(theme_cowplot())
 
+new_code_june30_40 <- read_excel("data-raw/Growth curve well labels.xlsx", sheet = 6) 
+View(new_code_june30_40)
+
+fit_growth_june30 <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+nc_june30_40 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June3023_40C.xlsx", range = "A40:CL137") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 40)
+view(nc_june30_40)
+
+nc_june30_41 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June2923_41C.xlsx", range = "A40:CL137") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 41)
+view(nc_june30_41)
+
+all_plates_june30 <- bind_rows(nc_june30_40, nc_june30_41) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(all_plates_june30)
+
+df_split2_june30 <- all_plates_june30 %>% 
+  split(.$unique_well)
+
+output_june30 <- df_split2 %>%
+  map_df(fit_growth, .id = "unique_well") 
+View(output_june30)
+
+o_june30 <- output_june30 %>% 
+  separate(unique_well, into = c("well", "temperature")) %>% 
+  left_join(., new_code_june30_40)
+View(o_june30)
+
+###COMPARING OLD VS NEW CODE
+#A1 40
+#OLD 8.956667     #gr.lagsat
+#NEW 8.956667224  #gr.lagsat
+#A1 41
+#OLD 1.248718     #gr.lagsat
+#NEW 1.248718362  #gr.lagsat
+#matches! yipee!
 
 ###June 30, 41 deg
 june30_41 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June2923_41C.xlsx", range = "A40:CL137") %>%
@@ -404,6 +465,54 @@ A8$best.model
 A8$best.slope
 #0.5088377
 
+###A9
+gr_june30_41A9 <- june30_41 %>% 
+  filter(well == "A9") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A9<-get.growth.rate(gr_june30_41A9$time_days, gr_june30_41A9$log_od,plot.best.Q = TRUE,id = 'A9')
+A9$best.model
+#"gr.lagsat"
+A9$best.slope
+#0.861948
+
+###A10
+gr_june30_41A10 <- june30_41 %>% 
+  filter(well == "A10") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A10<-get.growth.rate(gr_june30_41A10$time_days, gr_june30_41A10$log_od,plot.best.Q = TRUE,id = 'A10')
+A10$best.model
+#"gr.lagsat"
+A10$best.slope
+#1.178188
+
+###A11
+gr_june30_41A11 <- june30_41 %>% 
+  filter(well == "A11") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A11<-get.growth.rate(gr_june30_41A11$time_days, gr_june30_41A11$log_od,plot.best.Q = TRUE,id = 'A11')
+A11$best.model
+#"gr.lagsat"
+A11$best.slope
+#1.075391
+
+###A12
+gr_june30_41A12 <- june30_41 %>% 
+  filter(well == "A12") %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+
+A12<-get.growth.rate(gr_june30_41A12$time_days, gr_june30_41A12$log_od,plot.best.Q = TRUE,id = 'A12')
+A12$best.model
+#"gr.lagsat"
+A12$best.slope
+#1.583267
+
 ###AVERAGING GROWTH RATES
 #A1 1.248718
 #A2 8.76243
@@ -413,10 +522,14 @@ A8$best.slope
 #A6 0.4827641
 #A7 0.4814375
 #A8 0.5088377
-#these are all over the place?
+#A9 0.861948
+#A10 1.178188
+#A11 1.075391
+#A12 1.583267
+#a2 sus
 
-mean(c(1.248718, 8.76243, 0.7634547, 0.5987903, 0.4896916, 0.4827641, 0.4814375, 0.5088377))
-#1.667015
+mean(c(1.248718, 8.76243, 0.7634547, 0.5987903, 0.4896916, 0.4827641, 0.4814375, 0.5088377, 0.861948, 1.178188, 1.075391, 1.583267))
+#1.50291
 
 ###June 29, 37 deg
 june29_37 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/June2923_37C.xlsx", range = "A40:CL137") %>%
@@ -898,7 +1011,8 @@ A9$best.slope
 gr_june28_34A10 <- june28_34 %>% 
   filter(well == "A10") %>% 
   mutate(log_od = log(OD)) %>% 
-  mutate(time_days = time / 86400) 
+  mutate(time_days = time / 86400) %>% 
+  view()
 
 A10<-get.growth.rate(gr_june28_34A10$time_days, gr_june28_34A10$log_od,plot.best.Q = TRUE,id = 'A10')
 A10$best.model
@@ -949,15 +1063,13 @@ mean(c(8.887984, 9.143289, 8.895575, 9.047159, 9.002168, 8.989232, 10.67995, 8.9
 
 ###July 4, 18 deg
 #manual read
-#things here are because Sveta tried to merge 
-<<<<<<< HEAD:R-scripts/04-growth-rates-SU.R
 #downloaded the combined results (currently not in Git)
 #then found the wells that had fRS585
 #renamed them manually on the excel file (fRS585 --> well plate number (ie B5, etc))
 #need to change sheet, range, time from s to h, gather in the first function
 #for the rest, business as usual
-======
-  july4_18 <- read_excel("C:/Users/sveta/Downloads/July4_18deg.xlsx", sheet = 2, range = "A2:I11") %>% 
+
+july4_18 <- read_excel("C:/Users/sveta/Downloads/July4_18deg.xlsx", sheet = 2, range = "A2:I11") %>% 
   filter(`Time [h]` != "Temp. [°C]") %>% 
   gather(2:9, key = time, value = OD) %>% 
   rename(well = `Time [h]`) %>% 
@@ -982,7 +1094,7 @@ july4_18B10 <- july4_18 %>%
   filter(well == "B10") %>% 
   mutate(log_od = log(OD)) %>% 
   mutate(time_days = time / 24) #%>% 
-view()
+  view()
 
 B10 <- get.growth.rate(july4_18B10$time,july4_18B10$log_od,plot.best.Q = TRUE,id = 'B10')
 B10$best.model
@@ -1074,15 +1186,200 @@ G7$best.slope
 mean(c(0.1003318, 0.09947257, 0.09949161, 0.09896106, 0.1018986, 0.0979968, 0.09764423, 0.1009986))
 #0.09959941
 
+###JULY 14 30 DEG
+##IJE DID IT ON HER R SCRIPT
 
->>>>>>> bb4bc9c41bf8acce42eabb94236504528c4099c5:R-scripts/04-growth-rates.R
+###JULY 13, 41 DEG FOR 48 HOURS
+july13_41_well_key <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Growth curve well labels.xlsx", sheet = "13.07, 41 deg, 48 hr")
+View(july13_41_well_key)
 
-gr_july4_18B5 <- july4_18 %>% 
-  filter(well == "V1") %>% 
-  
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+ 
 
-gr_june30_41A1 <- june30_41 %>% 
-  filter(well == "A1") %>% 
+july13_41_gr <- read_excel ("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1323_41C_48h.xlsx", sheet = 3, range = "a2:gl19") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 41)
+#error: nas introduced by coercion
+View(july13_41_gr)
+
+july13_41_gr_1 <- july13_41_gr %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
   mutate(log_od = log(OD)) %>% 
-  mutate(time_days = time / 86400) %>% 
-  view
+  mutate(time_days = time / 86400) 
+View(july13_41_gr_1)
+
+###JULY 17, 42 DEG, 72 HR
+july17_42_72hr_well_key <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Well label keys/17.07, 42deg, 72hr.xlsx")
+View(july17_42_72hr_well_key)
+
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+july17_42_72hr <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100", skip = 1)
+View(july17_42_72hr)
+#how to skip time and just do overall time??
+july17_42_72hr2 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100", skip = "Time [s]")
+View(july17_42_72hr2)
+
+  filter(!1) %>% 
+  view()
+
+july17_42_72hr_new <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100")
+View(july17_42_72hr_new)
+
+july17_42_72hr %>% 
+   filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 42)
+#time [s] not found
+View(july17_42_72hr_new)
+
+all_plates <- bind_rows(july17_42_72hr) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(all_plates)
+
+#trying old code
+july17_42_72hr_old <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July1723_42C_72h.xlsx", sheet = "Working", range = "a2:kh100") %>%
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(treatment = case_when(str_detect(well, "A") ~ "fRS585",
+                               str_detect(well, "B") ~ "blank"))
+#time [s] not found?
+view(june29_37)
+
+###JULY 25, 30 DEG
+july25_30_well_key <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/Well label keys/25.07, 30 deg.xlsx")
+view(july25_30_well_key)
+
+fit_growth <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+nc_july25_30 <- read_excel("C:/Users/sveta/Documents/B Lab/cross-tolerance/data-raw/July2523_30C.xlsx", range = "a35:ct132") %>% 
+  filter(`Time [s]` != "Temp. [°C]") %>% 
+  gather(2:90, key = time, value = OD) %>% 
+  rename(well = `Time [s]`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 30)
+view(nc_july25_30)
+
+all_plates_july25 <- bind_rows(nc_july25_30) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 86400) 
+View(all_plates_july25)
+
+df_split2_july25 <- all_plates_july25 %>% 
+  split(.$unique_well)
+
+output_july25 <- df_split2_july25  %>%
+  map_df(fit_growth, .id = "unique_well") 
+View(output_july25)
+
+o_july25 <- output_july25 %>% 
+  separate(unique_well, into = c("well", "temperature")) %>% 
+  left_join(., nc_july25_30)
+View(o_june30)
+#Error in `left_join()`:
+#! Can't join `x$temperature` with `y$temperature` due to incompatible types.
+#ℹ `x$temperature` is a <character>.
+#ℹ `y$temperature` is a <double>.
+#doesnt matter, can use output_july25 and the excel well key to find corresponding growth rates
+
+#SUMMARY OF JULY 25, 30 DEG
+#B9 6.720393 gr.sat
+#C6 9.103709 gr.lagsat
+#D2 9.229623 gr.lagsat
+#D8 9.092536 gr.lagsat
+#E3 9.117204 gr.lagsat
+#E10 8.920191 gr.lagsat
+#F5 9.085137 gr.lagsat
+#G8 6.76458 gr.sat
+
+mean(c(6.720393, 9.103709, 9.229623, 9.092536, 9.117204, 8.920191, 9.085137, 6.76458))
+#8.504172
+
+###JULY 25, 20 DEG (REP 2)
+nc_july25_20deg_wellkey <- read_excel("data-raw/Well label keys/25.07, 20 deg.xlsx") 
+View(nc_july25_20deg_wellkey)
+
+fit_growth_july25_20deg <- function(df){
+  res <- try(get.growth.rate(df$time_days, df$log_od, plot.best.Q = FALSE))
+  if(class(res)!="try-error"){
+    out1 <- data.frame(best_model = res$best.model)
+    out2 <- data.frame(growth_rate = res$best.slope)
+  }
+  all <- bind_cols(out1, out2)
+  all
+}
+
+nc_july25_20 <- read_excel("data-raw/July25_20C_rep2_combined_results.xlsx", sheet = 2) %>% 
+  filter(`Time` != "Temp. [°C]") %>% 
+  gather(2:8, key = time, value = OD) %>% 
+  rename(well = `Time`) %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(temperature = 20)
+view(nc_july25_20)
+
+all_plates_july25 <- bind_rows(nc_july25_20) %>% 
+  mutate(unique_well = paste(well, temperature, sep = "_")) %>% 
+  mutate(log_od = log(OD)) %>% 
+  mutate(time_days = time / 24) 
+View(all_plates_july25) 
+
+df_split2_july25 <- all_plates_july25 %>% 
+  split(.$unique_well)
+view(df_split2_july25) 
+
+output_july25 <- df_split2_july25  %>%
+  map_df(fit_growth, .id = "unique_well") 
+View(output_july25) 
+
+o_july25 <- output_july25 %>% 
+  separate(unique_well, into = c("well", "temperature")) %>% 
+  left_join(., nc_july25_20deg_wellkey)
+#error, doesnt matter, can use output_july25 and the excel well key to find corresponding growth rates
+
+###JULY 25 20 DEG REP 2 SUMMARY
+#best model for all is "gr"
+#B8 2.519681
+#C11 2.567301
+#C2 2.586895
+#D6 2.498283
+#E9 2.577801
+#F7 2.594931
+#G10 2.559925
+#G3 2.569177
+
+mean(c(2.519681, 2.567301, 2.586895, 2.498283, 2.577801, 2.594931, 2.559925, 2.569177))
+#2.559249
