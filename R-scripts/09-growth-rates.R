@@ -62,6 +62,8 @@ summary_df <- gdat %>%
   left_join(plate_layout)
 
 
+### growth at 42 degrees
+
 summary_df %>% 
   mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
                                        grepl("40", strain) ~ "40 evolved",
