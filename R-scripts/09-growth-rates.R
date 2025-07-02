@@ -579,7 +579,12 @@ all_blocks <- bind_rows(summary_df, summary_df_35, summary_df_41, summary_df_b2_
                                        grepl("WT_CASP", strain) ~ "Caspofungin evolved",
                                        TRUE ~ strain))
 
-summary_df_b2_35 %>% View
+all_blocks %>% 
+  filter(test_temperature == 41) %>% 
+  filter(evolution_history == "Fluconazole evolved") %>%
+  ggplot(aes(x = strain, y = mu)) + geom_point() +
+  ggtitle("Growth rates at 41C")
+ggsave("figures/growth-41-fluconazole.png", width = 8, height = 6)
 
 all_blocks %>% 
   ggplot(aes(x = evolution_history, y = mu, color = factor(block))) + geom_point()
@@ -591,7 +596,7 @@ all_sum <- all_blocks %>%
 
 all_sum %>% 
   ggplot(aes(x = evolution_history, y = mean_growth_rate, color = factor(block))) + geom_point(size = 4) +
-  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate - se_growth_rate, ymax = mean_growth_rate + se_growth_rate), width = 0.1) +
+  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate - se_growth_rate, ymax = mean_growth_rate + se_growth_rate), width = 0.4) +
   facet_wrap(~ test_temperature, scales = "free") +
   # theme(legend.position="none") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
