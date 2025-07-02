@@ -147,6 +147,12 @@ d35 %>%
   ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
 ggsave("figures/od_time_35C_block1.png", width = 8, height = 6)
 
+d35 %>% 
+  filter(grepl("CASP", strain)) %>% 
+  mutate(casp = ifelse(grepl("CASP_1", strain), "casp", "not_casp")) %>% 
+  ggplot(aes(x = days, y = od, color = well, group = well)) + geom_line()
+ggsave("figures/casp-od-time-35.png", width = 8, height = 6)
+
 
 gdat35 <- d35 %>%
   mutate(ln_abundance = log(od)) %>% 
@@ -181,6 +187,15 @@ summary_df_35 %>%
   ggplot(aes(x = strain, y = mu, color = evolution_history)) + geom_point()
 
 
+
+summary_df_35 %>% 
+  filter(grepl("CASP", strain)) %>% 
+  mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
+                                       grepl("40", strain) ~ "40 evolved",
+                                       grepl("WT", strain) ~ "WT",
+                                       TRUE ~ strain)) %>% 
+  ggplot(aes(x = strain, y = mu, color = well)) + geom_point()
+ggsave("figures/35-casp-od.png", width = 8, height = 6)
 
 block1_all <- bind_rows(summary_df, summary_df_41, summary_df_41)
 
@@ -573,6 +588,7 @@ all_blocks <- bind_rows(summary_df, summary_df_35, summary_df_41, summary_df_b2_
   filter(!grepl("blank", strain)) %>% 
   filter(!grepl("YPD", strain)) %>%
   filter(!grepl("588", strain)) %>% 
+  filter(!grepl("FLZ_3", strain)) %>% 
   mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
                                        grepl("40", strain) ~ "40 evolved",
                                        grepl("WT_FLZ", strain) ~ "Fluconazole evolved",
@@ -585,6 +601,13 @@ all_blocks %>%
   ggplot(aes(x = strain, y = mu)) + geom_point() +
   ggtitle("Growth rates at 41C")
 ggsave("figures/growth-41-fluconazole.png", width = 8, height = 6)
+
+all_blocks %>% 
+  filter(test_temperature == 35) %>% 
+  filter(evolution_history == "Caspofungin evolved") %>%
+  ggplot(aes(x = strain, y = mu, color = factor(block))) + geom_point() +
+  ggtitle("Growth rates at 35C")
+ggsave("figures/growth-35-caspofungin.png", width = 8, height = 6)
 
 all_blocks %>% 
   ggplot(aes(x = evolution_history, y = mu, color = factor(block))) + geom_point()
@@ -633,3 +656,11 @@ all_sum3 %>%
   theme(legend.position="none") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 ggsave("figures/all-growth-rates-same-scale-wrap.png", width = 14, height = 6)
+
+all_sum3 %>% 
+  ggplot(aes(x = evolution_history, y = mean_growth_rate2, color = evolution_history)) + geom_point() +
+  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate), width = 1) +
+  facet_wrap( ~ test_temperature) +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+ggsave("figures/all-growth-rates-wrap.png", width = 14, height = 6)
