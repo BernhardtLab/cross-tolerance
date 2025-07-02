@@ -39,6 +39,7 @@ d2 <- left_join(data, plate_layout)
 
 d2 %>% 
   ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_42C_block1.png", width = 8, height = 6)
 
 
 gdat <- d2 %>%
@@ -91,6 +92,11 @@ data41 <- read_excel("data-raw/Growth-Curves/Block 1/Block1_41C/Nick_Feb7_25_Ngl
 
 d41 <- left_join(data41, plate_layout)
 
+d41 %>% 
+  ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_41C_block1.png", width = 8, height = 6)
+
+
 gdat41 <- d41 %>%
   mutate(ln_abundance = log(od)) %>% 
   group_by(well) %>%
@@ -137,6 +143,10 @@ data35 <- read_excel("data-raw/Growth-Curves/Block 1/Block1_35C/Nick_Feb13_25_Ng
 
 
 d35 <- left_join(data35, plate_layout)
+d35 %>% 
+  ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_35C_block1.png", width = 8, height = 6)
+
 
 gdat35 <- d35 %>%
   mutate(ln_abundance = log(od)) %>% 
@@ -202,6 +212,8 @@ d42_b2 <- left_join(data_b2_42, plate_layout_block2)
 
 d42_b2 %>% 
   ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_42C_block2.png", width = 8, height = 6)
+
 
 
 gdatb2_42 <- d42_b2 %>%
@@ -225,7 +237,7 @@ summary_df_b2_42 <- gdatb2_42 %>%
     R2 = grs$best.model.rsqr,
     n_obs = grs$best.model.slope.n
   ) %>% 
-  left_join(plate_layout) %>% 
+  left_join(plate_layout_block2) %>% 
   mutate(test_temperature = 42) %>% 
   mutate(block = 2)
 
@@ -263,6 +275,7 @@ d41_b2 <- left_join(datab2_41, plate_layout_block2)
 
 d41_b2 %>% 
   ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_41C_block2.png", width = 8, height = 6)
 
 
 gdatb2_41 <- d41_b2 %>%
@@ -286,7 +299,7 @@ summary_df_b2_41 <- gdatb2_41 %>%
     R2 = grs$best.model.rsqr,
     n_obs = grs$best.model.slope.n
   ) %>% 
-  left_join(plate_layout) %>% 
+  left_join(plate_layout_block2) %>% 
   mutate(test_temperature = 41) %>% 
   mutate(block = 2)
 
@@ -323,6 +336,8 @@ d35_b2 <- left_join(datab2_35, plate_layout_block2)
 
 d35_b2 %>% 
   ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_35C_block2.png", width = 8, height = 6)
+
 
 
 gdatb2_35 <- d35_b2 %>%
@@ -336,6 +351,7 @@ gdatb2_35 <- d35_b2 %>%
     fpath = "figures/block2/block2_35/"           # NA to display plots interactively
   ))
 
+View(gdatb2_35)
 
 summary_df_b2_35 <- gdatb2_35 %>%
   summarise(
@@ -346,10 +362,10 @@ summary_df_b2_35 <- gdatb2_35 %>%
     R2 = grs$best.model.rsqr,
     n_obs = grs$best.model.slope.n
   ) %>% 
-  left_join(plate_layout) %>% 
+  left_join(plate_layout_block2) %>% 
   mutate(test_temperature = 35) %>% 
   mutate(block = 2)
-
+View(summary_df_b2_35)
 
 ### growth at 35 degrees
 
@@ -387,6 +403,8 @@ d42_b3 <- left_join(data_b3_42, plate_layout_block3)
 
 d42_b3 %>% 
   ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_42C_block3.png", width = 8, height = 6)
+
 
 
 gdatb3_42 <- d42_b3 %>%
@@ -410,7 +428,7 @@ summary_df_b3_42 <- gdatb3_42 %>%
     R2 = grs$best.model.rsqr,
     n_obs = grs$best.model.slope.n
   ) %>% 
-  left_join(plate_layout) %>% 
+  left_join(plate_layout_block3) %>% 
   mutate(test_temperature = 42) %>% 
   mutate(block = 3)
 
@@ -448,6 +466,7 @@ d41_b3 <- left_join(datab3_41, plate_layout_block3)
 
 d41_b3 %>% 
   ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_41C_block3.png", width = 8, height = 6)
 
 
 gdatb3_41 <- d41_b3 %>%
@@ -471,7 +490,7 @@ summary_df_b3_41 <- gdatb3_41 %>%
     R2 = grs$best.model.rsqr,
     n_obs = grs$best.model.slope.n
   ) %>% 
-  left_join(plate_layout) %>% 
+  left_join(plate_layout_block3) %>% 
   mutate(test_temperature = 41) %>% 
   mutate(block = 3)
 
@@ -508,6 +527,8 @@ d35_b3 <- left_join(datab3_35, plate_layout_block3)
 
 d35_b3 %>% 
   ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_35C_block3.png", width = 8, height = 6)
+
 
 
 gdatb3_35 <- d35_b3 %>%
@@ -531,7 +552,7 @@ summary_df_b3_35 <- gdatb3_35 %>%
     R2 = grs$best.model.rsqr,
     n_obs = grs$best.model.slope.n
   ) %>% 
-  left_join(plate_layout) %>% 
+  left_join(plate_layout_block3) %>% 
   mutate(test_temperature = 35) %>% 
   mutate(block = 3)
 
@@ -547,23 +568,63 @@ summary_df_b3_35 %>%
 
 
 
-all_blocks <- bind_rows(summary_df, summary_df_41, summary_df_41, summary_df_b2_35, summary_df_b2_41, summary_df_b2_42, summary_df_b3_35, summary_df_b3_41, summary_df_b3_42) %>% 
+all_blocks <- bind_rows(summary_df, summary_df_35, summary_df_41, summary_df_b2_35, summary_df_b2_41, summary_df_b2_42, summary_df_b3_35, summary_df_b3_41, summary_df_b3_42) %>% 
+  filter(!grepl("LIG", strain)) %>% 
+  filter(!grepl("blank", strain)) %>% 
+  filter(!grepl("YPD", strain)) %>%
+  filter(!grepl("588", strain)) %>% 
   mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
                                        grepl("40", strain) ~ "40 evolved",
-                                       grepl("WT", strain) ~ "WT",
+                                       grepl("WT_FLZ", strain) ~ "Fluconazole evolved",
+                                       grepl("WT_CASP", strain) ~ "Caspofungin evolved",
                                        TRUE ~ strain))
 
+summary_df_b2_35 %>% View
+
 all_blocks %>% 
-  ggplot(aes(x = evolution_history, y = mu)) + geom_point()
+  ggplot(aes(x = evolution_history, y = mu, color = factor(block))) + geom_point()
 
 all_sum <- all_blocks %>% 
-  group_by(evolution_history, test_temperature) %>% 
+  group_by(evolution_history, test_temperature, block) %>% 
   summarise(mean_growth_rate = mean(mu),
             se_growth_rate = std.error(mu))
 
 all_sum %>% 
-  ggplot(aes(x = evolution_history, y = mean_growth_rate)) + geom_point() +
-  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate - se_growth_rate, ymax = mean_growth_rate + se_growth_rate)) +
-  facet_wrap( ~ test_temperature)
+  ggplot(aes(x = evolution_history, y = mean_growth_rate, color = factor(block))) + geom_point(size = 4) +
+  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate - se_growth_rate, ymax = mean_growth_rate + se_growth_rate), width = 0.1) +
+  facet_wrap(~ test_temperature, scales = "free") +
+  # theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 
-ggsave("figures/all-growth-rates.png", width = 8, height = 6)
+ggsave("figures/all-growth-rates.png", width = 14, height = 6)
+
+all_sum %>% 
+  ggplot(aes(x = evolution_history, y = mean_growth_rate, color = evolution_history)) + geom_point() +
+  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate - se_growth_rate, ymax = mean_growth_rate + se_growth_rate), width = 0.1) +
+  facet_grid(test_temperature ~ block) +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+
+# ggsave("figures/all-growth-rates-same-scale.png", width = 14, height = 6)
+ggsave("figures/all-growth-rates-same-scale-grid.png", width = 14, height = 6)
+
+all_sum2 <- all_sum %>% 
+  select(-se_growth_rate) %>%
+  ungroup() %>% 
+  mutate(test_temperature = as.factor(test_temperature)) %>% 
+  select(-block)
+
+View(all_sum2)
+
+all_sum3 <- all_sum2 %>% 
+  group_by(evolution_history, test_temperature) %>%
+  summarise(mean_growth_rate2 = mean(mean_growth_rate),
+            se_growth_rate = plotrix::std.error(mean_growth_rate))
+
+all_sum3 %>% 
+  ggplot(aes(x = evolution_history, y = mean_growth_rate2, color = evolution_history)) + geom_point() +
+  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate), width = 1) +
+  facet_wrap( ~ test_temperature, scales = "free") +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+ggsave("figures/all-growth-rates-same-scale-wrap.png", width = 14, height = 6)
