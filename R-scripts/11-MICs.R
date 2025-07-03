@@ -421,6 +421,23 @@ all_data_fluc <- map_dfr(sheet_names, function(sheet) {
 })
 
 
+fluc1 <- all_data_fluc %>% 
+  # filter(grepl("FLZ", sheet_name)) %>%
+  rename("population" = "<>") %>% 
+  dplyr::select(population, sheet_name, everything()) %>% 
+  gather(key = concentration, value = OD, 3:ncol(all_data_fluc)) %>% 
+  filter(!is.na(OD)) %>% 
+  mutate(concentration = as.numeric(concentration)) 
 
+fluc1 %>% 
+  ggplot(aes(x = concentration, y = OD, color = population)) + geom_point() 
 
+auc_df_fluc1 <- fluc1 %>%
+  arrange(population, concentration, sheet_name) %>%
+  group_by(population, sheet_name) %>%
+  summarise(AUC = trapz(concentration, OD))
 
+auc_df_fluc1 %>% 
+  ggplot(aes(x = population, y = AUC)) + geom_point() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ggsave("figures/fluc-1-auc.png", width = 8, height = 6)
