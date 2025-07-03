@@ -149,45 +149,77 @@ ggplot(fluc, aes(x = concentration, y = OD, color = population)) +
   scale_x_log10() +
   theme_minimal()
 
-# Split and fit model
-models <- fluc %>%
-  group_by(population) %>%
-  group_split() %>%
-  setNames(unique(fluc$population)) %>%
-  lapply(function(sub_df) {
-    tryCatch(
+fit_ic50_models <- function(data) {
+  # Ensure concentration is numeric
+  data$concentration <- as.numeric(as.character(data$concentration))
+  
+  # Get unique populations
+  populations <- unique(data$population)
+  
+  # Initialize storage
+  results <- data.frame(population = character(),
+                        IC50 = numeric(),
+                        stringsAsFactors = FALSE)
+  
+  # Optional: also store models
+  models <- list()
+  
+  # Loop over populations
+  for (pop in populations) {
+    sub_df <- subset(data, population == pop)
+    
+    # Fit model
+    fit <- tryCatch(
       drm(OD ~ concentration, data = sub_df, fct = LL.4()),
       error = function(e) NULL
     )
-  })
+    
+    # Extract IC50 if model is valid
+    ic50 <- NA
+    if (!is.null(fit)) {
+      ic50 <- tryCatch(ED(fit, 50, interval = "none")[1], error = function(e) NA)
+    }
+    
+    # Store results
+    results <- rbind(results, data.frame(population = pop, IC50 = ic50))
+    
+    # Optional: store model
+    models[[pop]] <- fit
+  }
+  
+  # Optionally return models too
+  # return(list(summary = results, models = models))
+  
+  return(results)
+}
 
-ic50_vals <- sapply(models, function(m) {
-  if (is.null(m)) return(NA)
-  ED(m, 50, interval = "none")[1]  # 50% effective dose
-})
-
-ic50_df <- data.frame(population = names(ic50_vals), IC50 = ic50_vals)
+ic50_df_fluc <- fit_ic50_models(fluc)
 
 
-auc_df <- fluc %>%
+auc_df_fluc <- fluc %>%
   arrange(population, concentration) %>%
-  group_by(population) %>%
+  group_by(population, sheet_name) %>%
   summarise(AUC = trapz(concentration, OD))
 
-mic_vals <- fluc %>%
+
+auc_df_fluc %>% 
+  ggplot(aes(x = population, y = AUC)) + geom_point() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ggsave("figures/fluc-auc.png", width = 10, height = 6)
+
+mic_vals_fluc <- fluc %>%
   group_by(population) %>%
   summarise(MIC = min(concentration[OD < 0.1], na.rm = TRUE))  # adjust threshold as needed
 
-resistance_metrics <- ic50_df %>%
-  left_join(auc_df, by = "population") %>%
-  left_join(mic_vals, by = "population") %>% 
+resistance_metrics_fluc <- ic50_df_fluc$summary %>%
+  left_join(auc_df_fluc, by = "population") %>%
+  left_join(mic_vals_fluc, by = "population") %>% 
   filter(population != "Blank")
 
-kruskal.test(IC50 ~ population, data = resistance_metrics)
 
-resistance_metrics %>% 
+resistance_metrics_fluc %>% 
   # filter(IC50 < .5) %>%  ### just getting rid of one outlier for now
-  ggplot(aes(x = population, y = IC50)) + geom_point() +
+  ggplot(aes(x = population, y = AUC)) + geom_point() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
@@ -253,9 +285,6 @@ ggplot(amph, aes(x = concentration, y = OD, color = population)) +
   geom_line() +
   scale_x_log10() +
   theme_minimal()
-
-# folding this for now ----------------------------------------------------
-
 
 
 
@@ -375,3 +404,23 @@ ggplot() +
        color = "Population") +
   theme_minimal()
 ggsave("figures/amph-drc.png", width = 8, height = 6)
+
+
+
+# read in data from time point 2 ------------------------------------------
+
+file_path <- "data-raw/MICs/FINAL/Feb26.25(40C-ev_FLZ)/24h.xlsx"
+
+# Get all sheet names
+sheet_names <- excel_sheets(file_path)
+
+# Read and combine all sheets, adding a column with the sheet name
+all_data_fluc <- map_dfr(sheet_names, function(sheet) {
+  read_excel(file_path, sheet = sheet,range = "A24:M32") %>%
+    mutate(sheet_name = sheet)
+})
+
+
+
+
+
