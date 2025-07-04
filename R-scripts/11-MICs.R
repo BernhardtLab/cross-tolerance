@@ -427,10 +427,12 @@ fluc1 <- all_data_fluc %>%
   dplyr::select(population, sheet_name, everything()) %>% 
   gather(key = concentration, value = OD, 3:ncol(all_data_fluc)) %>% 
   filter(!is.na(OD)) %>% 
-  mutate(concentration = as.numeric(concentration)) 
+  mutate(concentration = as.numeric(concentration)) %>% 
+  mutate(concentration = ifelse(concentration == 0, 0.1, concentration))
 
 fluc1 %>% 
-  ggplot(aes(x = concentration, y = OD, color = population)) + geom_point() 
+  ggplot(aes(x = concentration, y = OD, color = population)) + geom_point() +
+  scale_x_log10()
 
 auc_df_fluc1 <- fluc1 %>%
   arrange(population, concentration, sheet_name) %>%
@@ -441,3 +443,299 @@ auc_df_fluc1 %>%
   ggplot(aes(x = population, y = AUC)) + geom_point() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ggsave("figures/fluc-1-auc.png", width = 8, height = 6)
+
+
+
+# fit fluc curves ---------------------------------------------------------
+
+library(drc)
+library(dplyr)
+
+# Get unique population names
+populations <- unique(fluc1$population)
+
+# Create an empty named list to store models
+models <- list()
+
+# Loop through each population
+for (pop in populations) {
+  sub_df <- fluc1 %>% filter(population == pop)
+  
+  model <- tryCatch(
+    drm(OD ~ concentration, data = sub_df, fct = LL.4()),
+    error = function(e) {
+      message("Model failed for ", pop, ": ", e$message)
+      return(NULL)
+    }
+  )
+  
+  models[[pop]] <- model
+}
+
+
+# Check which models fit successfully
+sapply(models, function(m) !is.null(m))
+
+# Inspect one model
+summary(models[["40_F2"]])
+plot(models[["40_F2"]])
+
+
+
+
+library(ggplot2)
+
+# Create an empty list to hold prediction data frames
+fitted_data_list <- list()
+
+for (pop in names(models)) {
+  model <- models[[pop]]
+  if (is.null(model)) next  # skip failed fits
+  
+  # Extract original concentration values
+  x_vals <- tryCatch(model[["data"]][["concentration"]], error = function(e) NULL)
+  if (is.null(x_vals)) next
+  
+  # Remove zero and invalid values for log scale
+  x_vals <- x_vals[is.finite(x_vals) & x_vals > 0]
+  if (length(x_vals) < 2) next
+  
+  # Create a prediction grid
+  conc_grid <- exp(seq(log(min(x_vals)), log(max(x_vals)), length.out = 100))
+  
+  # Predict from the model
+  pred <- tryCatch(
+    predict(model, newdata = data.frame(concentration = conc_grid)),
+    error = function(e) rep(NA, length(conc_grid))
+  )
+  
+  # Create fitted data frame
+  fitted_df <- data.frame(
+    concentration = conc_grid,
+    OD = pred,
+    population = pop
+  )
+  
+  fitted_data_list[[pop]] <- fitted_df
+}
+
+# Combine all predictions
+fitted_data <- do.call(rbind, fitted_data_list)
+
+
+ggplot(fluc1, aes(x = concentration, y = OD, color = population)) +
+  geom_point(alpha = 0.6) +
+  geom_line(data = fitted_data, aes(x = concentration, y = OD, color = population), linewidth = 1) +
+  scale_x_log10() +
+  labs(title = "Logistic model fits by population",
+       x = "Drug concentration",
+       y = "Optical Density (OD)") +
+  theme_minimal()
+
+
+library(drc)
+
+# Initialize an empty data frame
+ic50_df <- data.frame(
+  population = character(),
+  IC50 = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through models and extract IC50
+for (pop in names(models)) {
+  model <- models[[pop]]
+  if (is.null(model)) {
+    ic50_val <- NA
+  } else {
+    ic50_val <- tryCatch(
+      ED(model, 50, interval = "none")[1],  # 50% effective dose
+      error = function(e) NA
+    )
+  }
+  
+  ic50_df <- rbind(ic50_df, data.frame(population = pop, IC50 = ic50_val))
+}
+
+
+library(ggplot2)
+
+# Merge fitted values and IC50s (optional, but helpful for faceting)
+# Ensure population is a character/factor in all frames
+fitted_data$population <- as.character(fitted_data$population)
+fluc1$population <- as.character(fluc1$population)
+ic50_df$population <- as.character(ic50_df$population)
+
+# Plot
+ggplot() +
+  # Raw data points
+  geom_point(data = fluc1, aes(x = concentration, y = OD), alpha = 0.6) +
+  
+  # Model fit lines
+  geom_line(data = fitted_data, aes(x = concentration, y = OD), color = "blue", linewidth = 1) +
+  
+  # IC50 vertical lines
+  geom_vline(data = ic50_df, aes(xintercept = IC50), linetype = "dashed", color = "red") +
+  
+  # Log x-axis
+  scale_x_log10() +
+  
+  facet_wrap(~ population, scales = "free") +
+  
+  labs(title = "Logistic fits with IC50 by population",
+       x = "Drug concentration (log scale)",
+       y = "Optical Density (OD)") +
+  theme_minimal()
+ggsave("figures/ic50-fits.png", width = 14, height = 12)  
+
+
+ic50_df %>% 
+  filter(population != "Blank") %>% 
+  ggplot(aes(x = population, y = IC50)) + geom_point() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ggsave("figures/fluc1-ic50.png", width = 8, height = 6)
+
+
+
+# bootstrap the dose response curves --------------------------------------
+
+bootstrap_curve <- function(data, n_boot = 100, conc_grid = NULL) {
+  # Filter to valid data
+  data <- data %>% filter(is.finite(OD), is.finite(concentration), concentration > 0)
+  
+  if (nrow(data) < 4) return(NULL)
+  
+  # Define concentration grid if not supplied
+  if (is.null(conc_grid)) {
+    conc_grid <- exp(seq(log(min(data$concentration)), log(max(data$concentration)), length.out = 100))
+  }
+  
+  # Matrix to store bootstrap predictions
+  preds <- matrix(NA, nrow = n_boot, ncol = length(conc_grid))
+  
+  for (i in 1:n_boot) {
+    boot_sample <- data[sample(nrow(data), replace = TRUE), ]
+    
+    fit <- tryCatch(
+      drm(OD ~ concentration, data = boot_sample, fct = LL.4()),
+      error = function(e) NULL
+    )
+    
+    if (!is.null(fit)) {
+      pred <- tryCatch(
+        predict(fit, newdata = data.frame(concentration = conc_grid)),
+        error = function(e) rep(NA, length(conc_grid))
+      )
+      preds[i, ] <- pred
+    }
+  }
+  
+  # Compute 2.5%, 50%, and 97.5% percentiles
+  ci_df <- data.frame(
+    concentration = conc_grid,
+    OD_lower = apply(preds, 2, quantile, 0.025, na.rm = TRUE),
+    OD_median = apply(preds, 2, quantile, 0.5, na.rm = TRUE),
+    OD_upper = apply(preds, 2, quantile, 0.975, na.rm = TRUE)
+  )
+  
+  return(ci_df)
+}
+
+# Create list to store bootstrap curves
+bootstrap_results <- list()
+
+for (pop in unique(fluc1$population)) {
+  pop_data <- fluc1 %>% filter(population == pop)
+  ci_curve <- bootstrap_curve(pop_data, n_boot = 100)
+  if (!is.null(ci_curve)) {
+    ci_curve$population <- pop
+    bootstrap_results[[pop]] <- ci_curve
+  }
+}
+
+# Combine into one data frame
+ci_all <- do.call(rbind, bootstrap_results)
+
+
+ggplot() +
+  geom_point(data = fluc1, aes(x = concentration, y = OD), alpha = 0.5) +
+  geom_ribbon(data = ci_all, aes(x = concentration, ymin = OD_lower, ymax = OD_upper), fill = "blue", alpha = 0.2) +
+  geom_line(data = ci_all, aes(x = concentration, y = OD_median), color = "blue") +
+  scale_x_log10() +
+  facet_wrap(~ population, scales = "free") +
+  labs(title = "Bootstrapped Logistic Curves with 95% CI",
+       x = "Drug concentration (log scale)",
+       y = "Optical Density (OD)") +
+  theme_minimal()
+ggsave("figures/ic50-fits-boot.png", width = 14, height = 12)  
+
+
+# get the bootstrapped ic 50 values ---------------------------------------
+
+bootstrap_ic50 <- function(data, n_boot = 100) {
+  data <- data %>% filter(is.finite(OD), is.finite(concentration), concentration > 0)
+  if (nrow(data) < 4) return(NULL)
+  
+  ic50_vals <- numeric(n_boot)
+  
+  for (i in 1:n_boot) {
+    boot_sample <- data[sample(nrow(data), replace = TRUE), ]
+    
+    fit <- tryCatch(
+      drm(OD ~ concentration, data = boot_sample, fct = LL.4()),
+      error = function(e) NULL
+    )
+    
+    ic <- tryCatch(
+      if (!is.null(fit)) ED(fit, 50, interval = "none")[1] else NA_real_,
+      error = function(e) NA_real_
+    )
+    
+    # Only accept plausible IC50s
+    if (is.finite(ic) && ic > 0 && ic < max(data$concentration) * 10) {
+      ic50_vals[i] <- ic
+    } else {
+      ic50_vals[i] <- NA
+    }
+  }
+  
+  valid_ics <- ic50_vals[!is.na(ic50_vals)]
+  
+  if (length(valid_ics) < 30) return(NULL)  # drop unreliable estimates
+  
+  quantiles <- quantile(valid_ics, probs = c(0.025, 0.5, 0.975), na.rm = TRUE)
+  
+  return(data.frame(
+    IC50_lower = quantiles[1],
+    IC50_median = quantiles[2],
+    IC50_upper = quantiles[3]
+  ))
+}
+
+
+ic50_boot_results <- list()
+
+for (pop in unique(fluc1$population)) {
+  pop_data <- fluc1 %>% filter(population == pop)
+  res <- bootstrap_ic50(pop_data, n_boot = 100)
+  if (!is.null(res)) {
+    res$population <- pop
+    ic50_boot_results[[pop]] <- res
+  }
+}
+
+# Combine into a tidy data frame
+ic50_boot_df <- bind_rows(ic50_boot_results)
+ic50_boot_df <- ic50_boot_df %>%
+  dplyr::select(population, IC50_median, IC50_lower, IC50_upper) %>% 
+  filter(population != "Blank")
+
+ggplot(ic50_boot_df, aes(x = population, y = IC50_median)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = IC50_lower, ymax = IC50_upper), width = 0.2) +
+  labs(y = "IC50 (bootstrap 95% CI)", x = "Population") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
