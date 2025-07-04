@@ -421,12 +421,17 @@ all_data_fluc <- map_dfr(sheet_names, function(sheet) {
 })
 
 
-fluc1 <- all_data_fluc %>% 
+fluc_raw <- all_data_fluc %>% 
   # filter(grepl("FLZ", sheet_name)) %>%
   rename("population" = "<>") %>% 
   dplyr::select(population, sheet_name, everything()) %>% 
   gather(key = concentration, value = OD, 3:ncol(all_data_fluc)) %>% 
-  filter(!is.na(OD)) %>% 
+  filter(!is.na(OD)) 
+write_csv(fluc_raw, "data-processed/fluconazole-mic-feb262025.csv")
+
+
+
+fluc1 <- fluc_raw %>% 
   mutate(concentration = as.numeric(concentration)) %>% 
   mutate(concentration = ifelse(concentration == 0, 0.1, concentration))
 
@@ -737,5 +742,13 @@ ggplot(ic50_boot_df, aes(x = population, y = IC50_median)) +
   labs(y = "IC50 (bootstrap 95% CI)", x = "Population") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+# next steps for assessing resistance -------------------------------------
+
+### first bring in all the fluconazole data
+### then figure out bootstrapping and a way to assess statistical differences
+## remember that the replicates can be treated as real replicates, so this should be the unique identifier that we fit with the non-linear model
 
 
