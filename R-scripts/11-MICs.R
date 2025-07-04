@@ -5,6 +5,8 @@ library(tidyverse)
 library(readxl)
 library(drc)       # for dose–response models
 library(pracma)    # for AUC via trapezoid
+library(cowplot)
+theme_set(theme_cowplot())
 
 
 thing1 <- read_excel("data-raw/MICs/FINAL/Mar6.25(35C-ev_ALL3+40C-ev_Res)/24h.xlsx", sheet = "Set3_Rep3_AMPB", range = "A24:M32") %>% 
@@ -22,6 +24,20 @@ all_data <- map_dfr(sheet_names, function(sheet) {
   read_excel(file_path, sheet = sheet,range = "A24:M32") %>%
     mutate(sheet_name = sheet)
 })
+
+
+fluc_raw_march <- all_data %>% 
+  filter(grepl("FLZ", sheet_name)) %>%
+  rename("population" = "<>") %>% 
+  dplyr::select(population, sheet_name, everything()) %>% 
+  gather(key = concentration, value = OD, 3:ncol(all_data)) %>%
+  filter(!is.na(OD)) %>% 
+  mutate(concentration = as.numeric(concentration)) 
+write_csv(fluc_raw_march, "data-raw/fluc-mic-march2025.csv")
+
+
+fluc <- fluc_raw_march  %>% 
+  mutate(concentration = ifelse(concentration == 0, 0.1, concentration))
 
 
 casp <- all_data %>% 
@@ -750,5 +766,284 @@ ggplot(ic50_boot_df, aes(x = population, y = IC50_median)) +
 ### first bring in all the fluconazole data
 ### then figure out bootstrapping and a way to assess statistical differences
 ## remember that the replicates can be treated as real replicates, so this should be the unique identifier that we fit with the non-linear model
+## maybe find the reverse logistic model from chlamee rstar?
 
+
+fluc1b <- read_csv("data-raw/fluc-mic-march2025.csv") %>% 
+  mutate(block = "march2025")
+fluc1c <- read_csv("data-processed/fluconazole-mic-feb262025.csv") %>% 
+  mutate(block = "feb2025")
+
+
+all_fluc <- bind_rows(fluc1b, fluc1c) %>%
+  separate(sheet_name, into = c("set", "rep", "drug"), sep = "_")
+
+a2 <- all_fluc %>%
+  unite("pop_rep", population, rep, set, sep = "_")
+  
+str(a2)
+
+a2 %>% 
+  arrange(pop_rep, concentration) %>%
+  drop_na(concentration, OD) %>% 
+  # filter(pop_rep == "40_E7_Rep3") %>% 
+  filter(!grepl("Blank", pop_rep)) %>% 
+  filter(grepl(40, pop_rep)) %>% 
+ggplot(aes(x = concentration, y = OD, group = interaction(pop_rep), color = pop_rep)) + geom_point() + geom_path() +
+  theme(legend.position="none") + scale_x_log10()
+  
+
+### now let's figure out how to fit these curves using nlsLM
+
+
+library(minpack.lm)
+library(car)
+
+
+a3 <- a2 %>% 
+  filter(concentration > 0) %>% 
+  filter(!grepl("Blank", pop_rep)) %>% 
+  filter(pop_rep == "40_C9_Rep3_Set4")
+
+start_vals <- list(
+  d = max(a3$OD),
+  b = 10,
+  e = median(a3$concentration)
+)
+
+# Fit the model
+fit <- nlsLM(
+  OD ~ d / (1 + exp(b * (log(concentration) - log(e)))),
+  data = a3,
+  start = start_vals,
+  lower = c(d = 0, b = 0.01, e = min(a3$concentration)),
+  upper = c(d = 2, b = 30, e = max(a3$concentration) * 5)
+)
+
+summary(fit)
+boot_fit <- Boot(fit, f = coef, method = "residual", R = 5000)
+
+summary(boot_fit)
+ic50_vals <- boot_fit$t[, "e"]
+
+hist(ic50_vals, breaks = 50, col = "skyblue", main = "Bootstrapped IC₅₀", xlab = "IC₅₀")
+abline(v = quantile(ic50_vals, c(0.025, 0.975)), col = "red", lty = 2)
+
+
+
+# 95% percentile CIs for each parameter
+confint(boot_fit, level = 0.95, type = "perc")
+
+
+concentration_grid <- data.frame(
+  concentration = exp(seq(
+    log(min(a3$concentration)),
+    log(max(a3$concentration)),
+    length.out = 100
+  ))
+)
+
+
+# Extract bootstrapped parameter matrix (each row: one bootstrap)
+boot_params <- boot_fit$t
+boot_params <- boot_params[complete.cases(boot_params), ]  # drop failures
+
+# For each row of parameters, predict the fitted values
+pred_matrix <- apply(boot_params, 1, function(pars) {
+  d <- pars["d"]
+  b <- pars["b"]
+  e <- pars["e"]
+  d / (1 + exp(b * (log(concentration_grid$concentration) - log(e))))
+})
+
+# Convert to data frame and compute ribbons
+pred_df <- concentration_grid %>%
+  mutate(
+    fit = predict(fit, newdata = .),
+    lower = apply(pred_matrix, 1, quantile, probs = 0.025, na.rm = TRUE),
+    upper = apply(pred_matrix, 1, quantile, probs = 0.975, na.rm = TRUE)
+  )
+
+
+ggplot() +
+  geom_point(alpha = 0.6, color = "black", data = a3, aes(x = concentration, y = OD)) +
+  geom_ribbon(
+    data = pred_df,
+    aes(ymin = lower, ymax = upper, x = concentration),
+    fill = "skyblue", alpha = 0.3
+  ) +
+  geom_line(data = pred_df, aes(y = fit, x = concentration), color = "blue", size = 1) +
+  scale_x_log10() +
+  labs(title = "Dose-Response with 95% CI Ribbon",
+       x = "Drug concentration (log scale)",
+       y = "OD") +
+  theme_minimal()
+
+
+
+# Predict over a smooth range
+newdata <- data.frame(concentration = exp(seq(log(min(a3$concentration)),
+                                              log(max(a3$concentration)),
+                                              length.out = 100)))
+
+newdata$fit <- predict(fit, newdata)
+
+# Plot
+plot(OD ~ concentration, data = a3, log = "x", pch = 16)
+lines(fit ~ concentration, data = newdata, col = "blue", lwd = 2)
+
+
+
+# now fit all of them -----------------------------------------------------
+
+library(minpack.lm)
+library(dplyr)
+
+a3 <- a2 %>% 
+  filter(concentration > 0) %>% 
+  filter(!grepl("Blank", pop_rep)) 
+
+fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123) {
+  set.seed(seed)
+  
+  pops <- unique(data[[group_var]])
+  ic50_list <- list()
+  pred_list <- list()
+  raw_list <- list()
+  boot_param_list <- list()  # NEW
+  
+  for (pop in pops) {
+    message("Fitting: ", pop)
+    
+    subdata <- data %>%
+      filter(.data[[group_var]] == pop, concentration > 0)
+    
+    if (nrow(subdata) < 5) next
+    
+    start_vals <- list(
+      d = max(subdata$OD),
+      b = 10,
+      e = median(subdata$concentration)
+    )
+    
+    fit <- tryCatch(
+      nlsLM(
+        OD ~ d / (1 + exp(b * (log(concentration) - log(e)))),
+        data = subdata,
+        start = start_vals,
+        lower = c(d = 0, b = 0.01, e = min(subdata$concentration)),
+        upper = c(d = 2, b = 30, e = max(subdata$concentration) * 5)
+      ),
+      error = function(e) NULL
+    )
+    
+    if (is.null(fit)) next
+    
+    # Bootstrap
+    boot_fit <- Boot(fit, f = coef, method = "residual", R = R)
+    boot_params <- boot_fit$t
+    boot_params <- boot_params[complete.cases(boot_params), ]
+    
+    # Store IC50 summary
+    ic50_vals <- boot_params[, "e"]
+    ic50_summary <- data.frame(
+      pop_rep = pop,
+      IC50 = coef(fit)["e"],
+      IC50_lower = quantile(ic50_vals, 0.025, na.rm = TRUE),
+      IC50_upper = quantile(ic50_vals, 0.975, na.rm = TRUE),
+      n_boot = nrow(boot_params)
+    )
+    ic50_list[[pop]] <- ic50_summary
+    
+    # Store bootstrapped parameter values
+    boot_df <- as.data.frame(boot_params)
+    boot_df$bootstrap_id <- seq_len(nrow(boot_df))
+    boot_df[[group_var]] <- pop
+    boot_param_list[[pop]] <- boot_df
+    
+    # Prediction grid
+    grid <- data.frame(
+      concentration = exp(seq(
+        log(min(subdata$concentration)),
+        log(max(subdata$concentration)),
+        length.out = 100
+      ))
+    )
+    
+    pred_matrix <- apply(boot_params, 1, function(pars) {
+      d <- pars["d"]
+      b <- pars["b"]
+      e <- pars["e"]
+      d / (1 + exp(b * (log(grid$concentration) - log(e))))
+    })
+    
+    grid$fit <- predict(fit, newdata = grid)
+    grid$lower <- apply(pred_matrix, 1, quantile, probs = 0.025, na.rm = TRUE)
+    grid$upper <- apply(pred_matrix, 1, quantile, probs = 0.975, na.rm = TRUE)
+    grid[[group_var]] <- pop
+    
+    pred_list[[pop]] <- grid
+    raw_list[[pop]] <- subdata
+  }
+  
+  list(
+    ic50_table = bind_rows(ic50_list),
+    fit_data = bind_rows(pred_list),
+    raw_data = bind_rows(raw_list),
+    boot_params = bind_rows(boot_param_list)  # NEW: all bootstrapped params
+  )
+}
+
+
+results <- fit_bootstrap_ic50(a3)
+
+tolerances <- results$ic50_table
+t2 <- tolerances %>% 
+  mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
+                                       grepl(35, pop_rep) ~ "evolved 35",
+                                       grepl("fR", pop_rep) ~ "fRS585"))
+
+t2 %>% 
+  ggplot(aes(x = pop_rep, y = IC50, color = evolution_history)) + geom_point() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
+  theme(legend.position = "none")
+ggsave("figures/mics-fluc-wide.png", width = 20, height = 6)
+
+library(plotrix)
+
+t3 <- t2 %>% 
+  # filter(IC50 < 100) %>% 
+  separate(pop_rep, into = c("evolution_temp", "well", "rep", "set"), sep = "_", remove = FALSE) %>% 
+  unite("hist_well", evolution_temp, well, remove = FALSE) %>%
+  # mutate(hist_well = ifelse(grepl("fR", hist_well), "fRS585", hist_well)) %>%
+  group_by(hist_well, evolution_history) %>% 
+  summarise(mean_ic50 = mean(IC50)) %>% 
+  group_by(evolution_history) %>% 
+  summarise(mean_ic502 = mean(mean_ic50),
+            se_ic50 = std.error(mean_ic50))
+
+
+
+  ggplot() +
+  geom_pointrange(aes(x = evolution_history, y = mean_ic502, ymin = mean_ic502 - se_ic50, ymax = mean_ic502 + se_ic50), data = t3, color = "blue") + ylab("IC50 (fluconazole)")
+  ggsave("figures/ic50s-evolution-history.png", width = 6, height = 4)
+  
+  
+
+
+ggplot() +
+  geom_point(size = 1.5, alpha = 0.6, data = raw_all, aes(x = concentration, y = OD)) +
+  geom_ribbon(data = pred_all, aes(x = concentration, ymin = lower, ymax = upper), 
+              fill = "skyblue", alpha = 0.3) +
+  geom_line(data = pred_all, aes(y = fit, x = concentration), color = "blue", size = 1) +
+  scale_x_log10() +
+  facet_wrap(~ pop_rep) +
+  labs(title = "Dose-Response Curves with 95% Bootstrapped CI",
+       x = "Drug concentration (log scale)",
+       y = "OD") +
+  theme(legend.position = "none")
+ggsave("figures/mic-logistic-boot.png", width = 16, height = 16)
+
+
+boot_fit$t[, "e"]
 
