@@ -920,6 +920,7 @@ a3 <- a2 %>%
 fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123) {
   set.seed(seed)
   
+  warning_log <- list()  # NEW: capture warnings
   pops <- unique(data[[group_var]])
   ic50_list <- list()
   pred_list <- list()
@@ -948,16 +949,25 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
       e = median(subdata$concentration)
     )
     
+    fit_warnings <- character(0)  # container for warnings
+    
     fit <- tryCatch(
-      eval(bquote(
-        nlsLM(
-          OD ~ d / (1 + exp(b * (log(concentration) - log(e)))),
-          data = .(subdata),
-          start = .(start_vals),
-          lower = c(d = 0, b = 0.01, e = min(.(subdata)$concentration)),
-          upper = c(d = 2, b = 30, e = max(.(subdata)$concentration) * 5)
-        )
-      )),
+      withCallingHandlers(
+        expr = eval(bquote(
+          nlsLM(
+            OD ~ d / (1 + exp(b * (log(concentration) - log(e)))),
+            data = .(subdata),
+            start = .(start_vals),
+            lower = c(d = 0, b = 0.01, e = min(.(subdata)$concentration)),
+            upper = c(d = 2, b = 30, e = max(.(subdata)$concentration) * 5),
+            control = nls.lm.control(maxiter = 500)
+          )
+        )),
+        warning = function(w) {
+          fit_warnings <<- c(fit_warnings, conditionMessage(w))
+          invokeRestart("muffleWarning")  # suppress console output
+        }
+      ),
       error = function(e) {
         error_log[[pop]] <<- data.frame(
           pop_rep = pop,
@@ -966,6 +976,16 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
         return(NULL)
       }
     )
+    
+    # After fitting, store warnings if any
+    if (length(fit_warnings) > 0) {
+      warning_log[[pop]] <- data.frame(
+        pop_rep = pop,
+        warning_message = fit_warnings,
+        stringsAsFactors = FALSE
+      )
+    }
+    
     if (is.null(fit)) next
     
     # Store point-estimate parameters
@@ -1024,8 +1044,10 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
   # Combine error messages into a dataframe (if any)
   error_df <- if (length(error_log) > 0) bind_rows(error_log) else data.frame()
   fit_param_df <- if (length(fit_param_list) > 0) bind_rows(fit_param_list) else data.frame()
+  warning_df <- if (length(warning_log) > 0) bind_rows(warning_log) else data.frame()
   
   list(
+    warning_log = warning_df,
     ic50_table = bind_rows(ic50_list),
     fit_data = bind_rows(pred_list),
     raw_data = bind_rows(raw_list),
@@ -1041,7 +1063,7 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
 results <- fit_bootstrap_ic50(a3) ### come back here to make sure none of these are hitting against the bounds
 
 View(results$fit_data)
-
+View(results$warning_log)
 
 
 boot_params1 <- results$boot_params
