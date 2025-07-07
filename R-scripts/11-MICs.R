@@ -800,10 +800,10 @@ library(minpack.lm)
 library(car)
 
 
-a3 <- a2 %>% 
-  filter(concentration > 0) %>% 
-  filter(!grepl("Blank", pop_rep)) %>% 
-  filter(pop_rep == "40_C9_Rep3_Set4")
+# a3 <- a2 %>% 
+#   filter(concentration > 0) %>% 
+#   filter(!grepl("Blank", pop_rep)) %>% 
+#   filter(pop_rep == "40_C9_Rep3_Set4")
 
 start_vals <- list(
   d = max(a3$OD),
@@ -899,9 +899,23 @@ lines(fit ~ concentration, data = newdata, col = "blue", lwd = 2)
 library(minpack.lm)
 library(dplyr)
 
+
+fluc1b <- read_csv("data-raw/fluc-mic-march2025.csv") %>% 
+  mutate(block = "march2025")
+fluc1c <- read_csv("data-processed/fluconazole-mic-feb262025.csv") %>% 
+  mutate(block = "feb2025")
+
+
+all_fluc <- bind_rows(fluc1b, fluc1c) %>%
+  separate(sheet_name, into = c("set", "rep", "drug"), sep = "_")
+
+a2 <- all_fluc %>%
+  unite("pop_rep", population, rep, set, sep = "_")
 a3 <- a2 %>% 
   filter(concentration > 0) %>% 
   filter(!grepl("Blank", pop_rep)) 
+
+# data <- a3
 
 fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123) {
   set.seed(seed)
@@ -910,7 +924,9 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
   ic50_list <- list()
   pred_list <- list()
   raw_list <- list()
-  boot_param_list <- list()  # NEW
+  boot_param_list <- list()
+  fit_param_list <- list()  # NEW
+  error_log <- list()
   
   for (pop in pops) {
     message("Fitting: ", pop)
@@ -918,7 +934,13 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
     subdata <- data %>%
       filter(.data[[group_var]] == pop, concentration > 0)
     
-    if (nrow(subdata) < 5) next
+    if (nrow(subdata) < 5) {
+      error_log[[pop]] <- data.frame(
+        pop_rep = pop,
+        error_message = "Insufficient data points"
+      )
+      next
+    }
     
     start_vals <- list(
       d = max(subdata$OD),
@@ -927,24 +949,37 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
     )
     
     fit <- tryCatch(
-      nlsLM(
-        OD ~ d / (1 + exp(b * (log(concentration) - log(e)))),
-        data = subdata,
-        start = start_vals,
-        lower = c(d = 0, b = 0.01, e = min(subdata$concentration)),
-        upper = c(d = 2, b = 30, e = max(subdata$concentration) * 5)
-      ),
-      error = function(e) NULL
+      eval(bquote(
+        nlsLM(
+          OD ~ d / (1 + exp(b * (log(concentration) - log(e)))),
+          data = .(subdata),
+          start = .(start_vals),
+          lower = c(d = 0, b = 0.01, e = min(.(subdata)$concentration)),
+          upper = c(d = 2, b = 30, e = max(.(subdata)$concentration) * 5)
+        )
+      )),
+      error = function(e) {
+        error_log[[pop]] <<- data.frame(
+          pop_rep = pop,
+          error_message = e$message
+        )
+        return(NULL)
+      }
     )
-    
     if (is.null(fit)) next
+    
+    # Store point-estimate parameters
+    fit_param_list[[pop]] <- data.frame(
+      pop_rep = pop,
+      t(coef(fit))
+    )
     
     # Bootstrap
     boot_fit <- Boot(fit, f = coef, method = "residual", R = R)
     boot_params <- boot_fit$t
     boot_params <- boot_params[complete.cases(boot_params), ]
     
-    # Store IC50 summary
+    # IC50 summary
     ic50_vals <- boot_params[, "e"]
     ic50_summary <- data.frame(
       pop_rep = pop,
@@ -955,7 +990,7 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
     )
     ic50_list[[pop]] <- ic50_summary
     
-    # Store bootstrapped parameter values
+    # Bootstrapped parameter values
     boot_df <- as.data.frame(boot_params)
     boot_df$bootstrap_id <- seq_len(nrow(boot_df))
     boot_df[[group_var]] <- pop
@@ -986,16 +1021,28 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
     raw_list[[pop]] <- subdata
   }
   
+  # Combine error messages into a dataframe (if any)
+  error_df <- if (length(error_log) > 0) bind_rows(error_log) else data.frame()
+  fit_param_df <- if (length(fit_param_list) > 0) bind_rows(fit_param_list) else data.frame()
+  
   list(
     ic50_table = bind_rows(ic50_list),
     fit_data = bind_rows(pred_list),
     raw_data = bind_rows(raw_list),
-    boot_params = bind_rows(boot_param_list)  # NEW: all bootstrapped params
+    boot_params = bind_rows(boot_param_list),
+    fit_params = fit_param_df,         # NEW: original model-fit params
+    error_log = error_df
   )
 }
 
+   
+
 
 results <- fit_bootstrap_ic50(a3) ### come back here to make sure none of these are hitting against the bounds
+
+View(results$fit_data)
+
+
 
 boot_params1 <- results$boot_params
 
@@ -1013,11 +1060,32 @@ ggplot() +
 ggsave("figures/mics-pointrange.png", width = 12, height = 5)
 
 
+e2 <- boot_params1 %>%
+  group_by(pop_rep) %>% 
+  summarise(mean_e = mean(e),
+            upper_e = quantile(e, 0.975),
+            lower_e = quantile(e, 0.025)) %>% 
+  mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
+                                       grepl(35, pop_rep) ~ "evolved 35",
+                                       grepl("fR", pop_rep) ~ "fRS585"))
+
+
+ggplot() +
+  geom_pointrange(aes(x = pop_rep, y = mean_e, ymin = lower_e, ymax = upper_e, color = evolution_history), data = e2)
+ggsave("figures/mics-pointrange-e.png", width = 12, height = 5)
+
+
+
 ### note that this boot file is missing a bunch of fits, presumably because they failed at the fitting step
 boot_params1 %>% 
   ggplot(aes(x = b)) + geom_density() +
   facet_wrap( ~ pop_rep, scales = "free")
-ggsave("figures/mic-b.png", width = 20, height = 20)
+ggsave("figures/mic-b.png", width = 25, height = 25)
+
+boot_params1 %>% 
+  ggplot(aes(x = e)) + geom_density() +
+  facet_wrap( ~ pop_rep, scales = "free")
+ggsave("figures/mic-e.png", width = 25, height = 25)
 
 
 
@@ -1034,6 +1102,9 @@ t2 %>%
 ggsave("figures/mics-fluc-wide.png", width = 20, height = 6)
 
 library(plotrix)
+
+
+
 
 t3 <- t2 %>% 
   # filter(IC50 < 100) %>% 
@@ -1052,8 +1123,44 @@ t3 <- t2 %>%
   geom_pointrange(aes(x = evolution_history, y = mean_ic502, ymin = mean_ic502 - se_ic50, ymax = mean_ic502 + se_ic50), data = t3, color = "blue") + ylab("IC50 (fluconazole)")
   ggsave("figures/ic50s-evolution-history.png", width = 6, height = 4)
   
+  fit_data2 <- results$fit_data %>% 
+    mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
+                                         grepl(35, pop_rep) ~ "evolved 35",
+                                         grepl("fR", pop_rep) ~ "fRS585"))
   
+  
+  raw_data2 <- results$raw_data %>% 
+    mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
+                                         grepl(35, pop_rep) ~ "evolved 35",
+                                         grepl("fR", pop_rep) ~ "fRS585"))
 
+ggplot() +
+  geom_point(size = 1.5, alpha = 0.6, data = raw_data2, aes(x = concentration, y = OD)) +
+  geom_ribbon(data =  fit_data2, aes(x = concentration, ymin = lower, ymax = upper, group = pop_rep), 
+              fill = "skyblue", alpha = 0.3) +
+  geom_line(data =  fit_data2, aes(y = fit, x = concentration, group = pop_rep), color = "blue", size = .5) +
+  scale_x_log10() +
+  facet_wrap(~ evolution_history) +
+  labs(title = "Dose-Response Curves with 95% Bootstrapped CI",
+       x = "Drug concentration (log scale)",
+       y = "OD") +
+  theme(legend.position = "none")
+ggsave("figures/mic-logistic-boot.png", width = 25, height = 25)
+ggsave("figures/mic-logistic-boot-facet.png", width = 15, height = 10)
+
+
+ggplot() +
+  geom_point(size = 1.5, alpha = 0.6, data = raw_data2, aes(x = concentration, y = OD)) +
+  geom_ribbon(data =  fit_data2, aes(x = concentration, ymin = lower, ymax = upper, group = pop_rep), 
+              fill = "grey", alpha = 0.3) +
+  geom_line(data =  fit_data2, aes(y = fit, x = concentration, group = pop_rep, color = evolution_history), size = .5) +
+  scale_x_log10() +
+  facet_wrap(~ pop_rep) +
+  labs(title = "Dose-Response Curves with 95% Bootstrapped CI",
+       x = "Drug concentration (log scale)",
+       y = "OD") +
+  theme(legend.position = "none")
+ggsave("figures/mic-logistic-boot-color-history.png", width = 25, height = 25)
 
 ggplot() +
   geom_point(size = 1.5, alpha = 0.6, data = raw_all, aes(x = concentration, y = OD)) +
@@ -1061,13 +1168,39 @@ ggplot() +
               fill = "skyblue", alpha = 0.3) +
   geom_line(data = pred_all, aes(y = fit, x = concentration), color = "blue", size = 1) +
   scale_x_log10() +
-  facet_wrap(~ pop_rep) +
+  facet_wrap(~ evolution_history) +
   labs(title = "Dose-Response Curves with 95% Bootstrapped CI",
        x = "Drug concentration (log scale)",
        y = "OD") +
   theme(legend.position = "none")
-ggsave("figures/mic-logistic-boot.png", width = 16, height = 16)
+ggsave("figures/mic-logistic-boot.png", width = 25, height = 25)
 
 
-boot_fit$t[, "e"]
 
+### let's compare the boot results with the means to just the raw fitted parameters
+
+fp <- results$fit_params
+
+fpb <- fp %>% 
+  mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
+                                       grepl(35, pop_rep) ~ "evolved 35",
+                                       grepl("fR", pop_rep) ~ "fRS585")) 
+
+
+fp2 <- fp %>% 
+  mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
+                                       grepl(35, pop_rep) ~ "evolved 35",
+                                       grepl("fR", pop_rep) ~ "fRS585")) %>% 
+  separate(pop_rep, into = c("evolution_temp", "well", "rep", "set"), sep = "_", remove = FALSE) %>% 
+  unite("hist_well", evolution_temp, well, remove = FALSE) %>%
+  group_by(hist_well, evolution_history) %>% 
+  summarise(mean_ic50 = mean(e)) %>% 
+  group_by(evolution_history) %>% 
+  summarise(mean_ic502 = mean(mean_ic50),
+            se_ic50 = std.error(mean_ic50))
+
+ggplot() +
+  geom_jitter(aes(x = evolution_history, y = e), data = fpb, alpha = .5, width = .3) +
+  geom_pointrange(aes(x = evolution_history, y = mean_ic502, ymin = mean_ic502 - se_ic50, ymax = mean_ic502 + se_ic50), data = fp2, color = "blue") + ylab("IC50 (fluconazole)") 
+  
+ggsave("figures/ic50s-evolution-history-params-all-data.png", width = 6, height = 4)
