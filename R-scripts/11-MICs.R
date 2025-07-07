@@ -995,7 +995,31 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
 }
 
 
-results <- fit_bootstrap_ic50(a3)
+results <- fit_bootstrap_ic50(a3) ### come back here to make sure none of these are hitting against the bounds
+
+boot_params1 <- results$boot_params
+
+b2 <- boot_params1 %>%
+  group_by(pop_rep) %>% 
+  summarise(mean_b = mean(b),
+            upper_b = quantile(b, 0.975),
+            lower_b = quantile(b, 0.025)) %>% 
+  mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
+                                       grepl(35, pop_rep) ~ "evolved 35",
+                                       grepl("fR", pop_rep) ~ "fRS585"))
+
+ggplot() +
+  geom_pointrange(aes(x = pop_rep, y = mean_b, ymin = lower_b, ymax = upper_b, color = evolution_history), data = b2)
+ggsave("figures/mics-pointrange.png", width = 12, height = 5)
+
+
+### note that this boot file is missing a bunch of fits, presumably because they failed at the fitting step
+boot_params1 %>% 
+  ggplot(aes(x = b)) + geom_density() +
+  facet_wrap( ~ pop_rep, scales = "free")
+ggsave("figures/mic-b.png", width = 20, height = 20)
+
+
 
 tolerances <- results$ic50_table
 t2 <- tolerances %>% 
