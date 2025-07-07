@@ -1195,8 +1195,7 @@ problem_reps <- c(
 "40_E11_Rep1_Plate2")
 
 
-low_ic50 <- t2 %>% 
-  top_n(wt = IC50, n = -7)
+
 
 ggplot() +
   geom_point(size = 1.5, alpha = 0.6, data = subset(raw_data2, pop_rep %in% problem_reps), aes(x = concentration, y = OD)) +
@@ -1212,17 +1211,42 @@ ggplot() +
 # ggsave("figures/mic-logistic-boot.png", width = 25, height = 25)
 ggsave("figures/mic-logistic-boot-facet.png", width = 15, height = 10)
 
+
+### look at the extremes
+
+low_ic50 <- t2 %>% 
+  top_n(wt = IC50, n = -10)
+
+high_ic50 <- t2 %>% 
+  top_n(wt = IC50, n = 10)
+fit_data3 <- fit_data2 %>% 
+  mutate(low_high_ic50 = ifelse(pop_rep %in% low_ic50$pop_rep, "low_ic50", NA))
+
 ggplot() +
-  geom_point(size = 1.5, alpha = 0.6, data = subset(raw_data2, pop_rep %in% problem_reps), aes(x = concentration, y = OD)) +
-  geom_ribbon(data =  subset(fit_data2, pop_rep %in% problem_reps), aes(x = concentration, ymin = lower, ymax = upper, group = pop_rep), 
-              fill = "skyblue", alpha = 0.3) +
-  geom_line(data =  subset(fit_data2, pop_rep %in% problem_reps), aes(y = fit, x = concentration, group = pop_rep), color = "blue", size = .5) +
+  geom_point(size = 1.5, alpha = 0.6, data = subset(raw_data2, pop_rep %in% low_ic50$pop_rep | pop_rep %in% high_ic50$pop_rep), aes(x = concentration, y = OD)) +
+  geom_ribbon(data =  subset(fit_data3, pop_rep %in% low_ic50$pop_rep | pop_rep %in% high_ic50$pop_rep), aes(x = concentration, ymin = lower, ymax = upper, group = pop_rep, fill = low_high_ic50), 
+               alpha = 0.3) +
+  geom_line(data =  subset(fit_data3, pop_rep %in% low_ic50$pop_rep | pop_rep %in% high_ic50$pop_rep), aes(y = fit, x = concentration, group = pop_rep, color = low_high_ic50), size = .5) +
   scale_x_log10() +
   facet_wrap(~ pop_rep) +
   labs(title = "Dose-Response Curves with 95% Bootstrapped CI",
        x = "Drug concentration (log scale)",
        y = "OD") +
   theme(legend.position = "none")
+ggsave("figures/low-ic-50.png", width = 10, height = 10)
+
+ggplot() +
+  geom_point(size = 1.5, alpha = 0.6, data = subset(raw_data2, pop_rep %in% low_ic50$pop_rep | pop_rep %in% high_ic50$pop_rep), aes(x = concentration, y = OD)) +
+  geom_ribbon(data =  subset(fit_data3, pop_rep %in% low_ic50$pop_rep | pop_rep %in% high_ic50$pop_rep), aes(x = concentration, ymin = lower, ymax = upper, group = pop_rep, fill = low_high_ic50), 
+              alpha = 0.3) +
+  geom_line(data =  subset(fit_data3, pop_rep %in% low_ic50$pop_rep | pop_rep %in% high_ic50$pop_rep), aes(y = fit, x = concentration, group = pop_rep, color = low_high_ic50), size = .5) +
+  scale_x_log10() +
+  # facet_wrap(~ pop_rep) +
+  labs(title = "Dose-Response Curves with 95% Bootstrapped CI",
+       x = "Drug concentration (log scale)",
+       y = "OD") +
+  theme(legend.position = "none")
+ggsave("figures/low-high-ic-50.png", width = 10, height = 10)
 
 
 
