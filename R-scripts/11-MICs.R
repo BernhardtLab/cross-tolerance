@@ -898,6 +898,7 @@ lines(fit ~ concentration, data = newdata, col = "blue", lwd = 2)
 
 library(minpack.lm)
 library(dplyr)
+library(car)
 
 
 fluc1b <- read_csv("data-raw/fluc-mic-march2025.csv") %>% 
