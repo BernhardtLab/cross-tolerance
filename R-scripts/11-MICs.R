@@ -960,7 +960,7 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
             data = .(subdata),
             start = .(start_vals),
             lower = c(d = 0, b = 0.01, e = min(.(subdata)$concentration)),
-            upper = c(d = 2, b = 30, e = max(.(subdata)$concentration) * 5),
+            upper = c(d = 2, b = 50, e = max(.(subdata)$concentration) * 5),
             control = nls.lm.control(maxiter = 500)
           )
         )),
@@ -1053,12 +1053,10 @@ fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123
     fit_data = bind_rows(pred_list),
     raw_data = bind_rows(raw_list),
     boot_params = bind_rows(boot_param_list),
-    fit_params = fit_param_df,         # NEW: original model-fit params
+    fit_params = fit_param_df,         
     error_log = error_df
   )
 }
-
-   
 
 
 results <- fit_bootstrap_ic50(a3) ### come back here to make sure none of these are hitting against the bounds
@@ -1103,12 +1101,12 @@ ggsave("figures/mics-pointrange-e.png", width = 12, height = 5)
 boot_params1 %>% 
   ggplot(aes(x = b)) + geom_density() +
   facet_wrap( ~ pop_rep, scales = "free")
-ggsave("figures/mic-b.png", width = 25, height = 25)
+ggsave("figures/mic-b.png", width = 30, height = 30)
 
 boot_params1 %>% 
   ggplot(aes(x = e)) + geom_density() +
   facet_wrap( ~ pop_rep, scales = "free")
-ggsave("figures/mic-e.png", width = 25, height = 25)
+ggsave("figures/mic-e.png", width = 30, height = 30)
 
 
 
@@ -1123,6 +1121,13 @@ t2 %>%
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
   theme(legend.position = "none")
 ggsave("figures/mics-fluc-wide.png", width = 20, height = 6)
+
+t2 %>% 
+  ggplot(aes(x = forcats::fct_reorder(pop_rep, IC50), y = IC50, color = evolution_history)) + geom_point() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
+  theme(legend.position = "none") +
+  coord_flip()
+ggsave("figures/mics-fluc-tall.png", width = 10, height = 30)
 
 library(plotrix)
 
@@ -1168,8 +1173,59 @@ ggplot() +
        x = "Drug concentration (log scale)",
        y = "OD") +
   theme(legend.position = "none")
-ggsave("figures/mic-logistic-boot.png", width = 25, height = 25)
+# ggsave("figures/mic-logistic-boot.png", width = 25, height = 25)
 ggsave("figures/mic-logistic-boot-facet.png", width = 15, height = 10)
+
+problem_reps <- c(
+# "40_D4_Rep3_Plate2",
+# "40_C7_Rep1_Plate1",
+# "40_C5_Rep1_Plate1",
+# "40_F2_Rep2_Plate3",
+# "40_B6_Rep2_Plate1",
+# "35_F4_Rep2_Plate3",
+# "35_F4_Rep3_Set3",
+# "40_E9_Rep3_Plate2",
+# "40_E9_Rep1_Plate2",
+"40_G9_Rep3_Set4",
+"40_G9_Rep1_Set4",
+"40_G9_Rep3_Plate3",
+"40_G11_Rep3_Plate3",
+"40_G11_Rep1_Plate3",
+"40_G11_Rep3_Set4",
+"40_E11_Rep1_Plate2")
+
+
+low_ic50 <- t2 %>% 
+  top_n(wt = IC50, n = -7)
+
+ggplot() +
+  geom_point(size = 1.5, alpha = 0.6, data = subset(raw_data2, pop_rep %in% problem_reps), aes(x = concentration, y = OD)) +
+  geom_ribbon(data =  subset(fit_data2, pop_rep %in% problem_reps), aes(x = concentration, ymin = lower, ymax = upper, group = pop_rep), 
+              fill = "skyblue", alpha = 0.3) +
+  geom_line(data =  subset(fit_data2, pop_rep %in% problem_reps), aes(y = fit, x = concentration, group = pop_rep), color = "blue", size = .5) +
+  scale_x_log10() +
+  facet_wrap(~ pop_rep) +
+  labs(title = "Dose-Response Curves with 95% Bootstrapped CI",
+       x = "Drug concentration (log scale)",
+       y = "OD") +
+  theme(legend.position = "none")
+# ggsave("figures/mic-logistic-boot.png", width = 25, height = 25)
+ggsave("figures/mic-logistic-boot-facet.png", width = 15, height = 10)
+
+ggplot() +
+  geom_point(size = 1.5, alpha = 0.6, data = subset(raw_data2, pop_rep %in% problem_reps), aes(x = concentration, y = OD)) +
+  geom_ribbon(data =  subset(fit_data2, pop_rep %in% problem_reps), aes(x = concentration, ymin = lower, ymax = upper, group = pop_rep), 
+              fill = "skyblue", alpha = 0.3) +
+  geom_line(data =  subset(fit_data2, pop_rep %in% problem_reps), aes(y = fit, x = concentration, group = pop_rep), color = "blue", size = .5) +
+  scale_x_log10() +
+  facet_wrap(~ pop_rep) +
+  labs(title = "Dose-Response Curves with 95% Bootstrapped CI",
+       x = "Drug concentration (log scale)",
+       y = "OD") +
+  theme(legend.position = "none")
+
+
+
 
 
 ggplot() +
