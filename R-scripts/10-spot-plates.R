@@ -8,6 +8,7 @@ library(readxl)
 library(janitor)
 library(cowplot)
 theme_set(theme_cowplot())
+library(plotrix)
 
 plate41C_Oct <- read_excel("data-raw/Spot plates quanitification.xlsx", sheet = "Oct29-31.24.AllG10_41C") %>% 
   clean_names() %>% 
@@ -19,7 +20,7 @@ plate41C_Oct <- read_excel("data-raw/Spot plates quanitification.xlsx", sheet = 
                                        grepl("CASP", population) ~ "Caspofungin evolved",
                                        TRUE ~ population)) %>% 
   mutate(test_temperature = 41) %>% 
-  mutate(block = 0)
+  mutate(block = "0")
 
 str(plate41C_Oct)
 
@@ -49,7 +50,7 @@ plate41C_Jan5 <- read_excel("data-raw/Spot plates quanitification.xlsx", sheet =
                                        grepl("CASP", population) ~ "Caspofungin evolved",
                                        TRUE ~ population)) %>% 
   mutate(test_temperature = 41) %>% 
-  mutate(block = 1)
+  mutate(block = "1")
 
 
 plate41C_Jan5 %>% 
@@ -78,7 +79,7 @@ plate41C_Jan5_r2 <- read_excel("data-raw/Spot plates quanitification.xlsx", shee
                                        grepl("CASP", population) ~ "Caspofungin evolved",
                                        TRUE ~ population)) %>% 
   mutate(test_temperature = 41) %>% 
-  mutate(block = 2)
+  mutate(block = "2")
 
 
 plate41C_Jan5_r2 %>% 
@@ -106,7 +107,7 @@ plate41C_Jan5_r3 <- read_excel("data-raw/Spot plates quanitification.xlsx", shee
                                        TRUE ~ population)) %>% 
   filter(!is.na(area_pixels)) %>% 
   mutate(test_temperature = 41)%>% 
-  mutate(block = 3)
+  mutate(block = "3")
 
 View(plate41C_Jan5_r3)
 
@@ -135,7 +136,7 @@ plate35C_oct <- read_excel("data-raw/Spot plates quanitification.xlsx", sheet = 
                                        TRUE ~ population)) %>% 
   filter(!is.na(area_pixels)) %>% 
   mutate(test_temperature = 35) %>% 
-  mutate(block = 1)
+  mutate(block = "0b")
 
 View(plate35C_oct)
 
@@ -152,7 +153,7 @@ plate35C_oct %>%
 ggsave("figures/spot-plates-35C-oct.png", width = 8, height = 6)
 
 
-all_plates <- bind_rows(plate35C_oct, plate41C_Jan5, plate41C_Jan5_r2, plate41C_Jan5_r3)
+all_plates <- bind_rows(plate35C_oct, plate41C_Jan5, plate41C_Jan5_r2, plate41C_Jan5_r3, plate41C_Oct)
 write_csv(all_plates, "data-processed/all-spot-plates.csv")
 
 
@@ -211,20 +212,81 @@ all_plates %>%
   facet_wrap( ~ test_temperature) +
   scale_x_log10()
 
-mod1 <- lm(area_pixels ~ evolution_history + test_temperature + dilution + evolution_history*test_temperature*dilution, data = all_plates_sub)
-summary(mod1)  
 
-mod1 <- lm(total_area ~ evolution_history*test_temperature*block, data = ap2)
-summary(mod1)  
+ap2b <- all_plates %>% 
+  filter(dilution != 1) %>%
+  filter(evolution_history != "(d)fRS585") %>%
+  filter(evolution_history != "fRS585") %>%
+  filter(block != 3) %>% 
+  filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
+  group_by(population, set, row, test_temperature, evolution_history, block) %>% 
+  summarise(total_area = sum(area_pixels))
+
 
 
 library(lme4)
-model <- lmer(total_area ~ evolution_history * test_temperature + (1 | block/population), data = ap2)
+library(MuMIn)
+model <- lmer(total_area ~ evolution_history * test_temperature + (1 | block), data = ap2b)
+Anova(model, type = "III")
+summary(model)
+r.squaredGLMM(model)
 
 
+model1 <- lm(total_area ~ evolution_history * test_temperature*block, data = ap2b)
+Anova(model1)
+summary(model1)
+library(car)
 
 
-ap2 %>% 
+ap2b40 <- all_plates %>% 
+  filter(dilution != 1) %>%
+  filter(evolution_history != "(d)fRS585") %>%
+  filter(evolution_history != "fRS585") %>%
+  filter(block != 3) %>% 
+  filter(test_temperature == 41) %>% 
+  filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
+  group_by(population, set, row, test_temperature, evolution_history, block) %>% 
+  summarise(total_area = sum(area_pixels))
+
+model40 <- lm(total_area ~ evolution_history*block, data = ap2b40)
+Anova(model40)
+summary(model40)
+
+modelm40 <- lmer(total_area ~ evolution_history + (1 | block), data = ap2b40)
+Anova(modelm40, type = "III")
+summary(modelm40)
+
+ap2b35 <- all_plates %>% 
+  filter(dilution != 1) %>%
+  filter(evolution_history != "(d)fRS585") %>%
+  filter(evolution_history != "fRS585") %>%
+  filter(block != 3) %>% 
+  filter(test_temperature == 35) %>% 
+  filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
+  group_by(population, set, row, test_temperature, evolution_history, block) %>% 
+  summarise(total_area = sum(area_pixels))
+
+modelm35 <- lmer(total_area ~ evolution_history + (1 | block), data = ap2b35)
+Anova(modelm35, type = "III")
+summary(modelm35)
+
+model35 <- lm(total_area ~ evolution_history, data = ap2b35)
+Anova(model35)
+summary(model35)
+
+
+library(emmeans)
+
+emmeans(model, pairwise ~ evolution_history * test_temperature)
+
+ggplot(ap2, aes(x = test_temperature, y = total_area,
+                color = evolution_history)) +
+  stat_summary(fun = mean, geom = "point", position = position_dodge(0.2)) +
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2,
+               position = position_dodge(0.2)) +
+  theme_minimal()
+
+ap2b %>% 
   ggplot(aes(x = test_temperature, y = total_area, color = factor(block))) + geom_point() +
   facet_grid(block ~ evolution_history)
 ggsave("figures/spot-plates-block.png", width = 8, height = 6)
