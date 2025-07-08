@@ -173,6 +173,8 @@ ggsave("figures/spot-plates-all.png", width = 12, height = 6)
 ap2 <- all_plates %>% 
   filter(dilution != 1) %>%
   filter(evolution_history != "(d)fRS585") %>%
+  filter(block != 3) %>% 
+  filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
   group_by(population, set, row, test_temperature, evolution_history, block) %>% 
   summarise(total_area = sum(area_pixels))
 
@@ -211,6 +213,23 @@ all_plates %>%
 
 mod1 <- lm(area_pixels ~ evolution_history + test_temperature + dilution + evolution_history*test_temperature*dilution, data = all_plates_sub)
 summary(mod1)  
+
+mod1 <- lm(total_area ~ evolution_history*test_temperature*block, data = ap2)
+summary(mod1)  
+
+
+library(lme4)
+model <- lmer(total_area ~ evolution_history * test_temperature + (1 | block/population), data = ap2)
+
+
+
+
+ap2 %>% 
+  ggplot(aes(x = test_temperature, y = total_area, color = factor(block))) + geom_point() +
+  facet_grid(block ~ evolution_history)
+ggsave("figures/spot-plates-block.png", width = 8, height = 6)
+
+
 
 all_plates_41 <- all_plates_sub %>% 
   filter(test_temperature == 41)
