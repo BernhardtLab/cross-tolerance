@@ -24,10 +24,10 @@ data <- read_excel("data-raw/Growth-Curves/Block 1/Block1_42C/Nick_Feb1_25_Nglab
   mutate(time = ymd_hms(time)) %>%
   mutate(start_time = min(time)) %>% 
   mutate(days = interval(start_time, time)/ddays(1)) %>% 
-  select(start_time, days, everything()) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
   gather(key = well, value = od, 5:ncol(.))
 
-str(data)
+
 
 plate_layout <- read_excel("data-raw/Growth-Curves/well-plate-layout.xlsx", sheet = "block1") %>% 
   mutate(well = str_to_lower(well))
@@ -86,7 +86,7 @@ data41 <- read_excel("data-raw/Growth-Curves/Block 1/Block1_41C/Nick_Feb7_25_Ngl
   mutate(time = ymd_hms(time)) %>%
   mutate(start_time = min(time)) %>% 
   mutate(days = interval(start_time, time)/ddays(1)) %>% 
-  select(start_time, days, everything()) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
   gather(key = well, value = od, 5:ncol(.))
 
 
@@ -138,7 +138,7 @@ data35 <- read_excel("data-raw/Growth-Curves/Block 1/Block1_35C/Nick_Feb13_25_Ng
   mutate(time = ymd_hms(time)) %>%
   mutate(start_time = min(time)) %>% 
   mutate(days = interval(start_time, time)/ddays(1)) %>% 
-  select(start_time, days, everything()) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
   gather(key = well, value = od, 5:ncol(.))
 
 
@@ -213,7 +213,7 @@ data_b2_42 <- read_excel("data-raw/Growth-Curves/Block 2/Block2_42C/Nick_Feb2_25
   mutate(time = ymd_hms(time)) %>%
   mutate(start_time = min(time)) %>% 
   mutate(days = interval(start_time, time)/ddays(1)) %>% 
-  select(start_time, days, everything()) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
   gather(key = well, value = od, 5:ncol(.))
 
 
@@ -276,7 +276,7 @@ datab2_41 <- read_excel("data-raw/Growth-Curves/Block 2/Block2_41C/Nick_Feb11_25
   mutate(time = ymd_hms(time)) %>%
   mutate(start_time = min(time)) %>% 
   mutate(days = interval(start_time, time)/ddays(1)) %>% 
-  select(start_time, days, everything()) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
   gather(key = well, value = od, 5:ncol(.))
 
 
@@ -337,7 +337,7 @@ datab2_35 <- read_excel("data-raw/Growth-Curves/Block 2/Block2_35C/Nick_Feb14_25
   mutate(time = ymd_hms(time)) %>%
   mutate(start_time = min(time)) %>% 
   mutate(days = interval(start_time, time)/ddays(1)) %>% 
-  select(start_time, days, everything()) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
   gather(key = well, value = od, 5:ncol(.))
 
 
@@ -404,7 +404,7 @@ data_b3_42 <- read_excel("data-raw/Growth-Curves/Block 3/Block3_42C/Nick_Feb3_25
   mutate(time = ymd_hms(time)) %>%
   mutate(start_time = min(time)) %>% 
   mutate(days = interval(start_time, time)/ddays(1)) %>% 
-  select(start_time, days, everything()) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
   gather(key = well, value = od, 5:ncol(.))
 
 
@@ -467,7 +467,7 @@ datab3_41 <- read_excel("data-raw/Growth-Curves/Block 3/Block3_41C/Nick_Feb12_25
   mutate(time = ymd_hms(time)) %>%
   mutate(start_time = min(time)) %>% 
   mutate(days = interval(start_time, time)/ddays(1)) %>% 
-  select(start_time, days, everything()) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
   gather(key = well, value = od, 5:ncol(.))
 
 
@@ -528,7 +528,7 @@ datab3_35 <- read_excel("data-raw/Growth-Curves/Block 3/Block3_35C/Nick_Feb22_25
   mutate(time = ymd_hms(time)) %>%
   mutate(start_time = min(time)) %>% 
   mutate(days = interval(start_time, time)/ddays(1)) %>% 
-  select(start_time, days, everything()) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
   gather(key = well, value = od, 5:ncol(.))
 
 
@@ -595,6 +595,9 @@ all_blocks <- bind_rows(summary_df, summary_df_35, summary_df_41, summary_df_b2_
                                        grepl("WT_CASP", strain) ~ "Caspofungin evolved",
                                        TRUE ~ strain))
 
+
+write_csv(all_blocks, "data-processed/all-blocks-growth.csv")
+
 all_blocks %>% 
   filter(test_temperature == 41) %>% 
   filter(evolution_history == "Fluconazole evolved") %>%
@@ -637,10 +640,10 @@ all_sum %>%
 ggsave("figures/all-growth-rates-same-scale-grid.png", width = 14, height = 6)
 
 all_sum2 <- all_sum %>% 
-  select(-se_growth_rate) %>%
+  dplyr::select(-se_growth_rate) %>%
   ungroup() %>% 
   mutate(test_temperature = as.factor(test_temperature)) %>% 
-  select(-block)
+  dplyr::select(-block)
 
 View(all_sum2)
 
@@ -664,3 +667,23 @@ all_sum3 %>%
   theme(legend.position="none") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 ggsave("figures/all-growth-rates-wrap.png", width = 14, height = 6)
+
+all_sum3b <- all_sum3 %>% 
+  mutate(test_temperature = as.numeric(as.character(test_temperature)))
+
+
+ab2 <- all_blocks %>% 
+  filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
+  mutate(test_temperature = as.numeric(as.character(test_temperature)))
+
+# all_sum2 %>% 
+#   mutate(test_temperature = as.numeric(as.character(test_temperature))) %>% 
+#   filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
+#   ggplot(aes(x = test_temperature, y = mean_growth_rate, color = evolution_history)) 
+  
+  ggplot() + 
+  geom_jitter(aes( x= test_temperature, y = mu, color = evolution_history), data = ab2, alpha = 0.2) + 
+  geom_point() +
+  # geom_smooth(method = "lm", aes(color = evolution_history)) +
+  geom_pointrange(aes(x = test_temperature, y = mean_growth_rate2, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate, color = evolution_history), position = position_dodge2(width = 2), data = filter(all_sum3b,!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved"))) 
+ggsave("figures/growth-rates-temp.png", width = 8, height = 6)
