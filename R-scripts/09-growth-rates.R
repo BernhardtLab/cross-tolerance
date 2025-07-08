@@ -682,7 +682,7 @@ ab2 <- all_blocks %>%
 #   ggplot(aes(x = test_temperature, y = mean_growth_rate, color = evolution_history)) 
   
   ggplot() + 
-  geom_jitter(aes( x= test_temperature, y = mu, color = evolution_history), data = ab2, alpha = 0.2) + 
+  geom_jitter(aes( x= test_temperature, y = mu, color = evolution_history), data = ab2, alpha = 0.6) + 
   geom_point() +
   # geom_smooth(method = "lm", aes(color = evolution_history)) +
   geom_pointrange(aes(x = test_temperature, y = mean_growth_rate2, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate, color = evolution_history), position = position_dodge2(width = 2), data = filter(all_sum3b,!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved"))) 
