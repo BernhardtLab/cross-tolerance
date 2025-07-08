@@ -6,7 +6,8 @@
 library(tidyverse)
 library(readxl)
 library(janitor)
-
+library(cowplot)
+theme_set(theme_cowplot())
 
 plate41C_Oct <- read_excel("data-raw/Spot plates quanitification.xlsx", sheet = "Oct29-31.24.AllG10_41C") %>% 
   clean_names() %>% 
@@ -152,6 +153,10 @@ ggsave("figures/spot-plates-35C-oct.png", width = 8, height = 6)
 
 
 all_plates <- bind_rows(plate35C_oct, plate41C_Jan5, plate41C_Jan5_r2, plate41C_Jan5_r3)
+write_csv(all_plates, "data-processed/all-spot-plates.csv")
+
+
+all_plates <- read_csv("data-processed/all-spot-plates.csv")
 
 all_plates %>% 
   filter(evolution_history %in% c("35 evolved", "40 evolved")) %>% 
@@ -163,6 +168,34 @@ all_plates %>%
   scale_x_log10() +
   geom_pointrange(aes(x = dilution, y = mean_area, ymin = mean_area - se_area, ymax = mean_area + se_area), position = position_dodge(width = .5))
 ggsave("figures/spot-plates-all.png", width = 12, height = 6)
+
+
+ap2 <- all_plates %>% 
+  filter(dilution != 1) %>%
+  filter(evolution_history != "(d)fRS585") %>%
+  group_by(population, set, row, test_temperature, evolution_history, block) %>% 
+  summarise(total_area = sum(area_pixels))
+
+ap2 %>% 
+  filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
+  ggplot(aes(x = test_temperature, y = total_area, color = evolution_history)) + geom_jitter(width = .5)
+
+library(plotrix)
+ap3 <- ap2 %>% 
+  filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
+  group_by(evolution_history, test_temperature) %>% 
+  summarise(mean_total_area = mean(total_area),
+            se_total_area = std.error(total_area)) 
+
+ap2 %>% 
+  filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
+  ggplot(aes(x = test_temperature, y = total_area, color = evolution_history)) + geom_jitter(width = .5, alpha = 0.5) + 
+  
+  geom_pointrange(aes(x = test_temperature, y = mean_total_area, ymin = mean_total_area - se_total_area, ymax = mean_total_area + se_total_area), data = ap3, position = position_dodge2(width = 0.5)) +
+  geom_pointrange(aes(x = test_temperature, y = mean_total_area, ymin = mean_total_area - se_total_area, ymax = mean_total_area + se_total_area), shape = 21, color = "black", data = ap3, position = position_dodge2(width = 0.5)) + scale_color_brewer(palette = "Set2") +ylab("Total area") +
+  xlab("Test temperature") +
+  labs(color = "Evolution history")
+ggsave("figures/spot-plates-temperature.png", width = 7, height = 5)
 
 
 all_plates_sub <- all_plates %>% 

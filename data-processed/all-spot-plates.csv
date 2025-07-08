@@ -1,0 +1,656 @@
+set,row,population,position,dilution,area_pixels,total_pixels,total_pixels_no_1_0,evolution_history,test_temperature,block
+1,1,35_B2,1,1,37483,150988,113505,35 evolved,35,1
+1,1,35_B2,2,0.1,37100,NA,NA,35 evolved,35,1
+1,1,35_B2,3,0.01,32132,NA,NA,35 evolved,35,1
+1,1,35_B2,4,0.001,24634,NA,NA,35 evolved,35,1
+1,1,35_B2,5,1e-4,19639,NA,NA,35 evolved,35,1
+1,2,35_B6,1,1,34556,116839,82283,35 evolved,35,1
+1,2,35_B6,2,0.1,27678,NA,NA,35 evolved,35,1
+1,2,35_B6,3,0.01,21716,NA,NA,35 evolved,35,1
+1,2,35_B6,4,0.001,15053,NA,NA,35 evolved,35,1
+1,2,35_B6,5,1e-4,17836,NA,NA,35 evolved,35,1
+1,3,35_B8,1,1,32816,121028,88212,35 evolved,35,1
+1,3,35_B8,2,0.1,27040,NA,NA,35 evolved,35,1
+1,3,35_B8,3,0.01,23313,NA,NA,35 evolved,35,1
+1,3,35_B8,4,0.001,19519,NA,NA,35 evolved,35,1
+1,3,35_B8,5,1e-4,18340,NA,NA,35 evolved,35,1
+1,4,35_C5,1,1,36352,122614,86262,35 evolved,35,1
+1,4,35_C5,2,0.1,33265,NA,NA,35 evolved,35,1
+1,4,35_C5,3,0.01,22664,NA,NA,35 evolved,35,1
+1,4,35_C5,4,0.001,17406,NA,NA,35 evolved,35,1
+1,4,35_C5,5,1e-4,12927,NA,NA,35 evolved,35,1
+2,1,35_C7,1,1,39875,145405,105530,35 evolved,35,1
+2,1,35_C7,2,0.1,36530,NA,NA,35 evolved,35,1
+2,1,35_C7,3,0.01,29065,NA,NA,35 evolved,35,1
+2,1,35_C7,4,0.001,24294,NA,NA,35 evolved,35,1
+2,1,35_C7,5,1e-4,15641,NA,NA,35 evolved,35,1
+2,2,35_C9,1,1,34711,119017,84306,35 evolved,35,1
+2,2,35_C9,2,0.1,28568,NA,NA,35 evolved,35,1
+2,2,35_C9,3,0.01,25401,NA,NA,35 evolved,35,1
+2,2,35_C9,4,0.001,17149,NA,NA,35 evolved,35,1
+2,2,35_C9,5,1e-4,13188,NA,NA,35 evolved,35,1
+2,3,35_D2,1,1,31286,122355,91069,35 evolved,35,1
+2,3,35_D2,2,0.1,26059,NA,NA,35 evolved,35,1
+2,3,35_D2,3,0.01,25654,NA,NA,35 evolved,35,1
+2,3,35_D2,4,0.001,22359,NA,NA,35 evolved,35,1
+2,3,35_D2,5,1e-4,16997,NA,NA,35 evolved,35,1
+2,4,35_D4,1,1,40440,153567,113127,35 evolved,35,1
+2,4,35_D4,2,0.1,34973,NA,NA,35 evolved,35,1
+2,4,35_D4,3,0.01,34738,NA,NA,35 evolved,35,1
+2,4,35_D4,4,0.001,24662,NA,NA,35 evolved,35,1
+2,4,35_D4,5,1e-4,18754,NA,NA,35 evolved,35,1
+3,1,35_D8,1,1,43519,160807,117288,35 evolved,35,1
+3,1,35_D8,2,0.1,37505,NA,NA,35 evolved,35,1
+3,1,35_D8,3,0.01,35437,NA,NA,35 evolved,35,1
+3,1,35_D8,4,0.001,23036,NA,NA,35 evolved,35,1
+3,1,35_D8,5,1e-4,21310,NA,NA,35 evolved,35,1
+3,2,35_E7,1,1,36738,131451,94713,35 evolved,35,1
+3,2,35_E7,2,0.1,30461,NA,NA,35 evolved,35,1
+3,2,35_E7,3,0.01,28266,NA,NA,35 evolved,35,1
+3,2,35_E7,4,0.001,22342,NA,NA,35 evolved,35,1
+3,2,35_E7,5,1e-4,13644,NA,NA,35 evolved,35,1
+3,3,35_E9,1,1,37314,121017,83703,35 evolved,35,1
+3,3,35_E9,2,0.1,30976,NA,NA,35 evolved,35,1
+3,3,35_E9,3,0.01,19026,NA,NA,35 evolved,35,1
+3,3,35_E9,4,0.001,17534,NA,NA,35 evolved,35,1
+3,3,35_E9,5,1e-4,16167,NA,NA,35 evolved,35,1
+3,4,35_E11,1,1,40315,138727,98412,35 evolved,35,1
+3,4,35_E11,2,0.1,34107,NA,NA,35 evolved,35,1
+3,4,35_E11,3,0.01,29125,NA,NA,35 evolved,35,1
+3,4,35_E11,4,0.001,22099,NA,NA,35 evolved,35,1
+3,4,35_E11,5,1e-4,13081,NA,NA,35 evolved,35,1
+4,1,35_F2,1,1,40492,151483,110991,35 evolved,35,1
+4,1,35_F2,2,0.1,35027,NA,NA,35 evolved,35,1
+4,1,35_F2,3,0.01,32300,NA,NA,35 evolved,35,1
+4,1,35_F2,4,0.001,26117,NA,NA,35 evolved,35,1
+4,1,35_F2,5,1e-4,17547,NA,NA,35 evolved,35,1
+4,2,35_F4,1,1,34074,123107,89033,35 evolved,35,1
+4,2,35_F4,2,0.1,28183,NA,NA,35 evolved,35,1
+4,2,35_F4,3,0.01,21477,NA,NA,35 evolved,35,1
+4,2,35_F4,4,0.001,16214,NA,NA,35 evolved,35,1
+4,2,35_F4,5,1e-4,23159,NA,NA,35 evolved,35,1
+4,3,35_F6,1,1,33255,112277,79022,35 evolved,35,1
+4,3,35_F6,2,0.1,29991,NA,NA,35 evolved,35,1
+4,3,35_F6,3,0.01,22439,NA,NA,35 evolved,35,1
+4,3,35_F6,4,0.001,16360,NA,NA,35 evolved,35,1
+4,3,35_F6,5,1e-4,10232,NA,NA,35 evolved,35,1
+4,4,35_G5,1,1,37820,138842,101022,35 evolved,35,1
+4,4,35_G5,2,0.1,35035,NA,NA,35 evolved,35,1
+4,4,35_G5,3,0.01,31720,NA,NA,35 evolved,35,1
+4,4,35_G5,4,0.001,25613,NA,NA,35 evolved,35,1
+4,4,35_G5,5,1e-4,8654,NA,NA,35 evolved,35,1
+5,1,35_G9,1,1,41679,158421,116742,35 evolved,35,1
+5,1,35_G9,2,0.1,43011,NA,NA,35 evolved,35,1
+5,1,35_G9,3,0.01,34827,NA,NA,35 evolved,35,1
+5,1,35_G9,4,0.001,24627,NA,NA,35 evolved,35,1
+5,1,35_G9,5,1e-4,14277,NA,NA,35 evolved,35,1
+5,2,35_G11,1,1,41676,128731,87055,35 evolved,35,1
+5,2,35_G11,2,0.1,32973,NA,NA,35 evolved,35,1
+5,2,35_G11,3,0.01,29523,NA,NA,35 evolved,35,1
+5,2,35_G11,4,0.001,19900,NA,NA,35 evolved,35,1
+5,2,35_G11,5,1e-4,4659,NA,NA,35 evolved,35,1
+5,3,fRS585,1,1,34546,127955,93409,fRS585,35,1
+5,3,fRS585,2,0.1,32044,NA,NA,fRS585,35,1
+5,3,fRS585,3,0.01,24645,NA,NA,fRS585,35,1
+5,3,fRS585,4,0.001,20329,NA,NA,fRS585,35,1
+5,3,fRS585,5,1e-4,16391,NA,NA,fRS585,35,1
+5,4,40_B2,1,1,38998,147651,108653,40 evolved,35,1
+5,4,40_B2,2,0.1,34695,NA,NA,40 evolved,35,1
+5,4,40_B2,3,0.01,30781,NA,NA,40 evolved,35,1
+5,4,40_B2,4,0.001,23518,NA,NA,40 evolved,35,1
+5,4,40_B2,5,1e-4,19659,NA,NA,40 evolved,35,1
+6,1,40_B6,1,1,52578,175381,122803,40 evolved,35,1
+6,1,40_B6,2,0.1,50844,NA,NA,40 evolved,35,1
+6,1,40_B6,3,0.01,34009,NA,NA,40 evolved,35,1
+6,1,40_B6,4,0.001,24595,NA,NA,40 evolved,35,1
+6,1,40_B6,5,1e-4,13355,NA,NA,40 evolved,35,1
+6,2,40_B8,1,1,38969,157216,118247,40 evolved,35,1
+6,2,40_B8,2,0.1,42141,NA,NA,40 evolved,35,1
+6,2,40_B8,3,0.01,31255,NA,NA,40 evolved,35,1
+6,2,40_B8,4,0.001,26669,NA,NA,40 evolved,35,1
+6,2,40_B8,5,1e-4,18182,NA,NA,40 evolved,35,1
+6,3,40_C5,1,1,36581,134355,97774,40 evolved,35,1
+6,3,40_C5,2,0.1,32292,NA,NA,40 evolved,35,1
+6,3,40_C5,3,0.01,27556,NA,NA,40 evolved,35,1
+6,3,40_C5,4,0.001,20655,NA,NA,40 evolved,35,1
+6,3,40_C5,5,1e-4,17271,NA,NA,40 evolved,35,1
+6,4,40_C7,1,1,41741,140948,99207,40 evolved,35,1
+6,4,40_C7,2,0.1,36391,NA,NA,40 evolved,35,1
+6,4,40_C7,3,0.01,34643,NA,NA,40 evolved,35,1
+6,4,40_C7,4,0.001,21605,NA,NA,40 evolved,35,1
+6,4,40_C7,5,1e-4,6568,NA,NA,40 evolved,35,1
+7,1,40_C9,1,1,42845,180208,137363,40 evolved,35,1
+7,1,40_C9,2,0.1,46786,NA,NA,40 evolved,35,1
+7,1,40_C9,3,0.01,41277,NA,NA,40 evolved,35,1
+7,1,40_C9,4,0.001,25438,NA,NA,40 evolved,35,1
+7,1,40_C9,5,1e-4,23862,NA,NA,40 evolved,35,1
+7,2,40_D2,1,1,35812,118804,82992,40 evolved,35,1
+7,2,40_D2,2,0.1,27432,NA,NA,40 evolved,35,1
+7,2,40_D2,3,0.01,22679,NA,NA,40 evolved,35,1
+7,2,40_D2,4,0.001,17574,NA,NA,40 evolved,35,1
+7,2,40_D2,5,1e-4,15307,NA,NA,40 evolved,35,1
+7,3,40_D4,1,1,36069,126764,90695,40 evolved,35,1
+7,3,40_D4,2,0.1,30267,NA,NA,40 evolved,35,1
+7,3,40_D4,3,0.01,22178,NA,NA,40 evolved,35,1
+7,3,40_D4,4,0.001,16871,NA,NA,40 evolved,35,1
+7,3,40_D4,5,1e-4,21379,NA,NA,40 evolved,35,1
+7,4,40_D8,1,1,41676,154846,113170,40 evolved,35,1
+7,4,40_D8,2,0.1,34038,NA,NA,40 evolved,35,1
+7,4,40_D8,3,0.01,31771,NA,NA,40 evolved,35,1
+7,4,40_D8,4,0.001,26779,NA,NA,40 evolved,35,1
+7,4,40_D8,5,1e-4,20582,NA,NA,40 evolved,35,1
+8,1,40_E7,1,1,40778,144147,103369,40 evolved,35,1
+8,1,40_E7,2,0.1,35073,NA,NA,40 evolved,35,1
+8,1,40_E7,3,0.01,29387,NA,NA,40 evolved,35,1
+8,1,40_E7,4,0.001,20137,NA,NA,40 evolved,35,1
+8,1,40_E7,5,1e-4,18772,NA,NA,40 evolved,35,1
+8,2,40_E9,1,1,36115,124951,88836,40 evolved,35,1
+8,2,40_E9,2,0.1,31444,NA,NA,40 evolved,35,1
+8,2,40_E9,3,0.01,25392,NA,NA,40 evolved,35,1
+8,2,40_E9,4,0.001,11133,NA,NA,40 evolved,35,1
+8,2,40_E9,5,1e-4,20867,NA,NA,40 evolved,35,1
+8,3,40_E11,1,1,36592,126682,90090,40 evolved,35,1
+8,3,40_E11,2,0.1,30335,NA,NA,40 evolved,35,1
+8,3,40_E11,3,0.01,23540,NA,NA,40 evolved,35,1
+8,3,40_E11,4,0.001,15172,NA,NA,40 evolved,35,1
+8,3,40_E11,5,1e-4,21043,NA,NA,40 evolved,35,1
+8,4,40_F2,1,1,37362,131376,94014,40 evolved,35,1
+8,4,40_F2,2,0.1,32042,NA,NA,40 evolved,35,1
+8,4,40_F2,3,0.01,31145,NA,NA,40 evolved,35,1
+8,4,40_F2,4,0.001,24044,NA,NA,40 evolved,35,1
+8,4,40_F2,5,1e-4,6783,NA,NA,40 evolved,35,1
+9,1,40_F4,1,1,43140,164041,120901,40 evolved,35,1
+9,1,40_F4,2,0.1,37212,NA,NA,40 evolved,35,1
+9,1,40_F4,3,0.01,36785,NA,NA,40 evolved,35,1
+9,1,40_F4,4,0.001,28666,NA,NA,40 evolved,35,1
+9,1,40_F4,5,1e-4,18238,NA,NA,40 evolved,35,1
+9,2,40_F6,1,1,38222,128545,90323,40 evolved,35,1
+9,2,40_F6,2,0.1,30550,NA,NA,40 evolved,35,1
+9,2,40_F6,3,0.01,27754,NA,NA,40 evolved,35,1
+9,2,40_F6,4,0.001,12974,NA,NA,40 evolved,35,1
+9,2,40_F6,5,1e-4,19045,NA,NA,40 evolved,35,1
+9,3,40_G5,1,1,36983,133213,96230,40 evolved,35,1
+9,3,40_G5,2,0.1,30657,NA,NA,40 evolved,35,1
+9,3,40_G5,3,0.01,27150,NA,NA,40 evolved,35,1
+9,3,40_G5,4,0.001,17060,NA,NA,40 evolved,35,1
+9,3,40_G5,5,1e-4,21363,NA,NA,40 evolved,35,1
+9,4,40_G9,1,1,36887,152099,115212,40 evolved,35,1
+9,4,40_G9,2,0.1,37171,NA,NA,40 evolved,35,1
+9,4,40_G9,3,0.01,33966,NA,NA,40 evolved,35,1
+9,4,40_G9,4,0.001,22605,NA,NA,40 evolved,35,1
+9,4,40_G9,5,1e-4,21470,NA,NA,40 evolved,35,1
+10,1,40_G11,1,1,44169,152986,108817,40 evolved,35,1
+10,1,40_G11,2,0.1,37492,NA,NA,40 evolved,35,1
+10,1,40_G11,3,0.01,29442,NA,NA,40 evolved,35,1
+10,1,40_G11,4,0.001,24953,NA,NA,40 evolved,35,1
+10,1,40_G11,5,1e-4,16930,NA,NA,40 evolved,35,1
+10,2,(d)fRS585,1,1,41624,132575,90951,(d)fRS585,35,1
+10,2,(d)fRS585,2,0.1,30901,NA,NA,(d)fRS585,35,1
+10,2,(d)fRS585,3,0.01,28450,NA,NA,(d)fRS585,35,1
+10,2,(d)fRS585,4,0.001,19168,NA,NA,(d)fRS585,35,1
+10,2,(d)fRS585,5,1e-4,12432,NA,NA,(d)fRS585,35,1
+1,1,35_B2,1,1,0,0,0,35 evolved,41,1
+1,1,35_B2,2,0.1,0,NA,NA,35 evolved,41,1
+1,1,35_B2,3,0.01,0,NA,NA,35 evolved,41,1
+1,1,35_B2,4,0.001,0,NA,NA,35 evolved,41,1
+1,1,35_B2,5,1e-4,0,NA,NA,35 evolved,41,1
+1,2,35_B6,1,1,0,0,0,35 evolved,41,1
+1,2,35_B6,2,0.1,0,NA,NA,35 evolved,41,1
+1,2,35_B6,3,0.01,0,NA,NA,35 evolved,41,1
+1,2,35_B6,4,0.001,0,NA,NA,35 evolved,41,1
+1,2,35_B6,5,1e-4,0,NA,NA,35 evolved,41,1
+1,3,35_B8,1,1,0,0,0,35 evolved,41,1
+1,3,35_B8,2,0.1,0,NA,NA,35 evolved,41,1
+1,3,35_B8,3,0.01,0,NA,NA,35 evolved,41,1
+1,3,35_B8,4,0.001,0,NA,NA,35 evolved,41,1
+1,3,35_B8,5,1e-4,0,NA,NA,35 evolved,41,1
+1,4,35_C5,1,1,0,0,0,35 evolved,41,1
+1,4,35_C5,2,0.1,0,NA,NA,35 evolved,41,1
+1,4,35_C5,3,0.01,0,NA,NA,35 evolved,41,1
+1,4,35_C5,4,0.001,0,NA,NA,35 evolved,41,1
+1,4,35_C5,5,1e-4,0,NA,NA,35 evolved,41,1
+2,1,35_C7,1,1,0,0,0,35 evolved,41,1
+2,1,35_C7,2,0.1,0,NA,NA,35 evolved,41,1
+2,1,35_C7,3,0.01,0,NA,NA,35 evolved,41,1
+2,1,35_C7,4,0.001,0,NA,NA,35 evolved,41,1
+2,1,35_C7,5,1e-4,0,NA,NA,35 evolved,41,1
+2,2,35_C9,1,1,0,0,0,35 evolved,41,1
+2,2,35_C9,2,0.1,0,NA,NA,35 evolved,41,1
+2,2,35_C9,3,0.01,0,NA,NA,35 evolved,41,1
+2,2,35_C9,4,0.001,0,NA,NA,35 evolved,41,1
+2,2,35_C9,5,1e-4,0,NA,NA,35 evolved,41,1
+2,3,35_D2,1,1,0,0,0,35 evolved,41,1
+2,3,35_D2,2,0.1,0,NA,NA,35 evolved,41,1
+2,3,35_D2,3,0.01,0,NA,NA,35 evolved,41,1
+2,3,35_D2,4,0.001,0,NA,NA,35 evolved,41,1
+2,3,35_D2,5,1e-4,0,NA,NA,35 evolved,41,1
+2,4,35_D4,1,1,0,0,0,35 evolved,41,1
+2,4,35_D4,2,0.1,0,NA,NA,35 evolved,41,1
+2,4,35_D4,3,0.01,0,NA,NA,35 evolved,41,1
+2,4,35_D4,4,0.001,0,NA,NA,35 evolved,41,1
+2,4,35_D4,5,1e-4,0,NA,NA,35 evolved,41,1
+3,1,35_D8,1,1,0,0,0,35 evolved,41,1
+3,1,35_D8,2,0.1,0,NA,NA,35 evolved,41,1
+3,1,35_D8,3,0.01,0,NA,NA,35 evolved,41,1
+3,1,35_D8,4,0.001,0,NA,NA,35 evolved,41,1
+3,1,35_D8,5,1e-4,0,NA,NA,35 evolved,41,1
+3,2,35_E7,1,1,0,0,0,35 evolved,41,1
+3,2,35_E7,2,0.1,0,NA,NA,35 evolved,41,1
+3,2,35_E7,3,0.01,0,NA,NA,35 evolved,41,1
+3,2,35_E7,4,0.001,0,NA,NA,35 evolved,41,1
+3,2,35_E7,5,1e-4,0,NA,NA,35 evolved,41,1
+3,3,35_E9,1,1,0,0,0,35 evolved,41,1
+3,3,35_E9,2,0.1,0,NA,NA,35 evolved,41,1
+3,3,35_E9,3,0.01,0,NA,NA,35 evolved,41,1
+3,3,35_E9,4,0.001,0,NA,NA,35 evolved,41,1
+3,3,35_E9,5,1e-4,0,NA,NA,35 evolved,41,1
+3,4,35_E11,1,1,0,0,0,35 evolved,41,1
+3,4,35_E11,2,0.1,0,NA,NA,35 evolved,41,1
+3,4,35_E11,3,0.01,0,NA,NA,35 evolved,41,1
+3,4,35_E11,4,0.001,0,NA,NA,35 evolved,41,1
+3,4,35_E11,5,1e-4,0,NA,NA,35 evolved,41,1
+4,1,35_F2,1,1,0,0,0,35 evolved,41,1
+4,1,35_F2,2,0.1,0,NA,NA,35 evolved,41,1
+4,1,35_F2,3,0.01,0,NA,NA,35 evolved,41,1
+4,1,35_F2,4,0.001,0,NA,NA,35 evolved,41,1
+4,1,35_F2,5,1e-4,0,NA,NA,35 evolved,41,1
+4,2,35_F4,1,1,0,0,0,35 evolved,41,1
+4,2,35_F4,2,0.1,0,NA,NA,35 evolved,41,1
+4,2,35_F4,3,0.01,0,NA,NA,35 evolved,41,1
+4,2,35_F4,4,0.001,0,NA,NA,35 evolved,41,1
+4,2,35_F4,5,1e-4,0,NA,NA,35 evolved,41,1
+4,3,35_F6,1,1,0,0,0,35 evolved,41,1
+4,3,35_F6,2,0.1,0,NA,NA,35 evolved,41,1
+4,3,35_F6,3,0.01,0,NA,NA,35 evolved,41,1
+4,3,35_F6,4,0.001,0,NA,NA,35 evolved,41,1
+4,3,35_F6,5,1e-4,0,NA,NA,35 evolved,41,1
+4,4,35_G5,1,1,0,0,0,35 evolved,41,1
+4,4,35_G5,2,0.1,0,NA,NA,35 evolved,41,1
+4,4,35_G5,3,0.01,0,NA,NA,35 evolved,41,1
+4,4,35_G5,4,0.001,0,NA,NA,35 evolved,41,1
+4,4,35_G5,5,1e-4,0,NA,NA,35 evolved,41,1
+5,1,35_G9,1,1,0,0,0,35 evolved,41,1
+5,1,35_G9,2,0.1,0,NA,NA,35 evolved,41,1
+5,1,35_G9,3,0.01,0,NA,NA,35 evolved,41,1
+5,1,35_G9,4,0.001,0,NA,NA,35 evolved,41,1
+5,1,35_G9,5,1e-4,0,NA,NA,35 evolved,41,1
+5,2,35_G11,1,1,0,0,0,35 evolved,41,1
+5,2,35_G11,2,0.1,0,NA,NA,35 evolved,41,1
+5,2,35_G11,3,0.01,0,NA,NA,35 evolved,41,1
+5,2,35_G11,4,0.001,0,NA,NA,35 evolved,41,1
+5,2,35_G11,5,1e-4,0,NA,NA,35 evolved,41,1
+5,3,fRS585,1,1,0,0,0,fRS585,41,1
+5,3,fRS585,2,0.1,0,NA,NA,fRS585,41,1
+5,3,fRS585,3,0.01,0,NA,NA,fRS585,41,1
+5,3,fRS585,4,0.001,0,NA,NA,fRS585,41,1
+5,3,fRS585,5,1e-4,0,NA,NA,fRS585,41,1
+5,4,40_B2,1,1,24157,65014,40857,40 evolved,41,1
+5,4,40_B2,2,0.1,20268,NA,NA,40 evolved,41,1
+5,4,40_B2,3,0.01,12423,NA,NA,40 evolved,41,1
+5,4,40_B2,4,0.001,5659,NA,NA,40 evolved,41,1
+5,4,40_B2,5,1e-4,2507,NA,NA,40 evolved,41,1
+6,1,40_B6,1,1,208,208,0,40 evolved,41,1
+6,1,40_B6,2,0.1,0,NA,NA,40 evolved,41,1
+6,1,40_B6,3,0.01,0,NA,NA,40 evolved,41,1
+6,1,40_B6,4,0.001,0,NA,NA,40 evolved,41,1
+6,1,40_B6,5,1e-4,0,NA,NA,40 evolved,41,1
+6,2,40_B8,1,1,0,0,0,40 evolved,41,1
+6,2,40_B8,2,0.1,0,NA,NA,40 evolved,41,1
+6,2,40_B8,3,0.01,0,NA,NA,40 evolved,41,1
+6,2,40_B8,4,0.001,0,NA,NA,40 evolved,41,1
+6,2,40_B8,5,1e-4,0,NA,NA,40 evolved,41,1
+6,3,40_C5,1,1,24,24,0,40 evolved,41,1
+6,3,40_C5,2,0.1,0,NA,NA,40 evolved,41,1
+6,3,40_C5,3,0.01,0,NA,NA,40 evolved,41,1
+6,3,40_C5,4,0.001,0,NA,NA,40 evolved,41,1
+6,3,40_C5,5,1e-4,0,NA,NA,40 evolved,41,1
+6,4,40_C7,1,1,12495,12549,54,40 evolved,41,1
+6,4,40_C7,2,0.1,54,NA,NA,40 evolved,41,1
+6,4,40_C7,3,0.01,0,NA,NA,40 evolved,41,1
+6,4,40_C7,4,0.001,0,NA,NA,40 evolved,41,1
+6,4,40_C7,5,1e-4,0,NA,NA,40 evolved,41,1
+7,1,40_C9,1,1,14484,16898,2414,40 evolved,41,1
+7,1,40_C9,2,0.1,2414,NA,NA,40 evolved,41,1
+7,1,40_C9,3,0.01,0,NA,NA,40 evolved,41,1
+7,1,40_C9,4,0.001,0,NA,NA,40 evolved,41,1
+7,1,40_C9,5,1e-4,0,NA,NA,40 evolved,41,1
+7,2,40_D2,1,1,11948,17805,5857,40 evolved,41,1
+7,2,40_D2,2,0.1,3329,NA,NA,40 evolved,41,1
+7,2,40_D2,3,0.01,2528,NA,NA,40 evolved,41,1
+7,2,40_D2,4,0.001,0,NA,NA,40 evolved,41,1
+7,2,40_D2,5,1e-4,0,NA,NA,40 evolved,41,1
+7,3,40_D4,1,1,2655,3968,1313,40 evolved,41,1
+7,3,40_D4,2,0.1,652,NA,NA,40 evolved,41,1
+7,3,40_D4,3,0.01,661,NA,NA,40 evolved,41,1
+7,3,40_D4,4,0.001,0,NA,NA,40 evolved,41,1
+7,3,40_D4,5,1e-4,0,NA,NA,40 evolved,41,1
+7,4,40_D8,1,1,8686,11411,2725,40 evolved,41,1
+7,4,40_D8,2,0.1,2063,NA,NA,40 evolved,41,1
+7,4,40_D8,3,0.01,662,NA,NA,40 evolved,41,1
+7,4,40_D8,4,0.001,0,NA,NA,40 evolved,41,1
+7,4,40_D8,5,1e-4,0,NA,NA,40 evolved,41,1
+8,1,40_E7,1,1,25359,44342,18983,40 evolved,41,1
+8,1,40_E7,2,0.1,15733,NA,NA,40 evolved,41,1
+8,1,40_E7,3,0.01,3243,NA,NA,40 evolved,41,1
+8,1,40_E7,4,0.001,7,NA,NA,40 evolved,41,1
+8,1,40_E7,5,1e-4,0,NA,NA,40 evolved,41,1
+8,2,40_E9,1,1,4842,4906,64,40 evolved,41,1
+8,2,40_E9,2,0.1,64,NA,NA,40 evolved,41,1
+8,2,40_E9,3,0.01,0,NA,NA,40 evolved,41,1
+8,2,40_E9,4,0.001,0,NA,NA,40 evolved,41,1
+8,2,40_E9,5,1e-4,0,NA,NA,40 evolved,41,1
+8,3,40_E11,1,1,3868,5536,1668,40 evolved,41,1
+8,3,40_E11,2,0.1,1668,NA,NA,40 evolved,41,1
+8,3,40_E11,3,0.01,0,NA,NA,40 evolved,41,1
+8,3,40_E11,4,0.001,0,NA,NA,40 evolved,41,1
+8,3,40_E11,5,1e-4,0,NA,NA,40 evolved,41,1
+8,4,40_F2,1,1,9221,11838,2617,40 evolved,41,1
+8,4,40_F2,2,0.1,2617,NA,NA,40 evolved,41,1
+8,4,40_F2,3,0.01,0,NA,NA,40 evolved,41,1
+8,4,40_F2,4,0.001,0,NA,NA,40 evolved,41,1
+8,4,40_F2,5,1e-4,0,NA,NA,40 evolved,41,1
+9,1,40_F4,1,1,1045,1045,0,40 evolved,41,1
+9,1,40_F4,2,0.1,0,NA,NA,40 evolved,41,1
+9,1,40_F4,3,0.01,0,NA,NA,40 evolved,41,1
+9,1,40_F4,4,0.001,0,NA,NA,40 evolved,41,1
+9,1,40_F4,5,1e-4,0,NA,NA,40 evolved,41,1
+9,2,40_F6,1,1,22827,29096,6269,40 evolved,41,1
+9,2,40_F6,2,0.1,5723,NA,NA,40 evolved,41,1
+9,2,40_F6,3,0.01,497,NA,NA,40 evolved,41,1
+9,2,40_F6,4,0.001,0,NA,NA,40 evolved,41,1
+9,2,40_F6,5,1e-4,49,NA,NA,40 evolved,41,1
+9,3,40_G5,1,1,3753,4069,316,40 evolved,41,1
+9,3,40_G5,2,0.1,0,NA,NA,40 evolved,41,1
+9,3,40_G5,3,0.01,316,NA,NA,40 evolved,41,1
+9,3,40_G5,4,0.001,0,NA,NA,40 evolved,41,1
+9,3,40_G5,5,1e-4,0,NA,NA,40 evolved,41,1
+9,4,40_G9,1,1,19691,25058,5367,40 evolved,41,1
+9,4,40_G9,2,0.1,4452,NA,NA,40 evolved,41,1
+9,4,40_G9,3,0.01,560,NA,NA,40 evolved,41,1
+9,4,40_G9,4,0.001,355,NA,NA,40 evolved,41,1
+9,4,40_G9,5,1e-4,0,NA,NA,40 evolved,41,1
+10,1,40_G11,1,1,30930,95473,64543,40 evolved,41,1
+10,1,40_G11,2,0.1,24997,NA,NA,40 evolved,41,1
+10,1,40_G11,3,0.01,21245,NA,NA,40 evolved,41,1
+10,1,40_G11,4,0.001,10093,NA,NA,40 evolved,41,1
+10,1,40_G11,5,1e-4,8208,NA,NA,40 evolved,41,1
+12,4,G25i WT_FLZ_1,1,1,20098,21472,1374,Fluconazole evolved,41,1
+12,4,G25i WT_FLZ_1,2,0.1,1062,NA,NA,Fluconazole evolved,41,1
+12,4,G25i WT_FLZ_1,3,0.01,312,NA,NA,Fluconazole evolved,41,1
+12,4,G25i WT_FLZ_1,4,0.001,0,NA,NA,Fluconazole evolved,41,1
+12,4,G25i WT_FLZ_1,5,1e-4,0,NA,NA,Fluconazole evolved,41,1
+13,1,G25i WT_FLZ_2,1,1,17612,31020,13408,Fluconazole evolved,41,1
+13,1,G25i WT_FLZ_2,2,0.1,7361,NA,NA,Fluconazole evolved,41,1
+13,1,G25i WT_FLZ_2,3,0.01,6047,NA,NA,Fluconazole evolved,41,1
+13,1,G25i WT_FLZ_2,4,0.001,0,NA,NA,Fluconazole evolved,41,1
+13,1,G25i WT_FLZ_2,5,1e-4,0,NA,NA,Fluconazole evolved,41,1
+13,2,G25i WT_FLZ_3,1,1,0,0,0,Fluconazole evolved,41,1
+13,2,G25i WT_FLZ_3,2,0.1,0,NA,NA,Fluconazole evolved,41,1
+13,2,G25i WT_FLZ_3,3,0.01,0,NA,NA,Fluconazole evolved,41,1
+13,2,G25i WT_FLZ_3,4,0.001,0,NA,NA,Fluconazole evolved,41,1
+13,2,G25i WT_FLZ_3,5,1e-4,0,NA,NA,Fluconazole evolved,41,1
+13,3,G25i WT_CASP_1,1,1,21142,27977,6835,Caspofungin evolved,41,1
+13,3,G25i WT_CASP_1,2,0.1,6835,NA,NA,Caspofungin evolved,41,1
+13,3,G25i WT_CASP_1,3,0.01,0,NA,NA,Caspofungin evolved,41,1
+13,3,G25i WT_CASP_1,4,0.001,0,NA,NA,Caspofungin evolved,41,1
+13,3,G25i WT_CASP_1,5,1e-4,0,NA,NA,Caspofungin evolved,41,1
+13,4,G25i WT_CASP_2,1,1,28783,99786,71003,Caspofungin evolved,41,1
+13,4,G25i WT_CASP_2,2,0.1,23203,NA,NA,Caspofungin evolved,41,1
+13,4,G25i WT_CASP_2,3,0.01,21666,NA,NA,Caspofungin evolved,41,1
+13,4,G25i WT_CASP_2,4,0.001,13251,NA,NA,Caspofungin evolved,41,1
+13,4,G25i WT_CASP_2,5,1e-4,12883,NA,NA,Caspofungin evolved,41,1
+14,1,G25i WT_CASP_3,1,1,25018,38863,13845,Caspofungin evolved,41,1
+14,1,G25i WT_CASP_3,2,0.1,11038,NA,NA,Caspofungin evolved,41,1
+14,1,G25i WT_CASP_3,3,0.01,2604,NA,NA,Caspofungin evolved,41,1
+14,1,G25i WT_CASP_3,4,0.001,203,NA,NA,Caspofungin evolved,41,1
+14,1,G25i WT_CASP_3,5,1e-4,0,NA,NA,Caspofungin evolved,41,1
+1,1,35_B2,1,1,1676,1676,0,35 evolved,41,2
+1,1,35_B2,2,0.1,0,NA,NA,35 evolved,41,2
+1,1,35_B2,3,0.01,0,NA,NA,35 evolved,41,2
+1,1,35_B2,4,0.001,0,NA,NA,35 evolved,41,2
+1,1,35_B2,5,1e-4,0,NA,NA,35 evolved,41,2
+1,2,35_B6,1,1,1780,1906,126,35 evolved,41,2
+1,2,35_B6,2,0.1,126,NA,NA,35 evolved,41,2
+1,2,35_B6,3,0.01,0,NA,NA,35 evolved,41,2
+1,2,35_B6,4,0.001,0,NA,NA,35 evolved,41,2
+1,2,35_B6,5,1e-4,0,NA,NA,35 evolved,41,2
+1,3,35_B8,1,1,177,177,0,35 evolved,41,2
+1,3,35_B8,2,0.1,0,NA,NA,35 evolved,41,2
+1,3,35_B8,3,0.01,0,NA,NA,35 evolved,41,2
+1,3,35_B8,4,0.001,0,NA,NA,35 evolved,41,2
+1,3,35_B8,5,1e-4,0,NA,NA,35 evolved,41,2
+1,4,35_C5,1,1,4607,4607,0,35 evolved,41,2
+1,4,35_C5,2,0.1,0,NA,NA,35 evolved,41,2
+1,4,35_C5,3,0.01,0,NA,NA,35 evolved,41,2
+1,4,35_C5,4,0.001,0,NA,NA,35 evolved,41,2
+1,4,35_C5,5,1e-4,0,NA,NA,35 evolved,41,2
+2,1,35_C7,1,1,15526,20347,4821,35 evolved,41,2
+2,1,35_C7,2,0.1,4821,NA,NA,35 evolved,41,2
+2,1,35_C7,3,0.01,0,NA,NA,35 evolved,41,2
+2,1,35_C7,4,0.001,0,NA,NA,35 evolved,41,2
+2,1,35_C7,5,1e-4,0,NA,NA,35 evolved,41,2
+2,2,35_C9,1,1,9524,10549,1025,35 evolved,41,2
+2,2,35_C9,2,0.1,959,NA,NA,35 evolved,41,2
+2,2,35_C9,3,0.01,66,NA,NA,35 evolved,41,2
+2,2,35_C9,4,0.001,0,NA,NA,35 evolved,41,2
+2,2,35_C9,5,1e-4,0,NA,NA,35 evolved,41,2
+2,3,35_D2,1,1,9579,10782,1203,35 evolved,41,2
+2,3,35_D2,2,0.1,1203,NA,NA,35 evolved,41,2
+2,3,35_D2,3,0.01,0,NA,NA,35 evolved,41,2
+2,3,35_D2,4,0.001,0,NA,NA,35 evolved,41,2
+2,3,35_D2,5,1e-4,0,NA,NA,35 evolved,41,2
+2,4,35_D4,1,1,3239,3302,63,35 evolved,41,2
+2,4,35_D4,2,0.1,63,NA,NA,35 evolved,41,2
+2,4,35_D4,3,0.01,0,NA,NA,35 evolved,41,2
+2,4,35_D4,4,0.001,0,NA,NA,35 evolved,41,2
+2,4,35_D4,5,1e-4,0,NA,NA,35 evolved,41,2
+3,1,35_D8,1,1,16336,21148,4812,35 evolved,41,2
+3,1,35_D8,2,0.1,4758,NA,NA,35 evolved,41,2
+3,1,35_D8,3,0.01,54,NA,NA,35 evolved,41,2
+3,1,35_D8,4,0.001,0,NA,NA,35 evolved,41,2
+3,1,35_D8,5,1e-4,0,NA,NA,35 evolved,41,2
+3,2,35_E7,1,1,18847,27681,8834,35 evolved,41,2
+3,2,35_E7,2,0.1,6858,NA,NA,35 evolved,41,2
+3,2,35_E7,3,0.01,1947,NA,NA,35 evolved,41,2
+3,2,35_E7,4,0.001,28,NA,NA,35 evolved,41,2
+3,2,35_E7,5,1e-4,1,NA,NA,35 evolved,41,2
+3,3,35_E9,1,1,15302,20746,5444,35 evolved,41,2
+3,3,35_E9,2,0.1,4587,NA,NA,35 evolved,41,2
+3,3,35_E9,3,0.01,857,NA,NA,35 evolved,41,2
+3,3,35_E9,4,0.001,0,NA,NA,35 evolved,41,2
+3,3,35_E9,5,1e-4,0,NA,NA,35 evolved,41,2
+3,4,35_E11,1,1,18174,25773,7599,35 evolved,41,2
+3,4,35_E11,2,0.1,6699,NA,NA,35 evolved,41,2
+3,4,35_E11,3,0.01,900,NA,NA,35 evolved,41,2
+3,4,35_E11,4,0.001,0,NA,NA,35 evolved,41,2
+3,4,35_E11,5,1e-4,0,NA,NA,35 evolved,41,2
+4,1,35_F2,1,1,23550,35047,11497,35 evolved,41,2
+4,1,35_F2,2,0.1,11286,NA,NA,35 evolved,41,2
+4,1,35_F2,3,0.01,211,NA,NA,35 evolved,41,2
+4,1,35_F2,4,0.001,0,NA,NA,35 evolved,41,2
+4,1,35_F2,5,1e-4,0,NA,NA,35 evolved,41,2
+4,2,35_F4,1,1,20485,33828,13343,35 evolved,41,2
+4,2,35_F4,2,0.1,10877,NA,NA,35 evolved,41,2
+4,2,35_F4,3,0.01,2466,NA,NA,35 evolved,41,2
+4,2,35_F4,4,0.001,0,NA,NA,35 evolved,41,2
+4,2,35_F4,5,1e-4,0,NA,NA,35 evolved,41,2
+4,3,35_F6,1,1,18069,29594,11525,35 evolved,41,2
+4,3,35_F6,2,0.1,8892,NA,NA,35 evolved,41,2
+4,3,35_F6,3,0.01,2633,NA,NA,35 evolved,41,2
+4,3,35_F6,4,0.001,0,NA,NA,35 evolved,41,2
+4,3,35_F6,5,1e-4,0,NA,NA,35 evolved,41,2
+4,4,35_G5,1,1,24041,37104,13063,35 evolved,41,2
+4,4,35_G5,2,0.1,11665,NA,NA,35 evolved,41,2
+4,4,35_G5,3,0.01,1398,NA,NA,35 evolved,41,2
+4,4,35_G5,4,0.001,0,NA,NA,35 evolved,41,2
+4,4,35_G5,5,1e-4,0,NA,NA,35 evolved,41,2
+5,1,35_G9,1,1,23810,40014,16204,35 evolved,41,2
+5,1,35_G9,2,0.1,13193,NA,NA,35 evolved,41,2
+5,1,35_G9,3,0.01,3011,NA,NA,35 evolved,41,2
+5,1,35_G9,4,0.001,0,NA,NA,35 evolved,41,2
+5,1,35_G9,5,1e-4,0,NA,NA,35 evolved,41,2
+5,2,35_G11,1,1,24759,37678,12919,35 evolved,41,2
+5,2,35_G11,2,0.1,10084,NA,NA,35 evolved,41,2
+5,2,35_G11,3,0.01,2835,NA,NA,35 evolved,41,2
+5,2,35_G11,4,0.001,0,NA,NA,35 evolved,41,2
+5,2,35_G11,5,1e-4,0,NA,NA,35 evolved,41,2
+5,3,fRS585,1,1,16122,21305,5183,fRS585,41,2
+5,3,fRS585,2,0.1,4127,NA,NA,fRS585,41,2
+5,3,fRS585,3,0.01,906,NA,NA,fRS585,41,2
+5,3,fRS585,4,0.001,150,NA,NA,fRS585,41,2
+5,3,fRS585,5,1e-4,0,NA,NA,fRS585,41,2
+5,4,40_B2,1,1,25225,82261,57036,40 evolved,41,2
+5,4,40_B2,2,0.1,22196,NA,NA,40 evolved,41,2
+5,4,40_B2,3,0.01,16597,NA,NA,40 evolved,41,2
+5,4,40_B2,4,0.001,10861,NA,NA,40 evolved,41,2
+5,4,40_B2,5,1e-4,7382,NA,NA,40 evolved,41,2
+6,1,40_B6,1,1,22848,36409,13561,40 evolved,41,2
+6,1,40_B6,2,0.1,11914,NA,NA,40 evolved,41,2
+6,1,40_B6,3,0.01,590,NA,NA,40 evolved,41,2
+6,1,40_B6,4,0.001,1057,NA,NA,40 evolved,41,2
+6,1,40_B6,5,1e-4,0,NA,NA,40 evolved,41,2
+6,2,40_B8,1,1,24533,49274,24741,40 evolved,41,2
+6,2,40_B8,2,0.1,15543,NA,NA,40 evolved,41,2
+6,2,40_B8,3,0.01,4449,NA,NA,40 evolved,41,2
+6,2,40_B8,4,0.001,4749,NA,NA,40 evolved,41,2
+6,2,40_B8,5,1e-4,0,NA,NA,40 evolved,41,2
+6,3,40_C5,1,1,23076,38998,15922,40 evolved,41,2
+6,3,40_C5,2,0.1,10991,NA,NA,40 evolved,41,2
+6,3,40_C5,3,0.01,4073,NA,NA,40 evolved,41,2
+6,3,40_C5,4,0.001,557,NA,NA,40 evolved,41,2
+6,3,40_C5,5,1e-4,301,NA,NA,40 evolved,41,2
+6,4,40_C7,1,1,25814,52725,26911,40 evolved,41,2
+6,4,40_C7,2,0.1,17622,NA,NA,40 evolved,41,2
+6,4,40_C7,3,0.01,6719,NA,NA,40 evolved,41,2
+6,4,40_C7,4,0.001,2511,NA,NA,40 evolved,41,2
+6,4,40_C7,5,1e-4,59,NA,NA,40 evolved,41,2
+7,1,40_C9,1,1,25942,76906,50964,40 evolved,41,2
+7,1,40_C9,2,0.1,20592,NA,NA,40 evolved,41,2
+7,1,40_C9,3,0.01,14870,NA,NA,40 evolved,41,2
+7,1,40_C9,4,0.001,8393,NA,NA,40 evolved,41,2
+7,1,40_C9,5,1e-4,7109,NA,NA,40 evolved,41,2
+7,2,40_D2,1,1,21235,38277,17042,40 evolved,41,2
+7,2,40_D2,2,0.1,9797,NA,NA,40 evolved,41,2
+7,2,40_D2,3,0.01,2394,NA,NA,40 evolved,41,2
+7,2,40_D2,4,0.001,4849,NA,NA,40 evolved,41,2
+7,2,40_D2,5,1e-4,2,NA,NA,40 evolved,41,2
+7,3,40_D4,1,1,23606,64226,40620,40 evolved,41,2
+7,3,40_D4,2,0.1,16054,NA,NA,40 evolved,41,2
+7,3,40_D4,3,0.01,13281,NA,NA,40 evolved,41,2
+7,3,40_D4,4,0.001,4637,NA,NA,40 evolved,41,2
+7,3,40_D4,5,1e-4,6648,NA,NA,40 evolved,41,2
+7,4,40_D8,1,1,24354,49032,24678,40 evolved,41,2
+7,4,40_D8,2,0.1,15877,NA,NA,40 evolved,41,2
+7,4,40_D8,3,0.01,5881,NA,NA,40 evolved,41,2
+7,4,40_D8,4,0.001,2096,NA,NA,40 evolved,41,2
+7,4,40_D8,5,1e-4,824,NA,NA,40 evolved,41,2
+8,1,40_E7,1,1,26527,69682,43155,40 evolved,41,2
+8,1,40_E7,2,0.1,23261,NA,NA,40 evolved,41,2
+8,1,40_E7,3,0.01,11961,NA,NA,40 evolved,41,2
+8,1,40_E7,4,0.001,7933,NA,NA,40 evolved,41,2
+8,1,40_E7,5,1e-4,0,NA,NA,40 evolved,41,2
+8,2,40_E9,1,1,21659,28900,7241,40 evolved,41,2
+8,2,40_E9,2,0.1,6686,NA,NA,40 evolved,41,2
+8,2,40_E9,3,0.01,471,NA,NA,40 evolved,41,2
+8,2,40_E9,4,0.001,84,NA,NA,40 evolved,41,2
+8,2,40_E9,5,1e-4,0,NA,NA,40 evolved,41,2
+8,3,40_E11,1,1,22093,43291,21198,40 evolved,41,2
+8,3,40_E11,2,0.1,12642,NA,NA,40 evolved,41,2
+8,3,40_E11,3,0.01,6469,NA,NA,40 evolved,41,2
+8,3,40_E11,4,0.001,1837,NA,NA,40 evolved,41,2
+8,3,40_E11,5,1e-4,250,NA,NA,40 evolved,41,2
+8,4,40_F2,1,1,25706,44560,18854,40 evolved,41,2
+8,4,40_F2,2,0.1,12479,NA,NA,40 evolved,41,2
+8,4,40_F2,3,0.01,5616,NA,NA,40 evolved,41,2
+8,4,40_F2,4,0.001,667,NA,NA,40 evolved,41,2
+8,4,40_F2,5,1e-4,92,NA,NA,40 evolved,41,2
+9,1,40_F4,1,1,20936,37071,16135,40 evolved,41,2
+9,1,40_F4,2,0.1,12387,NA,NA,40 evolved,41,2
+9,1,40_F4,3,0.01,3109,NA,NA,40 evolved,41,2
+9,1,40_F4,4,0.001,0,NA,NA,40 evolved,41,2
+9,1,40_F4,5,1e-4,639,NA,NA,40 evolved,41,2
+9,2,40_F6,1,1,24211,46412,22201,40 evolved,41,2
+9,2,40_F6,2,0.1,13297,NA,NA,40 evolved,41,2
+9,2,40_F6,3,0.01,8812,NA,NA,40 evolved,41,2
+9,2,40_F6,4,0.001,92,NA,NA,40 evolved,41,2
+9,2,40_F6,5,1e-4,0,NA,NA,40 evolved,41,2
+9,3,40_G5,1,1,20254,49364,29110,40 evolved,41,2
+9,3,40_G5,2,0.1,16169,NA,NA,40 evolved,41,2
+9,3,40_G5,3,0.01,8114,NA,NA,40 evolved,41,2
+9,3,40_G5,4,0.001,4174,NA,NA,40 evolved,41,2
+9,3,40_G5,5,1e-4,653,NA,NA,40 evolved,41,2
+9,4,40_G9,1,1,27502,83640,56138,40 evolved,41,2
+9,4,40_G9,2,0.1,22613,NA,NA,40 evolved,41,2
+9,4,40_G9,3,0.01,19283,NA,NA,40 evolved,41,2
+9,4,40_G9,4,0.001,10422,NA,NA,40 evolved,41,2
+9,4,40_G9,5,1e-4,3820,NA,NA,40 evolved,41,2
+10,1,40_G11,1,1,23493,30904,7411,40 evolved,41,2
+10,1,40_G11,2,0.1,7411,NA,NA,40 evolved,41,2
+10,1,40_G11,3,0.01,0,NA,NA,40 evolved,41,2
+10,1,40_G11,4,0.001,0,NA,NA,40 evolved,41,2
+10,1,40_G11,5,1e-4,0,NA,NA,40 evolved,41,2
+12,4,G25i WT_FLZ_1,1,1,0,0,0,Fluconazole evolved,41,2
+12,4,G25i WT_FLZ_1,2,0.1,0,NA,NA,Fluconazole evolved,41,2
+12,4,G25i WT_FLZ_1,3,0.01,0,NA,NA,Fluconazole evolved,41,2
+12,4,G25i WT_FLZ_1,4,0.001,0,NA,NA,Fluconazole evolved,41,2
+12,4,G25i WT_FLZ_1,5,1e-4,0,NA,NA,Fluconazole evolved,41,2
+13,1,G25i WT_FLZ_2,1,1,11275,20128,8853,Fluconazole evolved,41,2
+13,1,G25i WT_FLZ_2,2,0.1,4505,NA,NA,Fluconazole evolved,41,2
+13,1,G25i WT_FLZ_2,3,0.01,0,NA,NA,Fluconazole evolved,41,2
+13,1,G25i WT_FLZ_2,4,0.001,0,NA,NA,Fluconazole evolved,41,2
+13,1,G25i WT_FLZ_2,5,1e-4,4348,NA,NA,Fluconazole evolved,41,2
+13,2,G25i WT_FLZ_3,1,1,0,0,0,Fluconazole evolved,41,2
+13,2,G25i WT_FLZ_3,2,0.1,0,NA,NA,Fluconazole evolved,41,2
+13,2,G25i WT_FLZ_3,3,0.01,0,NA,NA,Fluconazole evolved,41,2
+13,2,G25i WT_FLZ_3,4,0.001,0,NA,NA,Fluconazole evolved,41,2
+13,2,G25i WT_FLZ_3,5,1e-4,0,NA,NA,Fluconazole evolved,41,2
+13,3,G25i WT_CASP_1,1,1,268,268,0,Caspofungin evolved,41,2
+13,3,G25i WT_CASP_1,2,0.1,0,NA,NA,Caspofungin evolved,41,2
+13,3,G25i WT_CASP_1,3,0.01,0,NA,NA,Caspofungin evolved,41,2
+13,3,G25i WT_CASP_1,4,0.001,0,NA,NA,Caspofungin evolved,41,2
+13,3,G25i WT_CASP_1,5,1e-4,0,NA,NA,Caspofungin evolved,41,2
+13,4,G25i WT_CASP_2,1,1,4851,7559,2708,Caspofungin evolved,41,2
+13,4,G25i WT_CASP_2,2,0.1,2596,NA,NA,Caspofungin evolved,41,2
+13,4,G25i WT_CASP_2,3,0.01,112,NA,NA,Caspofungin evolved,41,2
+13,4,G25i WT_CASP_2,4,0.001,0,NA,NA,Caspofungin evolved,41,2
+13,4,G25i WT_CASP_2,5,1e-4,0,NA,NA,Caspofungin evolved,41,2
+14,1,G25i WT_CASP_3,1,1,8838,10484,1646,Caspofungin evolved,41,2
+14,1,G25i WT_CASP_3,2,0.1,19,NA,NA,Caspofungin evolved,41,2
+14,1,G25i WT_CASP_3,3,0.01,1627,NA,NA,Caspofungin evolved,41,2
+14,1,G25i WT_CASP_3,4,0.001,0,NA,NA,Caspofungin evolved,41,2
+14,1,G25i WT_CASP_3,5,1e-4,0,NA,NA,Caspofungin evolved,41,2
+10,1,40_G11,1,1,22395,24553,2158,40 evolved,41,3
+10,1,40_G11,2,0.1,2158,NA,NA,40 evolved,41,3
+10,1,40_G11,3,0.01,0,NA,NA,40 evolved,41,3
+10,1,40_G11,4,0.001,0,NA,NA,40 evolved,41,3
+10,1,40_G11,5,1e-4,0,NA,NA,40 evolved,41,3
+12,4,G25i WT_FLZ_1,1,1,2400,2400,0,Fluconazole evolved,41,3
+12,4,G25i WT_FLZ_1,2,0.1,0,NA,NA,Fluconazole evolved,41,3
+12,4,G25i WT_FLZ_1,3,0.01,0,NA,NA,Fluconazole evolved,41,3
+12,4,G25i WT_FLZ_1,4,0.001,0,NA,NA,Fluconazole evolved,41,3
+12,4,G25i WT_FLZ_1,5,1e-4,0,NA,NA,Fluconazole evolved,41,3
+13,1,G25i WT_FLZ_2,1,1,10560,10560,0,Fluconazole evolved,41,3
+13,1,G25i WT_FLZ_2,2,0.1,0,NA,NA,Fluconazole evolved,41,3
+13,1,G25i WT_FLZ_2,3,0.01,0,NA,NA,Fluconazole evolved,41,3
+13,1,G25i WT_FLZ_2,4,0.001,0,NA,NA,Fluconazole evolved,41,3
+13,1,G25i WT_FLZ_2,5,1e-4,0,NA,NA,Fluconazole evolved,41,3
+13,2,G25i WT_FLZ_3,1,1,0,0,0,Fluconazole evolved,41,3
+13,2,G25i WT_FLZ_3,2,0.1,0,NA,NA,Fluconazole evolved,41,3
+13,2,G25i WT_FLZ_3,3,0.01,0,NA,NA,Fluconazole evolved,41,3
+13,2,G25i WT_FLZ_3,4,0.001,0,NA,NA,Fluconazole evolved,41,3
+13,2,G25i WT_FLZ_3,5,1e-4,0,NA,NA,Fluconazole evolved,41,3
+13,3,G25i WT_CASP_1,1,1,5844,5844,0,Caspofungin evolved,41,3
+13,3,G25i WT_CASP_1,2,0.1,0,NA,NA,Caspofungin evolved,41,3
+13,3,G25i WT_CASP_1,3,0.01,0,NA,NA,Caspofungin evolved,41,3
+13,3,G25i WT_CASP_1,4,0.001,0,NA,NA,Caspofungin evolved,41,3
+13,3,G25i WT_CASP_1,5,1e-4,0,NA,NA,Caspofungin evolved,41,3
+13,4,G25i WT_CASP_2,1,1,19201,24393,5192,Caspofungin evolved,41,3
+13,4,G25i WT_CASP_2,2,0.1,3558,NA,NA,Caspofungin evolved,41,3
+13,4,G25i WT_CASP_2,3,0.01,1634,NA,NA,Caspofungin evolved,41,3
+13,4,G25i WT_CASP_2,4,0.001,0,NA,NA,Caspofungin evolved,41,3
+13,4,G25i WT_CASP_2,5,1e-4,0,NA,NA,Caspofungin evolved,41,3
+14,1,G25i WT_CASP_3,1,1,4001,4001,0,Caspofungin evolved,41,3
+14,1,G25i WT_CASP_3,2,0.1,0,NA,NA,Caspofungin evolved,41,3
+14,1,G25i WT_CASP_3,3,0.01,0,NA,NA,Caspofungin evolved,41,3
+14,1,G25i WT_CASP_3,4,0.001,0,NA,NA,Caspofungin evolved,41,3
+14,1,G25i WT_CASP_3,5,1e-4,0,NA,NA,Caspofungin evolved,41,3
