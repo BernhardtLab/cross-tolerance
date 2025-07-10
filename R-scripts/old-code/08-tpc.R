@@ -26,8 +26,16 @@ temp20C <- read_excel("data-raw/old-unused/Growth curves/July25_20C_rep2_combine
   rename(time = Time)
 
 
-temp30C <- read_excel("data-raw/old-unused/Growth curves/July2523_30C.xlsx", sheet = "Sheet2", range = "A40:CL138")
 
+
+temp30C <- read_excel(
+  "data-raw/old-unused/Growth curves/July2523_30C.xlsx",
+  sheet = "Sheet2",
+  range = "A40:CL138",
+  col_names = FALSE
+)
+
+dim(temp30C)
 
 
 
