@@ -13,7 +13,8 @@ library(readxl)
 temp18C <- read_excel("data-raw/old-unused/Growth curves/July0423_18C.xlsx", sheet = "Sheet1", range = "A2:I9", col_names = c("time", "rep1", "rep2", "rep3", "rep4", "rep5", "rep6", "rep7", "rep8")) %>% 
   gather(2:ncol(.), key = "replicate", value = "OD") %>% 
   mutate(treatment = "fRS585") %>% 
-  mutate(test_temperature = 18)
+  mutate(test_temperature = 18) %>% 
+  mutate(time = time*3600) ## convert hours to seconds
 
 
 temp18C %>% 
@@ -23,7 +24,8 @@ temp20C <- read_excel("data-raw/old-unused/Growth curves/July25_20C_rep2_combine
   gather(2:ncol(.), key = "replicate", value = "OD") %>% 
   mutate(treatment = "fRS585") %>% 
   mutate(test_temperature = 20) %>% 
-  rename(time = Time)
+  rename(time = Time) %>% 
+  mutate(time = time*3600) ## convert hours to seconds
 
 
 
@@ -31,17 +33,32 @@ temp20C <- read_excel("data-raw/old-unused/Growth curves/July25_20C_rep2_combine
 temp30C <- read_excel(
   "data-raw/old-unused/Growth curves/July2523_30C.xlsx",
   sheet = "Sheet2",
-  range = "A40:CL138",
-  col_names = FALSE
-)
+  range = "A34:CT132",
+  col_names = c("cycle", 1:97)) %>% 
+  filter(cycle != "Temp. [°C]") %>%
+  filter(cycle != "Cycle Nr.") %>% 
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 30)
 
-dim(temp30C)
+temp30C_key <- read_excel("data-raw/old-unused/Well label keys/25.07, 30 deg.xlsx")
+
+df1 <- data.frame(A1 = "A1", water = "water")
+
+temp30C_key2 <- bind_rows(temp30C_key, df1) %>% 
+  rename(well = A1, treatment = water)
+
+temp30C2 <- temp30C %>% 
+  left_join(temp30C_key2, by = "well") %>% 
+  mutate(time = as.numeric(time))
 
 
-
-all_temps <- bind_rows(temp18C, temp20C)
+all_temps <- bind_rows(temp18C, temp20C, temp30C2)
 
 
 all_temps %>% 
+  filter(treatment == "fRS585") %>% 
   ggplot(aes(x = time, y = OD, color = test_temperature)) + geom_point() +
   scale_color_viridis_c()
