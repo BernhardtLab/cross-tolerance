@@ -5,7 +5,7 @@
 
 # Author: Joey Bernhardt
 # Input: Excel spreadsheets that are outputs from the Tecan plate reader
-# Output: Merged OD data across all temperatures
+# Output: Merged OD data across all temperatures ("data-processed/all-temps-od.csv")
 # Written for R version 4.2.3
 # Last updated: July 10 2025
 
@@ -17,6 +17,7 @@ library(tidyverse)
 library(readxl)
 library(cowplot)
 theme_set(theme_cowplot())
+library(janitor)
 
 
 # read in data ------------------------------------------------------------
@@ -96,13 +97,107 @@ temp40.5C2 <- temp40.5 %>%
 
 
 
+temp34C <- read_excel("data-raw/old-unused/Growth curves/June28_34C.xlsx", range = "A40:CL137", col_names = c("cycle", 1:89)) %>%
+  filter(cycle != "Temp. [°C]") %>%
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 34)
 
 
-all_temps <- bind_rows(temp18C, temp20C, temp30C2, temp40.5C2)
+temp34C_key <- read_excel("data-raw/old-unused/Well label keys/28.06, 30 and 34 deg.xlsx")
+
+temp34C_2 <- temp34C %>% 
+  left_join(temp34C_key, by = "well") %>% 
+  mutate(time = as.numeric(time))
+
+
+
+temp37C <- read_excel("data-raw/old-unused/Growth curves/July0623_37C.xlsx", range = "A35:CT132", col_names = c("cycle", 1:97)) %>%
+  filter(cycle != "Temp. [°C]") %>%
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 37)
+
+
+temp37C_key <- read_excel("data-raw/old-unused/Well label keys/06.07, 37 deg.xlsx")
+
+temp37C_2 <- temp37C %>% 
+  left_join(temp37C_key, by = "well") %>% 
+  mutate(time = as.numeric(time))
+
+
+# temp 40 -----------------------------------------------------------------
+
+temp40C <- read_excel("data-raw/old-unused/Growth curves/July0523_40C.xlsx", range = "A40:CL137", col_names = c("cycle", 1:89)) %>%
+  filter(cycle != "Temp. [°C]") %>%
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 40)
+
+
+temp40C_key <- read_excel("data-raw/old-unused/Well label keys/05.07, 40 deg.xlsx")
+
+temp40C_2 <- temp40C %>% 
+  left_join(temp40C_key, by = "well") %>% 
+  mutate(time = as.numeric(time))
+
+
+# temp 42 -----------------------------------------------------------------
+
+temp42C <- read_excel("data-raw/old-unused/Growth curves/July1723_42C_72h.xlsx", range = "A35:CT132", sheet = "1st_24h",  col_names = c("cycle", 1:97)) %>% 
+  filter(cycle != "Temp. [°C]") %>%
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 42)
+
+
+temp42C_key <- read_excel("data-raw/old-unused/Well label keys/05.07, 40 deg.xlsx") ### JB to come to make sure this is correct, and also, should we use the 48 and 72 hour from this file above?
+
+temp42C_2 <- temp42C %>% 
+  left_join(temp42C_key, by = "well") %>% 
+  mutate(time = as.numeric(time))
+
+temp42C_2 %>% 
+  ggplot(aes(x = time, y = OD)) + geom_point()
+
+
+
+# temp 41 -----------------------------------------------------------------
+
+temp41C <- read_excel("data-raw/old-unused/Growth curves/June2923_41C.xlsx", range = "A40:CL127", sheet = "Sheet3",  col_names = c("cycle", 1:89)) %>% 
+  filter(cycle != "Temp. [°C]") %>%
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 41)
+
+
+temp41C_key <- read_excel("data-raw/old-unused/Well label keys/30.06, 40 and 41 deg.xlsx") ## Note from Sveta: note: this last one (June 29, 2023, 41 deg is referred to as June 30 in some scripts and in the well key - 30.06, 40 and 41 deg.xlsx)
+
+temp41C_2 <- temp41C %>% 
+  left_join(temp41C_key, by = "well") %>% 
+  mutate(time = as.numeric(time))
+
+
+
+
+
+all_temps <- bind_rows(temp18C, temp20C, temp30C2, temp40.5C2, temp34_2, temp37C_2, temp40C_2, temp42C_2, temp41C_2)
+
+write_csv(all_temps, "data-processed/all-temps-od.csv")
 
 
 all_temps %>% 
   filter(treatment == "fRS585") %>%
-  filter(test_temperature == 40.5) %>% 
-  ggplot(aes(x = time, y = OD, group = well, color = factor(test_temperature))) + geom_line() +
+  # filter(test_temperature == 40.5) %>% 
+  ggplot(aes(x = time, y = OD, group = well, color = factor(test_temperature))) + geom_point() +
   scale_color_viridis_d()
