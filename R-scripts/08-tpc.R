@@ -1,10 +1,22 @@
 
 
 
-#### Fitting a thermal performance curve to yeast growth rates
+#### Data import process for OD data from thermal performance experiments with N. glabrata
+
+# Author: Joey Bernhardt
+# Input: Excel spreadsheets that are outputs from the Tecan plate reader
+# Output: Merged OD data across all temperatures
+# Written for R version 4.2.3
+# Last updated: July 10 2025
+
+
+# load packages -----------------------------------------------------------
+
 
 library(tidyverse)
 library(readxl)
+library(cowplot)
+theme_set(theme_cowplot())
 
 
 # read in data ------------------------------------------------------------
@@ -79,6 +91,12 @@ temp40.5C2 <- temp40.5 %>%
   mutate(time = as.numeric(time))
 
 ### I'm seeing there are a few wells at 40.5C here that have much lower carrying capacity -- it's weird and I'm not sure why. Come back to this.
+
+
+
+
+
+
 
 all_temps <- bind_rows(temp18C, temp20C, temp30C2, temp40.5C2)
 
