@@ -13,6 +13,7 @@ library(tidyverse)
 library(cowplot)
 theme_set(theme_cowplot())
 library(lubridate)
+library(growthTools)
 
 
 
@@ -32,3 +33,38 @@ od2 <- ods %>%
 od2 %>% 
   ggplot(aes(x = days, y = OD, color = factor(test_temperature))) + geom_point()
 
+
+# estimate growth rates ---------------------------------------------------
+
+gdat_all <- od2 %>%
+  mutate(ln_abundance = log(OD)) %>% 
+  mutate(unique_id = paste(well, test_temperature,treatment, sep = "_")) %>% 
+  group_by(unique_id) %>%
+  do(grs = get.growth.rate(
+    x = .$days,
+    y = .$ln_abundance,
+    id = unique(.$unique_id),
+    plot.best.Q = TRUE,
+    fpath = "figures/tpc-growth/" 
+  ))
+
+
+summary_df <- gdat_all %>%
+  summarise(
+    unique_id,
+    mu = grs$best.slope,
+    best_model = grs$best.model,
+    se = grs$best.se,
+    R2 = grs$best.model.rsqr,
+    n_obs = grs$best.model.slope.n
+  ) 
+
+
+s2 <- summary_df %>% 
+  separate(unique_id, into = c("well", "test_temperature", "treatment"), sep = "_", remove = FALSE)
+
+s2 %>% 
+  ggplot(aes(x = test_temperature, y = mu, color = treatment)) + geom_point() ### something looks wrong here... the mus are way too high for water... seems like it might be well plate key issue, where wells have been mis-assigned
+
+
+           
