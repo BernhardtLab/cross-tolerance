@@ -33,7 +33,8 @@ od2 <- ods %>%
 
 
 od2 %>% 
-  ggplot(aes(x = days, y = OD, color = factor(test_temperature))) + geom_point()
+  ggplot(aes(x = days, y = OD, color = factor(test_temperature))) + geom_point() +
+  facet_grid(test_temperature ~ treatment, scales = "free")
 
 
 # estimate growth rates ---------------------------------------------------

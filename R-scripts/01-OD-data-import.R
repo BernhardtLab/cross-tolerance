@@ -93,7 +93,8 @@ temp40.5C2 <- temp40.5 %>%
 
 ### I'm seeing there are a few wells at 40.5C here that have much lower carrying capacity -- it's weird and I'm not sure why. Come back to this.
 
-
+temp40.5C2 %>% 
+  ggplot(aes(x = time, y = OD)) + geom_point()
 
 
 
@@ -156,19 +157,67 @@ temp42C <- read_excel("data-raw/old-unused/Growth curves/July1723_42C_72h.xlsx",
   gather(2:ncol(.), key = "time", value = "OD") %>% 
   rename(well = "Time [s]") %>% 
   # mutate(treatment = "fRS585") %>% 
-  mutate(test_temperature = 42)
+  mutate(test_temperature = 42) %>% 
+  filter(well != "B4") %>% 
+  filter(well != "F10") 
+
+temp42C %>% 
+  filter(well == "B4") %>% 
+  ggplot(aes(x = time, y = OD)) + geom_point()
 
 
-temp42C_key <- read_excel("data-raw/old-unused/Well label keys/05.07, 40 deg.xlsx") ### JB to come to make sure this is correct, and also, should we use the 48 and 72 hour from this file above?
+temp42C_key <- read_excel("data-raw/old-unused/Well label keys/17.07, 42 deg, 72 hr.xlsx") %>% 
+  filter(well != "F4") %>% 
+  filter(well != "F10") ### JB to come to make sure this is correct, and also, should we use the 48 and 72 hour from this file above?
 
 temp42C_2 <- temp42C %>% 
   left_join(temp42C_key, by = "well") %>% 
   mutate(time = as.numeric(time))
 
-temp42C_2 %>% 
-  ggplot(aes(x = time, y = OD)) + geom_point()
+temp42C_2 %>%
+  ggplot(aes(x = time, y = OD, color = treatment)) + geom_point()
+
+### 42 degrees 48 hours
+
+temp42C_48h <- read_excel("data-raw/old-unused/Growth curves/July1723_42C_72h.xlsx", range = "A35:CT132", sheet = "2nd_24h_3rd_24h",  col_names = c("cycle", 1:97)) %>% 
+  filter(cycle != "Temp. [°C]") %>%
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 42) %>% 
+  filter(well != "B4") %>% 
+  filter(well != "F10") %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(time = time + 86409.9) ### adding on the first 24 hours
+
+temp42C_48h_2 <- temp42C_48h %>% 
+  left_join(temp42C_key, by = "well") %>% 
+  mutate(time = as.numeric(time))
 
 
+
+temp42C_72h <- read_excel("data-raw/old-unused/Growth curves/July1723_42C_72h.xlsx", range = "A161:CT258", sheet = "2nd_24h_3rd_24h",  col_names = c("cycle", 1:97)) %>% 
+  filter(cycle != "Temp. [°C]") %>%
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 42) %>% 
+  filter(well != "B4") %>% 
+  filter(well != "F10") %>% 
+  mutate(time = as.numeric(time)) %>% 
+  mutate(time = time + 172819.7) ### adding on the first 24 hours
+
+temp42C_72h_2 <- temp42C_72h %>% 
+  left_join(temp42C_key, by = "well") %>% 
+  mutate(time = as.numeric(time))
+
+
+temp42C_all <- bind_rows(temp42C_2, temp42C_48h_2, temp42C_72h_2)
+
+temp42C_all %>% 
+  ggplot(aes(x = time, y = OD)) + geom_point() ### after looking at this, let's just use the first 24 hours for 42, since no substantial growth after that time point
 
 # temp 41 -----------------------------------------------------------------
 
@@ -189,9 +238,26 @@ temp41C_2 <- temp41C %>%
 
 
 
+# temp 25 degrees ---------------------------------------------------------
+
+temp25C <- read_excel("data-raw/old-unused/Growth curves/July0123_25C.xlsx", range = "A40:CL137", sheet = "Sheet5",  col_names = c("cycle", 1:89)) %>% 
+  filter(cycle != "Temp. [°C]") %>%
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 25) %>% 
+  filter(well != "A2") ## redundant, see below
+
+temp25C_key <- read_excel("data-raw/old-unused/Well label keys/01.07, 25 deg.xlsx") %>%
+  filter(well != "A2") ## redundant, listed as blank and water
+
+temp25C_2 <- temp25C %>% 
+  left_join(temp25C_key, by = "well") %>% 
+  mutate(time = as.numeric(time))
 
 
-all_temps <- bind_rows(temp18C, temp20C, temp30C2, temp40.5C2, temp34_2, temp37C_2, temp40C_2, temp42C_2, temp41C_2)
+all_temps <- bind_rows(temp18C, temp20C, temp30C2, temp40.5C2, temp37C_2, temp40C_2, temp42C_2, temp41C_2, temp25C_2, temp34C_2)
 
 write_csv(all_temps, "data-processed/all-temps-od.csv")
 
