@@ -1,4 +1,12 @@
 
+### Estimate growth rates in common garden experiments
+
+# Author: Joey Bernhardt
+# Input: Excel spreadsheets that are outputs from the Biotek plate reader
+# Output: 
+# Written for R version 4.2.3
+# Last updated: July 10 2025
+
 
 
 #### growth curve fitting
