@@ -196,8 +196,14 @@ all_temps <- bind_rows(temp18C, temp20C, temp30C2, temp40.5C2, temp34_2, temp37C
 write_csv(all_temps, "data-processed/all-temps-od.csv")
 
 
+# plot it to make sure it looks ok ----------------------------------------
+
+
+## ok it looks like there's some contamination at 42C or the wrong well assignment
+
 all_temps %>% 
-  filter(treatment == "fRS585") %>%
+  # filter(treatment == "fRS585") %>%
   # filter(test_temperature == 40.5) %>% 
   ggplot(aes(x = time, y = OD, group = well, color = factor(test_temperature))) + geom_point() +
-  scale_color_viridis_d()
+  scale_color_viridis_d() + facet_wrap( ~ treatment)
+ggsave("figures/od-time-tpc.png", width = 12, height = 12)
