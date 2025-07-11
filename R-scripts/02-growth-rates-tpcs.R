@@ -14,6 +14,8 @@ library(cowplot)
 theme_set(theme_cowplot())
 library(lubridate)
 library(growthTools)
+library(rTPC)
+library(minpack.lm)
 
 
 
@@ -66,5 +68,26 @@ s2 <- summary_df %>%
 s2 %>% 
   ggplot(aes(x = test_temperature, y = mu, color = treatment)) + geom_point() ### something looks wrong here... the mus are way too high for water... seems like it might be well plate key issue, where wells have been mis-assigned
 
+s2 %>% 
+  filter(treatment == "fRS585") %>% 
+  mutate(test_temperature = as.numeric(test_temperature)) %>% 
+  ggplot(aes(x = test_temperature, y = mu, color = treatment)) + geom_point() ### ok this looks ok -- still a lot of variation at the warm temps
+
+
+### next step is to fit the tpc
+
+s3 <- s2 %>% 
+  filter(treatment == "fRS585") %>% 
+  mutate(test_temperature = as.numeric(test_temperature))
+
+start_vals <- get_start_vals(s3$test_temperature, s3$mu, model_name = "thomas_2012")
+lower_lims <- c(a = 0, b = -10, c = 0, topt = -100)
+upper_lims <- c(a = 100, b = 10, c = 700, topt = 100)
+
+fit <- nlsLM(mu ~ thomas_2012(temp = temp, a, b, c, topt), data = s3,
+        start = start_vals,
+        lower = lower_lims,
+        upper = upper_lims,
+        control = nls.lm.control(maxiter = 1000))
 
            
