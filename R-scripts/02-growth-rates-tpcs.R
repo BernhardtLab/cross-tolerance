@@ -145,6 +145,8 @@ boot_params <- boot_fit$t %>%
   mutate(iter = 1:n(),
          tmax = topt + (0.5 * c))
 
+write_csv(boot_params, "data-processed/frs585-boot-params.csv")
+
 b2 <- boot_params %>% 
   summarise(mean_tmax = mean(tmax),
             se_tmax = std.error(tmax))
@@ -157,3 +159,34 @@ ggplot() +
   theme_minimal() +ylim(0, 11.5) +
   geom_pointrange(aes(xmin = mean_tmax - se_tmax, xmax = mean_tmax + se_tmax, y = 0, x = mean_tmax), data = b2, color = "red")
 ggsave("figures/tpc-frs585.png", width = 6, height = 4)
+
+
+### now for fun, let's bring in the growth rates from the evolution experiment to plot along side
+
+evolution_expt <- read_csv("data-processed/all-blocks-growth.csv") %>% 
+  filter(evolution_history != "Fluconazole evolved") %>% 
+  filter(evolution_history != "Caspofungin evolved") 
+
+e2 <- evolution_expt %>% 
+  group_by(test_temperature, evolution_history) %>% 
+  summarise(mean_growth = mean(mu),
+            se_growth = std.error(mu))
+
+
+ggplot() + 
+  geom_point(color = "grey", size = 2, data = s3, aes(x = temp, y = mu)) +  # observed data
+  geom_line(data = fit_df, aes(x = temp, y = mu), color = "black", size = 1) +  # model fit
+  labs(title = "N. glabrata (fRS585)", x = "Temperature", y = "Growth rate (per day)") +
+  theme_minimal() +ylim(0, 11.5) +
+  # geom_pointrange(aes(xmin = mean_tmax - se_tmax, xmax = mean_tmax + se_tmax, y = 0, x = mean_tmax), data = b2, color = "red") +
+  geom_pointrange(aes(ymin = mean_growth - se_growth, ymax = mean_growth + se_growth, y = mean_growth, x = test_temperature, color = evolution_history), data = e2) 
+ggsave("figures/tpc-evolution-results.png", width = 8, height = 6)
+
+ggplot() + 
+  # geom_point(color = "grey", size = 2, data = s3, aes(x = temp, y = mu)) +  # observed data
+  geom_line(data = fit_df, aes(x = temp, y = mu-.8), color = "black", size = 1) +  # model fit
+  labs(title = "N. glabrata (fRS585)", x = "Temperature", y = "Growth rate (per day)") +
+  theme_minimal() +ylim(0, 10) +
+  # geom_pointrange(aes(xmin = mean_tmax - se_tmax, xmax = mean_tmax + se_tmax, y = 0, x = mean_tmax), data = b2, color = "red") +
+  geom_pointrange(aes(ymin = mean_growth - se_growth, ymax = mean_growth + se_growth, y = mean_growth, x = test_temperature, color = evolution_history), data = e2) 
+ggsave("figures/tpc-evolution-results-tpc-shifted.png", width = 8, height = 6)
