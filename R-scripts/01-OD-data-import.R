@@ -97,7 +97,7 @@ temp40.5C2 %>%
   ggplot(aes(x = time, y = OD)) + geom_point()
 
 
-
+### not random
 temp34C <- read_excel("data-raw/old-unused/Growth curves/June28_34C.xlsx", range = "A40:CL137", col_names = c("cycle", 1:89)) %>%
   filter(cycle != "Temp. [°C]") %>%
   row_to_names(row_number = 1, remove_row = TRUE) %>% 
@@ -170,11 +170,15 @@ temp42C_key <- read_excel("data-raw/old-unused/Well label keys/17.07, 42 deg, 72
   filter(well != "F4") %>% 
   filter(well != "F10") ### JB to come to make sure this is correct, and also, should we use the 48 and 72 hour from this file above?
 
+View(temp42C_key)
+
+
 temp42C_2 <- temp42C %>% 
   left_join(temp42C_key, by = "well") %>% 
   mutate(time = as.numeric(time))
 
 temp42C_2 %>%
+  filter(well == "B3") %>% 
   ggplot(aes(x = time, y = OD, color = treatment)) + geom_point()
 
 ### 42 degrees 48 hours
@@ -220,7 +224,7 @@ temp42C_all %>%
   ggplot(aes(x = time, y = OD)) + geom_point() ### after looking at this, let's just use the first 24 hours for 42, since no substantial growth after that time point
 
 # temp 41 -----------------------------------------------------------------
-
+### not random
 temp41C <- read_excel("data-raw/old-unused/Growth curves/June2923_41C.xlsx", range = "A40:CL127", sheet = "Sheet3",  col_names = c("cycle", 1:89)) %>% 
   filter(cycle != "Temp. [°C]") %>%
   row_to_names(row_number = 1, remove_row = TRUE) %>% 
@@ -235,6 +239,29 @@ temp41C_key <- read_excel("data-raw/old-unused/Well label keys/30.06, 40 and 41 
 temp41C_2 <- temp41C %>% 
   left_join(temp41C_key, by = "well") %>% 
   mutate(time = as.numeric(time))
+
+
+
+
+# another temp 41 ---------------------------------------------------------
+
+
+temp41C_random <- read_excel("data-raw/old-unused/Growth curves/July1323_41C_48h.xlsx", range = "A35:CT132", sheet = "Sheet2",  col_names = c("cycle", 1:97)) %>% 
+  filter(cycle != "Temp. [°C]") %>%
+  row_to_names(row_number = 1, remove_row = TRUE) %>% 
+  gather(2:ncol(.), key = "time", value = "OD") %>% 
+  rename(well = "Time [s]") %>% 
+  # mutate(treatment = "fRS585") %>% 
+  mutate(test_temperature = 41) %>% 
+  filter(well != "F10") ## this is coded as blank and water
+
+temp41C_random_key <- read_excel("data-raw/old-unused/Well label keys/13.07, 41 deg, 48 hr.xlsx") %>% 
+  filter(well != "F10") ## this is coded as blank and water
+
+temp41C_random_2 <- temp41C_random %>% 
+  left_join(temp41C_random_key, by = "well") %>% 
+  mutate(time = as.numeric(time))
+
 
 
 
@@ -257,10 +284,19 @@ temp25C_2 <- temp25C %>%
   mutate(time = as.numeric(time))
 
 
-all_temps <- bind_rows(temp18C, temp20C, temp30C2, temp40.5C2, temp37C_2, temp40C_2, temp42C_2, temp41C_2, temp25C_2, temp34C_2)
+all_temps <- bind_rows(temp18C, temp20C, temp30C2, temp40.5C2, temp37C_2, temp40C_2, temp42C_2, 
+# temp41C_2,taking this one out for now, and replacing with the randomized 41C
+temp41C_random_2,
+temp25C_2, temp34C_2)
 
 write_csv(all_temps, "data-processed/all-temps-od.csv")
 
+all_temps %>% 
+  filter(test_temperature == 42, well == "B3") %>% View
+
+
+temp42C_2 %>% 
+  filter(well == "B3") %>% View
 
 # plot it to make sure it looks ok ----------------------------------------
 
