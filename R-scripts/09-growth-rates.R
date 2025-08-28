@@ -1108,6 +1108,13 @@ ggsave("figures/all-growth-rates-wrap.png", width = 14, height = 6)
 all_sum3b <- all_sum3 %>% 
   mutate(test_temperature = as.numeric(as.character(test_temperature)))
 
+all_sum3b %>% 
+  ggplot(aes(x = test_temperature, y = mean_growth_rate2, color = evolution_history)) + geom_point() +
+  geom_errorbar(aes(x = test_temperature, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate), width = 1) 
+ggsave("figures/all-growth-rates-wrap-no.png", width = 14, height = 6)
+
+
+
 
 ab2 <- all_blocks %>% 
   filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
