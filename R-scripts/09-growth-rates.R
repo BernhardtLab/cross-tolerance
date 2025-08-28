@@ -205,7 +205,155 @@ summary_df_35 %>%
   ggplot(aes(x = strain, y = mu, color = well)) + geom_point()
 ggsave("figures/35-casp-od.png", width = 8, height = 6)
 
-block1_all <- bind_rows(summary_df, summary_df_41, summary_df_41)
+
+
+
+# block 1 25 degrees ------------------------------------------------------
+
+
+data25 <- read_excel("data-raw/Growth-Curves/Block 1/Block1_25C/Nick_July19_25_Nglab_Block1_25C.xlsx", range = "B32:CU129") %>% 
+  clean_names() %>% 
+  mutate(time = ymd_hms(time)) %>%
+  mutate(start_time = min(time)) %>% 
+  mutate(days = interval(start_time, time)/ddays(1)) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
+  gather(key = well, value = od, 5:ncol(.))
+
+
+d25 <- left_join(data25, plate_layout)
+d25 %>% 
+  ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_25C_block1.png", width = 8, height = 6)
+
+d25 %>% 
+  filter(grepl("CASP", strain)) %>% 
+  mutate(casp = ifelse(grepl("CASP_1", strain), "casp", "not_casp")) %>% 
+  ggplot(aes(x = days, y = od, color = well, group = well)) + geom_line()
+ggsave("figures/casp-od-time-25.png", width = 8, height = 6)
+
+
+gdat25 <- d25 %>%
+  mutate(ln_abundance = log(od)) %>% 
+  group_by(well) %>%
+  do(grs = get.growth.rate(
+    x = .$days,
+    y = .$ln_abundance,   # or whatever your log-transformed response is
+    id = unique(.$well),
+    plot.best.Q = TRUE,
+    fpath = "figures/block1/block1_25/"           # NA to display plots interactively
+  ))
+
+
+summary_df_25 <- gdat25 %>%
+  summarise(
+    well,
+    mu = grs$best.slope,
+    best_model = grs$best.model,
+    se = grs$best.se,
+    R2 = grs$best.model.rsqr,
+    n_obs = grs$best.model.slope.n
+  ) %>% 
+  left_join(plate_layout) %>% 
+  mutate(test_temperature = 25) %>% 
+  mutate(block = 1)
+
+summary_df_25 %>% 
+  mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
+                                       grepl("40", strain) ~ "40 evolved",
+                                       grepl("WT", strain) ~ "WT",
+                                       TRUE ~ strain)) %>% 
+  ggplot(aes(x = strain, y = mu, color = evolution_history)) + geom_point()
+
+
+
+summary_df_25 %>% 
+  filter(grepl("CASP", strain)) %>% 
+  mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
+                                       grepl("40", strain) ~ "40 evolved",
+                                       grepl("WT", strain) ~ "WT",
+                                       TRUE ~ strain)) %>% 
+  ggplot(aes(x = strain, y = mu, color = well)) + geom_point()
+ggsave("figures/25-casp-od.png", width = 8, height = 6)
+
+
+
+# block 1 38 degrees ------------------------------------------------------
+
+
+
+data38 <- read_excel("data-raw/Growth-Curves/Block 1/Block1_38C/Nick_Aug22_25_Nglab_Block1_38C.xlsx", range = "B32:CU129") %>% 
+  clean_names() %>% 
+  mutate(time = ymd_hms(time)) %>%
+  mutate(start_time = min(time)) %>% 
+  mutate(days = interval(start_time, time)/ddays(1)) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
+  gather(key = well, value = od, 5:ncol(.))
+
+
+d38 <- left_join(data38, plate_layout)
+d38 %>% 
+  ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_38C_block1.png", width = 8, height = 6)
+
+d38 %>% 
+  filter(grepl("CASP", strain)) %>% 
+  mutate(casp = ifelse(grepl("CASP_1", strain), "casp", "not_casp")) %>% 
+  ggplot(aes(x = days, y = od, color = well, group = well)) + geom_line()
+ggsave("figures/casp-od-time-25.png", width = 8, height = 6)
+
+
+gdat38 <- d38 %>%
+  mutate(ln_abundance = log(od)) %>% 
+  group_by(well) %>%
+  do(grs = get.growth.rate(
+    x = .$days,
+    y = .$ln_abundance,   # or whatever your log-transformed response is
+    id = unique(.$well),
+    plot.best.Q = TRUE,
+    fpath = "figures/block1/block1_38/"           # NA to display plots interactively
+  ))
+
+
+summary_df_38 <- gdat38 %>%
+  summarise(
+    well,
+    mu = grs$best.slope,
+    best_model = grs$best.model,
+    se = grs$best.se,
+    R2 = grs$best.model.rsqr,
+    n_obs = grs$best.model.slope.n
+  ) %>% 
+  left_join(plate_layout) %>% 
+  mutate(test_temperature = 38) %>% 
+  mutate(block = 1)
+
+summary_df_38 %>% 
+  mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
+                                       grepl("40", strain) ~ "40 evolved",
+                                       grepl("WT", strain) ~ "WT",
+                                       TRUE ~ strain)) %>% 
+  ggplot(aes(x = strain, y = mu, color = evolution_history)) + geom_point()
+
+
+
+summary_df_38 %>% 
+  filter(grepl("CASP", strain)) %>% 
+  mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
+                                       grepl("40", strain) ~ "40 evolved",
+                                       grepl("WT", strain) ~ "WT",
+                                       TRUE ~ strain)) %>% 
+  ggplot(aes(x = strain, y = mu, color = well)) + geom_point()
+ggsave("figures/38-casp-od.png", width = 8, height = 6)
+
+
+
+
+
+
+
+
+
+block1_all <- bind_rows(summary_df, summary_df_41, summary_df_41, summary_df_25, summary_df_38)
 
 
 
@@ -400,6 +548,145 @@ summary_df_b2_35 %>%
   ggplot(aes(x = strain, y = mu, color = evolution_history)) + geom_point()
 
 
+
+# block 2 25 degrees ------------------------------------------------------
+
+
+
+### 25 degrees
+datab2_25 <- read_excel("data-raw/Growth-Curves/Block 2/Block2_25C/Nick_July20_25_Nglab_Block2_25C.xlsx", range = "B32:CU129") %>% 
+  clean_names() %>% 
+  mutate(time = ymd_hms(time)) %>%
+  mutate(start_time = min(time)) %>% 
+  mutate(days = interval(start_time, time)/ddays(1)) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
+  gather(key = well, value = od, 5:ncol(.))
+
+
+plate_layout_block2 <- read_excel("data-raw/Growth-Curves/well-plate-layout.xlsx", sheet = "block2") %>% 
+  mutate(well = str_to_lower(well))
+
+
+d25_b2 <- left_join(datab2_25, plate_layout_block2)
+
+
+
+d25_b2 %>% 
+  ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_25C_block2.png", width = 8, height = 6)
+
+
+
+gdatb2_25 <- d25_b2 %>%
+  mutate(ln_abundance = log(od)) %>% 
+  group_by(well) %>%
+  do(grs = get.growth.rate(
+    x = .$days,
+    y = .$ln_abundance,   # or whatever your log-transformed response is
+    id = unique(.$well),
+    plot.best.Q = TRUE,
+    fpath = "figures/block2/block2_25/"           # NA to display plots interactively
+  ))
+
+View(gdatb2_35)
+
+summary_df_b2_25 <- gdatb2_25 %>%
+  summarise(
+    well,
+    mu = grs$best.slope,
+    best_model = grs$best.model,
+    se = grs$best.se,
+    R2 = grs$best.model.rsqr,
+    n_obs = grs$best.model.slope.n
+  ) %>% 
+  left_join(plate_layout_block2) %>% 
+  mutate(test_temperature = 25) %>% 
+  mutate(block = 2)
+View(summary_df_b2_35)
+
+### growth at 25 degrees
+
+summary_df_b2_25 %>% 
+  mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
+                                       grepl("40", strain) ~ "40 evolved",
+                                       grepl("WT", strain) ~ "WT",
+                                       TRUE ~ strain)) %>% 
+  ggplot(aes(x = strain, y = mu, color = evolution_history)) + geom_point()
+
+
+
+
+
+# block 2 38 degrees ------------------------------------------------------
+
+
+
+
+### 38 degrees
+datab2_38 <- read_excel("data-raw/Growth-Curves/Block 2/Block2_38C/Nick_Aug23_25_Nglab_Block2_38C.xlsx", range = "B32:CU129") %>% 
+  clean_names() %>% 
+  mutate(time = ymd_hms(time)) %>%
+  mutate(start_time = min(time)) %>% 
+  mutate(days = interval(start_time, time)/ddays(1)) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
+  gather(key = well, value = od, 5:ncol(.))
+
+
+plate_layout_block2 <- read_excel("data-raw/Growth-Curves/well-plate-layout.xlsx", sheet = "block2") %>% 
+  mutate(well = str_to_lower(well))
+
+
+d38_b2 <- left_join(datab2_38, plate_layout_block2)
+
+
+
+d38_b2 %>% 
+  ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_38C_block2.png", width = 8, height = 6)
+
+
+
+gdatb2_38 <- d38_b2 %>%
+  mutate(ln_abundance = log(od)) %>% 
+  group_by(well) %>%
+  do(grs = get.growth.rate(
+    x = .$days,
+    y = .$ln_abundance,   # or whatever your log-transformed response is
+    id = unique(.$well),
+    plot.best.Q = TRUE,
+    fpath = "figures/block2/block2_38/"           # NA to display plots interactively
+  ))
+
+
+
+summary_df_b2_38 <- gdatb2_38 %>%
+  summarise(
+    well,
+    mu = grs$best.slope,
+    best_model = grs$best.model,
+    se = grs$best.se,
+    R2 = grs$best.model.rsqr,
+    n_obs = grs$best.model.slope.n
+  ) %>% 
+  left_join(plate_layout_block2) %>% 
+  mutate(test_temperature = 38) %>% 
+  mutate(block = 2)
+View(summary_df_b2_35)
+
+### growth at 25 degrees
+
+summary_df_b2_38 %>% 
+  mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
+                                       grepl("40", strain) ~ "40 evolved",
+                                       grepl("WT", strain) ~ "WT",
+                                       TRUE ~ strain)) %>% 
+  ggplot(aes(x = strain, y = mu, color = evolution_history)) + geom_point()
+
+
+
+
+
+
 # block 3 -----------------------------------------------------------------
 
 
@@ -527,7 +814,7 @@ summary_df_b3_41 %>%
                                        TRUE ~ strain)) %>% 
   ggplot(aes(x = strain, y = mu, color = evolution_history)) + geom_point()
 
-# block 2 35 degrees ------------------------------------------------------
+# block 3 35 degrees ------------------------------------------------------
 
 
 ### 35 degrees
@@ -591,7 +878,146 @@ summary_df_b3_35 %>%
 
 
 
-all_blocks <- bind_rows(summary_df, summary_df_35, summary_df_41, summary_df_b2_35, summary_df_b2_41, summary_df_b2_42, summary_df_b3_35, summary_df_b3_41, summary_df_b3_42) %>% 
+
+
+# block 3 25 degrees ------------------------------------------------------
+
+
+### 25 degrees
+datab3_25 <- read_excel("data-raw/Growth-Curves/Block 3/Block3_25C/Nick_July24_25_Nglab_Block3_25C.xlsx", range = "B32:CU129") %>% 
+  clean_names() %>% 
+  mutate(time = ymd_hms(time)) %>%
+  mutate(start_time = min(time)) %>% 
+  mutate(days = interval(start_time, time)/ddays(1)) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
+  gather(key = well, value = od, 5:ncol(.))
+
+
+plate_layout_block3 <- read_excel("data-raw/Growth-Curves/well-plate-layout.xlsx", sheet = "block3") %>% 
+  mutate(well = str_to_lower(well))
+
+
+d25_b3 <- left_join(datab3_25, plate_layout_block3)
+
+
+
+d35_b3 %>% 
+  ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_35C_block3.png", width = 8, height = 6)
+
+
+
+gdatb3_25 <- d25_b3 %>%
+  mutate(ln_abundance = log(od)) %>% 
+  group_by(well) %>%
+  do(grs = get.growth.rate(
+    x = .$days,
+    y = .$ln_abundance,   # or whatever your log-transformed response is
+    id = unique(.$well),
+    plot.best.Q = TRUE,
+    fpath = "figures/block3/block3_25/"           # NA to display plots interactively
+  ))
+
+
+summary_df_b3_25 <- gdatb3_25 %>%
+  summarise(
+    well,
+    mu = grs$best.slope,
+    best_model = grs$best.model,
+    se = grs$best.se,
+    R2 = grs$best.model.rsqr,
+    n_obs = grs$best.model.slope.n
+  ) %>% 
+  left_join(plate_layout_block3) %>% 
+  mutate(test_temperature = 25) %>% 
+  mutate(block = 3)
+
+
+### growth at 25 degrees
+
+summary_df_b3_25 %>% 
+  mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
+                                       grepl("40", strain) ~ "40 evolved",
+                                       grepl("WT", strain) ~ "WT",
+                                       TRUE ~ strain)) %>% 
+  ggplot(aes(x = strain, y = mu, color = evolution_history)) + geom_point()
+
+
+
+
+
+
+# block 3 38 degrees ------------------------------------------------------
+
+
+### 38 degrees
+datab3_38 <- read_excel("data-raw/Growth-Curves/Block 3/Block3_38C/Nick_Aug24_25_Nglab_Block3_38C.xlsx", range = "B32:CU129") %>% 
+  clean_names() %>% 
+  mutate(time = ymd_hms(time)) %>%
+  mutate(start_time = min(time)) %>% 
+  mutate(days = interval(start_time, time)/ddays(1)) %>% 
+  dplyr::select(start_time, days, everything()) %>% 
+  gather(key = well, value = od, 5:ncol(.))
+
+
+plate_layout_block3 <- read_excel("data-raw/Growth-Curves/well-plate-layout.xlsx", sheet = "block3") %>% 
+  mutate(well = str_to_lower(well))
+
+
+d38_b3 <- left_join(datab3_38, plate_layout_block3)
+
+
+
+d38_b3 %>% 
+  ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
+ggsave("figures/od_time_38C_block3.png", width = 8, height = 6)
+
+
+
+gdatb3_38 <- d38_b3 %>%
+  mutate(ln_abundance = log(od)) %>% 
+  group_by(well) %>%
+  do(grs = get.growth.rate(
+    x = .$days,
+    y = .$ln_abundance,   # or whatever your log-transformed response is
+    id = unique(.$well),
+    plot.best.Q = TRUE,
+    fpath = "figures/block3/block3_38/"           # NA to display plots interactively
+  ))
+
+
+summary_df_b3_38 <- gdatb3_38 %>%
+  summarise(
+    well,
+    mu = grs$best.slope,
+    best_model = grs$best.model,
+    se = grs$best.se,
+    R2 = grs$best.model.rsqr,
+    n_obs = grs$best.model.slope.n
+  ) %>% 
+  left_join(plate_layout_block3) %>% 
+  mutate(test_temperature = 38) %>% 
+  mutate(block = 3)
+
+
+### growth at 25 degrees
+
+summary_df_b3_38 %>% 
+  mutate(evolution_history = case_when(grepl("35", strain) ~ "35 evolved",
+                                       grepl("40", strain) ~ "40 evolved",
+                                       grepl("WT", strain) ~ "WT",
+                                       TRUE ~ strain)) %>% 
+  ggplot(aes(x = strain, y = mu, color = evolution_history)) + geom_point()
+
+
+
+
+
+
+
+
+all_blocks <- bind_rows(summary_df, summary_df_35, summary_df_41, summary_df_25, summary_df_38, summary_df_b2_35,
+                        summary_df_b2_38, summary_df_b2_25, summary_df_b2_41, summary_df_b2_42, summary_df_b3_35, summary_df_b3_41, summary_df_b3_42, summary_df_b3_25, summary_df_b3_38) %>% 
   filter(!grepl("LIG", strain)) %>% 
   filter(!grepl("blank", strain)) %>% 
   filter(!grepl("YPD", strain)) %>%

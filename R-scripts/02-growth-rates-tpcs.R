@@ -192,3 +192,189 @@ ggplot() +
   # geom_pointrange(aes(xmin = mean_tmax - se_tmax, xmax = mean_tmax + se_tmax, y = 0, x = mean_tmax), data = b2, color = "red") +
   geom_pointrange(aes(ymin = mean_growth - se_growth, ymax = mean_growth + se_growth, y = mean_growth, x = test_temperature, color = evolution_history), data = e2) 
 ggsave("figures/tpc-evolution-results-tpc-shifted.png", width = 8, height = 6)
+
+
+
+### Fit tpcs to the growth curves from the biotek experiment
+
+all_blocks <- read_csv("data-processed/all-blocks-growth.csv")
+
+
+growth_35evolved <- all_blocks %>% 
+  filter(evolution_history == "35 evolved") %>% 
+  mutate(temp = test_temperature)
+
+
+growth_35evolved %>% 
+  ggplot(aes(x = test_temperature, y = mu, color = factor(block))) + geom_point()
+
+
+
+start_vals <- get_start_vals(growth_35evolved$temp, growth_35evolved$mu, model_name = "thomas_2012")
+lower_lims <- c(a = 0, b = 0, c = 0, topt = 0)
+upper_lims <- c(a = 100, b = 10, c = 700, topt = 100)
+
+
+library(nls.multstart)
+library(rtpc)
+
+
+# choose model
+mod = 'sharpschoolhigh_1981'
+
+d <- growth_35evolved %>% 
+  mutate(temp = test_temperature, rate = mu)
+
+# get start vals
+start_vals <- get_start_vals(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981')
+
+# get limits
+low_lims <- get_lower_lims(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981')
+upper_lims <- get_upper_lims(d$temp, d$rate, model_name = 'sharpeschoolhigh_1981')
+
+
+fit <- nls_multstart(rate~sharpeschoolhigh_1981(temp = temp, r_tref,e,eh,th, tref = 15),
+                     data = d,
+                     iter = 500,
+                     start_lower = start_vals - 10,
+                     start_upper = start_vals + 10,
+                     lower = low_lims,
+                     upper = upper_lims,
+                     supp_errors = 'Y')
+
+summary(fit)
+
+
+calc_params(fit) %>%
+  # round for easy viewing
+  mutate_all(round, 2)
+
+library(broom)
+
+# predict new data
+new_data <- data.frame(temp = seq(min(d$temp), max(d$temp), 0.5))
+preds <- augment(fit, newdata = new_data)
+
+# plot data and model fit
+ggplot(d, aes(temp, rate)) +
+  geom_point() +
+  geom_line(aes(temp, .fitted), preds, col = 'blue') +
+  theme_bw(base_size = 12) +
+  labs(x = 'Temperature (ºC)',
+       y = 'Growth rate',
+       title = 'Growth rates across temperatures for 35 evolved')
+
+
+d40 <- all_blocks %>% 
+  filter(evolution_history == "40 evolved") %>% 
+  mutate(temp = test_temperature, rate = mu)
+
+# get start vals
+start_vals <- get_start_vals(d40$temp, d40$rate, model_name = 'sharpeschoolhigh_1981')
+
+# get limits
+low_lims <- get_lower_lims(d40$temp, d40$rate, model_name = 'sharpeschoolhigh_1981')
+upper_lims <- get_upper_lims(d40$temp, d40$rate, model_name = 'sharpeschoolhigh_1981')
+
+
+fit40 <- nls_multstart(rate~sharpeschoolhigh_1981(temp = temp, r_tref,e,eh,th, tref = 15),
+                     data = d40,
+                     iter = 500,
+                     start_lower = start_vals - 10,
+                     start_upper = start_vals + 10,
+                     lower = low_lims,
+                     upper = upper_lims,
+                     supp_errors = 'Y')
+
+summary(fit40)
+
+
+calc_params(fit40) %>%
+  # round for easy viewing
+  mutate_all(round, 2)
+
+calc_params(fit) %>%
+  # round for easy viewing
+  mutate_all(round, 2)
+
+# predict new data
+new_data40 <- data.frame(temp = seq(min(d40$temp), max(d40$temp), 0.5))
+preds40 <- augment(fit40, newdata = new_data40)
+
+# plot data and model fit
+ggplot(d40, aes(temp, rate)) +
+  geom_point() +
+  geom_line(aes(temp, .fitted), preds40, col = 'blue') +
+  theme_bw(base_size = 12) +
+  labs(x = 'Temperature (ºC)',
+       y = 'Growth rate',
+       title = 'Growth rates across temperatures for 40 evolved')
+
+
+
+dwild <- all_blocks %>% 
+  filter(evolution_history == "fRS585") %>% 
+  mutate(temp = test_temperature, rate = mu)
+
+# get start vals
+start_vals <- get_start_vals(dwild $temp, dwild $rate, model_name = 'sharpeschoolhigh_1981')
+
+# get limits
+low_lims <- get_lower_lims(dwild $temp, dwild $rate, model_name = 'sharpeschoolhigh_1981')
+upper_lims <- get_upper_lims(dwild $temp, dwild $rate, model_name = 'sharpeschoolhigh_1981')
+
+
+fitwild <- nls_multstart(rate~sharpeschoolhigh_1981(temp = temp, r_tref,e,eh,th, tref = 15),
+                       data = dwild,
+                       iter = 500,
+                       start_lower = start_vals - 10,
+                       start_upper = start_vals + 10,
+                       lower = low_lims,
+                       upper = upper_lims,
+                       supp_errors = 'Y')
+
+summary(fitwild)
+confint(fitwild)
+
+calc_params(fitwild) %>%
+  # round for easy viewing
+  mutate_all(round, 2)
+
+calc_params(fit) %>%
+  # round for easy viewing
+  mutate_all(round, 2)
+
+# predict new data
+new_datawild <- data.frame(temp = seq(min(dwild$temp), max(dwild$temp), 0.5))
+predswild <- augment(fitwild, newdata = new_datawild)
+
+# plot data and model fit
+ggplot(dwild, aes(temp, rate)) +
+  geom_point() +
+  geom_line(aes(temp, .fitted), predswild, col = 'blue') +
+  theme_bw(base_size = 12) +
+  labs(x = 'Temperature (ºC)',
+       y = 'Growth rate',
+       title = 'Growth rates across temperatures for 40 evolved')
+
+
+
+
+
+
+
+
+
+ggplot(d40, aes(temp, rate)) +
+  geom_point() +
+  geom_point(data = d, aes(temp, rate), color = "blue") +
+  geom_point(data = dwild, aes(temp, rate), color = "green") +
+  geom_point(data = d40, aes(temp, rate), color = "red") +
+  geom_line(aes(temp, .fitted), predswild, col = 'green', size = 1.5) +
+  geom_line(aes(temp, .fitted), preds, col = 'blue', size = 1.5) +
+  geom_line(aes(temp, .fitted), preds40, col = 'red', size = 1.5) +
+  theme_bw(base_size = 12) +
+  labs(x = 'Temperature (ºC)',
+       y = 'Growth rate',
+       title = 'Growth rates for 40 evolved (red) and 35 evolved populations (blue), wild type (green)')
+ggsave("figures/tpcs-descendants.png", width = 8, height = 6)
