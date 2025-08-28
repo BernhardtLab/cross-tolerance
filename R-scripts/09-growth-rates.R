@@ -606,6 +606,9 @@ all_blocks <- bind_rows(summary_df, summary_df_35, summary_df_41, summary_df_b2_
 
 write_csv(all_blocks, "data-processed/all-blocks-growth.csv")
 
+
+all_blocks <- read_csv("data-processed/all-blocks-growth.csv")
+
 all_blocks %>% 
   filter(test_temperature == 41) %>% 
   filter(evolution_history == "Fluconazole evolved") %>%

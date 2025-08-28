@@ -23,7 +23,7 @@ library(plotrix) ### for SE calculations
 
 # load data ---------------------------------------------------------------
 
-### notes from chatting with Sveta, July 11, possibly exclude 41? because not randomized
+### Notes that Nick thinks the Tecan (used for these wasn't reliable at 42... maybe we take out those data from the TPC?)
 
 
 ods <- read_csv("data-processed/all-temps-od.csv")
@@ -80,7 +80,7 @@ summary_df <- gdat_all %>%
 s2 <- summary_df %>% 
   separate(unique_id, into = c("well", "test_temperature", "treatment"), sep = "_", remove = FALSE)
 write_csv(s2, "data-processed/growth-tools-rates-tpcs.csv")
-
+s2 <- read_csv("data-processed/growth-tools-rates-tpcs.csv")
 
 s2 %>% 
   filter(treatment != "water") %>% 
@@ -99,7 +99,7 @@ ggsave("figures/mu-temperature.png", width = 8, height = 6)
 
 s3 <- s2 %>% 
   filter(treatment == "fRS585") %>% 
-  mutate(temp = as.numeric(test_temperature))
+  mutate(temp = as.numeric(test_temperature)) 
 
 start_vals <- get_start_vals(s3$test_temperature, s3$mu, model_name = "thomas_2012")
 lower_lims <- c(a = 0, b = -10, c = 0, topt = -100)
@@ -115,7 +115,7 @@ summary(fit)
 
 params <- coef(fit)
 
-temp_seq <- seq(min(s3$temp-5), max(s3$temp+5), length.out = 200)
+temp_seq <- seq(min(s3$temp-2), max(s3$temp+2), length.out = 200)
 
 
 predicted_mu <- thomas_2012(temp = temp_seq, 
@@ -146,6 +146,8 @@ boot_params <- boot_fit$t %>%
          tmax = topt + (0.5 * c))
 
 write_csv(boot_params, "data-processed/frs585-boot-params.csv")
+
+boot_params <- read_csv("data-processed/frs585-boot-params.csv")
 
 b2 <- boot_params %>% 
   summarise(mean_tmax = mean(tmax),
@@ -183,7 +185,7 @@ ggplot() +
 ggsave("figures/tpc-evolution-results.png", width = 8, height = 6)
 
 ggplot() + 
-  # geom_point(color = "grey", size = 2, data = s3, aes(x = temp, y = mu)) +  # observed data
+  geom_point(color = "grey", size = 2, data = s3, aes(x = temp, y = mu-.8)) +  # observed data
   geom_line(data = fit_df, aes(x = temp, y = mu-.8), color = "black", size = 1) +  # model fit
   labs(title = "N. glabrata (fRS585)", x = "Temperature", y = "Growth rate (per day)") +
   theme_minimal() +ylim(0, 10) +
