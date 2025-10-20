@@ -18,7 +18,11 @@ library(rTPC)
 library(minpack.lm)
 library(car) ### for bootstrapping
 library(plotrix) ### for SE calculations
-
+library(broom)
+library(tidyverse)
+library(conflicted)
+conflict_prefer("select", "dplyr")
+conflicts_prefer(dplyr::filter)
 
 
 # load data ---------------------------------------------------------------
@@ -249,7 +253,6 @@ calc_params(fit) %>%
   # round for easy viewing
   mutate_all(round, 2)
 
-library(broom)
 
 # predict new data
 new_data <- data.frame(temp = seq(min(d$temp), max(d$temp), 0.5))
@@ -536,7 +539,7 @@ for (id in names(d_split)) {
 boots <- bind_rows(boot_results, .id = "curveid")
 # write_csv(boots, "data-processed/all-tpcs-boots-filtered.csv") 
 write_csv(boots, "data-processed/all-tpcs-boots.csv") 
-
+boots <- read_csv("data-processed/all-tpcs-boots.csv")
 
 well_key <- all_blocks %>% 
   dplyr::select(strain, evolution_history) %>% 
@@ -550,7 +553,7 @@ boots2 <- boots %>%
 boots2 %>% 
   group_by(curveid, evolution_history) %>% 
   summarise(mean_tmax = mean(tmax),
-            se_tmax = std.error(tmax)) %>% View
+            se_tmax = std.error(tmax)) %>% 
   ggplot(aes(x = evolution_history, y = mean_tmax)) + geom_point()
   
   
@@ -603,7 +606,7 @@ df <- d
       tibble(temp = seq(min(.x$temp), max(.x$temp), length.out = 200)) %>%
         mutate(fit = predict(.y, newdata = tibble(temp = temp)))
     })) %>%
-    select(curve_id, pred) %>%
+    dplyr::select(curve_id, pred) %>%
     unnest(pred)
   
 preds2 <- preds %>% 
@@ -634,6 +637,34 @@ preds2 <- preds %>%
     )
   ggsave("figures/tpcs-all-no-facet.png", width = 10, height = 6)
   
+  
+  
+  ggplot() +
+    geom_point(data = df, aes(x = temp, y = rate, color = evolution_history)) +
+    geom_line(data = preds2, aes(x = temp, y = fit, color = evolution_history, group = curve_id), size = 1) +
+    # facet_wrap(~ evolution_history, scales = "free_y") +
+    theme_minimal() +
+    labs(
+      x = "Temperature (°C)",
+      y = "Growth rate",
+      title = "Sharpe–Schoolfield high fits per population"
+    )
+  ggsave("figures/tpcs-all-no-facet.png", width = 10, height = 6)
+  
+  preds2 %>% 
+    filter(evolution_history %in% c("35 evolved", "40 evolved")) %>%
+    ggplot(aes(x = temp, y = fit, group = curve_id, color = evolution_history)) + geom_line() 
+  ggsave("figures/tpcs-all-temp-evolved.png", width = 10, height = 6)
+  
+  
+  preds2 %>% 
+    # filter(evolution_history %in% c("35 evolved", "40 evolved", "Fluconazole evolved")) %>%
+    filter(evolution_history %in% c("35 evolved", "40 evolved", "Caspofungin evolved")) %>%
+    ggplot(aes(x = temp, y = fit, group = curve_id, color = evolution_history)) + geom_line() 
+  ggsave("figures/tpcs-all-temp-evolved.png", width = 10, height = 6)
+  
+  
+  
   length(unique(df$strain))
   
   
@@ -643,10 +674,10 @@ preds2 <- preds %>%
       params = map(fit, ~ broom::tidy(.x)),
       traits = map(fit, ~ calc_params(.x))
     ) %>%
-    select(curve_id, params, traits)
+    dplyr::select(curve_id, params, traits)
   
   # Parameter estimates
-  param_estimates <- param_table %>% select(curve_id, params) %>% unnest(params)
+  param_estimates <- param_table %>% dplyr::select(curve_id, params) %>% unnest(params)
   print(param_estimates)
   
   # Derived traits (topt, rmax, ctmax, etc.)
@@ -656,6 +687,9 @@ preds2 <- preds %>%
   
   traits <- trait_estimates %>% 
     left_join(well_key, by = c("curve_id" = "strain"))
+  
+  traits %>%
+    ggplot(aes(x = evolution_history, y = topt)) + geom_point()
 
   
   traits %>% 
