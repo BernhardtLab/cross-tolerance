@@ -26,6 +26,10 @@ all_data <- map_dfr(sheet_names, function(sheet) {
 })
 
 
+
+
+
+
 fluc_raw_march <- all_data %>% 
   filter(grepl("FLZ", sheet_name)) %>%
   rename("population" = "<>") %>% 
@@ -47,7 +51,8 @@ casp <- all_data %>%
   gather(key = concentration, value = OD, 3:ncol(all_data)) %>%
   filter(!is.na(OD)) %>% 
   mutate(concentration = as.numeric(concentration)) %>% 
-  mutate(concentration = ifelse(concentration == 0, 0.001, concentration))
+  mutate(concentration = ifelse(concentration == 0, 0.001, concentration)) %>% 
+  mutate(block_time = "March")
 
 
 casp %>% 
@@ -56,20 +61,50 @@ casp %>%
   
 
 
+
+
+# getting more of the caspofungin data ------------------------------------
+
+file_path_casp <- "data-raw/MICs/FINAL/Jan31.25(40C-ev_CASP_AMPB)/24h.xlsx"
+
+# Get all sheet names
+sheet_names_casp <- excel_sheets(file_path_casp)
+
+# Read and combine all sheets, adding a column with the sheet name
+all_data_casp <- map_dfr(sheet_names_casp , function(sheet) {
+  read_excel(file_path, sheet = sheet,range = "A24:M32") %>%
+    mutate(sheet_name = sheet)
+})
+
+casp_raw_jan <- all_data_casp %>% 
+  filter(grepl("CASP", sheet_name)) %>%
+  rename("population" = "<>") %>% 
+  dplyr::select(population, sheet_name, everything()) %>% 
+  gather(key = concentration, value = OD, 3:ncol(all_data)) %>%
+  filter(!is.na(OD)) %>% 
+  mutate(concentration = as.numeric(concentration)) %>% 
+  mutate(concentration = ifelse(concentration == 0, 0.001, concentration)) %>% 
+  mutate(block_time = "January")
+write_csv(casp_raw_jan, "data-raw/casp-mic-jan2025.csv")
+
+all_casp <- bind_rows(casp, casp_raw_jan) %>% 
+  unite(unique_pop, population, block_time, remove = FALSE)
+
+
 library(drc)       # for dose–response models
 library(pracma)    # for AUC via trapezoid
 
-ggplot(casp, aes(x = concentration, y = OD, color = population)) +
+ggplot(all_casp, aes(x = concentration, y = OD, color = population)) +
   geom_point() +
   geom_line() +
   scale_x_log10() +
   theme_minimal()
 
 # Split and fit model
-models <- casp %>%
-  group_by(population) %>%
+models <- all_casp %>%
+  group_by(unique_pop) %>%
   group_split() %>%
-  setNames(unique(casp$population)) %>%
+  setNames(unique(all_casp$unique_pop)) %>%
   lapply(function(sub_df) {
     tryCatch(
       drm(OD ~ concentration, data = sub_df, fct = LL.4()),
@@ -82,24 +117,37 @@ ic50_vals <- sapply(models, function(m) {
   ED(m, 50, interval = "none")[1]  # 50% effective dose
 })
 
-ic50_df <- data.frame(population = names(ic50_vals), IC50 = ic50_vals)
+ic50_df <- data.frame(unique_pop = names(ic50_vals), IC50 = ic50_vals)
 
 
-auc_df <- casp %>%
-  arrange(population, concentration) %>%
-  group_by(population) %>%
+auc_df <- all_casp %>%
+  arrange(unique_pop, concentration) %>%
+  group_by(unique_pop) %>%
   summarise(AUC = trapz(concentration, OD))
 
-mic_vals <- casp %>%
-  group_by(population) %>%
+mic_vals <- all_casp %>%
+  group_by(unique_pop) %>%
   summarise(MIC = min(concentration[OD < 0.1], na.rm = TRUE))  # adjust threshold as needed
 
 resistance_metrics <- ic50_df %>%
-  left_join(auc_df, by = "population") %>%
-  left_join(mic_vals, by = "population") %>% 
+  left_join(auc_df, by = "unique_pop") %>%
+  left_join(mic_vals, by = "unique_pop") %>% 
   filter(population != "Blank")
 
 kruskal.test(IC50 ~ population, data = resistance_metrics)
+
+resistance_metrics %>% 
+  filter(IC50 < .5) %>%  ### just getting rid of one outlier for now
+  ggplot(aes(x = population, y = IC50)) + geom_point() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ggsave("figures/caspofungin-ic-50.png", width = 8, height = 6)
+
+ic50_df %>% ### ok somehow now the 35 degrees are missing
+  filter(IC50 < .5) %>%  ### just getting rid of one outlier for now
+  ggplot(aes(x = unique_pop, y = IC50)) + geom_point() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ggsave("figures/caspofungin-ic-50.png", width = 8, height = 6)
+
 
 resistance_metrics %>% 
   filter(IC50 < .5) %>%  ### just getting rid of one outlier for now
