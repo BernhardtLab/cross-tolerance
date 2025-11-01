@@ -7,6 +7,9 @@ library(drc)       # for dose–response models
 library(pracma)    # for AUC via trapezoid
 library(cowplot)
 theme_set(theme_cowplot())
+library(minpack.lm)
+library(dplyr)
+library(car)
 
 
 thing1 <- read_excel("data-raw/MICs/FINAL/Mar6.25(35C-ev_ALL3+40C-ev_Res)/24h.xlsx", sheet = "Set3_Rep3_AMPB", range = "A24:M32") %>% 
@@ -85,6 +88,9 @@ all_mic_data %>%
   facet_wrap( ~ drug)
 
 write_csv(all_mic_data, "data-processed/all_mic_data.csv")
+
+
+# older data read in ------------------------------------------------------
 
 
 fluc_raw_march <- all_data %>% 
@@ -1001,27 +1007,35 @@ lines(fit ~ concentration, data = newdata, col = "blue", lwd = 2)
 
 # now fit all of them -----------------------------------------------------
 
-library(minpack.lm)
-library(dplyr)
-library(car)
 
 
-fluc1b <- read_csv("data-raw/fluc-mic-march2025.csv") %>% 
-  mutate(block = "march2025")
-fluc1c <- read_csv("data-processed/fluconazole-mic-feb262025.csv") %>% 
-  mutate(block = "feb2025")
 
+# fluc1b <- read_csv("data-raw/fluc-mic-march2025.csv") %>% 
+#   mutate(block = "march2025")
+# fluc1c <- read_csv("data-processed/fluconazole-mic-feb262025.csv") %>% 
+#   mutate(block = "feb2025")
+# # 
+# # 
+# all_fluc <- bind_rows(fluc1b, fluc1c) %>%
+#   separate(sheet_name, into = c("set", "rep", "drug"), sep = "_")
+# 
+# a2 <- all_fluc %>%
+#   unite("pop_rep", population, rep, set, sep = "_")
 
-all_fluc <- bind_rows(fluc1b, fluc1c) %>%
-  separate(sheet_name, into = c("set", "rep", "drug"), sep = "_")
+a2 <- all_mic_data %>%
+  separate(sheet_name, into = c("set", "rep", "drug_type"), sep = "_") %>%
+  unite("pop_rep", population, rep, set, drug, sep = "_")
 
-a2 <- all_fluc %>%
-  unite("pop_rep", population, rep, set, sep = "_")
 a3 <- a2 %>% 
   filter(concentration > 0) %>% 
   filter(!grepl("Blank", pop_rep)) 
 
 # data <- a3
+
+
+# boostrapping function ---------------------------------------------------
+
+
 
 fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123) {
   set.seed(seed)
@@ -1179,60 +1193,56 @@ b2 <- boot_params1 %>%
             lower_b = quantile(b, 0.025)) %>% 
   mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                        grepl(35, pop_rep) ~ "evolved 35",
-                                       grepl("fR", pop_rep) ~ "fRS585"))
+                                       grepl("fR", pop_rep) ~ "fRS585")) %>% 
+  mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
+                          grepl("fluc", pop_rep) ~ "fluconazole",
+                          grepl("casp", pop_rep) ~ "caspofungin"))
 
 ggplot() +
-  geom_pointrange(aes(x = pop_rep, y = mean_b, ymin = lower_b, ymax = upper_b, color = evolution_history), data = b2)
-ggsave("figures/mics-pointrange.png", width = 12, height = 5)
+  geom_pointrange(aes(x = pop_rep, y = mean_b, ymin = lower_b, ymax = upper_b, color = evolution_history), data = b2) +
+  facet_wrap( ~ drug)
+ggsave("figures/mics-pointrange-all-drugs.png", width = 12, height = 5)
 
 
 e2 <- boot_params1 %>%
-  group_by(pop_rep) %>% 
+  mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
+                          grepl("fluc", pop_rep) ~ "fluconazole",
+                          grepl("casp", pop_rep) ~ "caspofungin")) %>% 
+  group_by(pop_rep, drug) %>% 
   summarise(mean_e = mean(e),
             upper_e = quantile(e, 0.975),
             lower_e = quantile(e, 0.025)) %>% 
   mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                        grepl(35, pop_rep) ~ "evolved 35",
-                                       grepl("fR", pop_rep) ~ "fRS585"))
+                                       grepl("fR", pop_rep) ~ "fRS585")) 
 
 
 ggplot() +
-  geom_pointrange(aes(x = pop_rep, y = mean_e, ymin = lower_e, ymax = upper_e, color = evolution_history), data = e2)
+  geom_pointrange(aes(x = pop_rep, y = mean_e, ymin = lower_e, ymax = upper_e, color = evolution_history), data = e2) +
+  facet_wrap( ~ drug, scales = "free")
 ggsave("figures/mics-pointrange-e.png", width = 12, height = 5)
 
 
 
 ### note that this boot file is missing a bunch of fits, presumably because they failed at the fitting step
-boot_params1 %>% 
-  ggplot(aes(x = b)) + geom_density() +
-  facet_wrap( ~ pop_rep, scales = "free")
-ggsave("figures/mic-b.png", width = 30, height = 30)
-
-boot_params1 %>% 
-  ggplot(aes(x = e)) + geom_density() +
-  facet_wrap( ~ pop_rep, scales = "free")
-ggsave("figures/mic-e.png", width = 30, height = 30)
-
 
 
 tolerances <- results$ic50_table
 t2 <- tolerances %>% 
   mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                        grepl(35, pop_rep) ~ "evolved 35",
-                                       grepl("fR", pop_rep) ~ "fRS585"))
+                                       grepl("fR", pop_rep) ~ "fRS585")) %>% 
+  mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
+                          grepl("fluc", pop_rep) ~ "fluconazole",
+                          grepl("casp", pop_rep) ~ "caspofungin"))
 
 t2 %>% 
   ggplot(aes(x = pop_rep, y = IC50, color = evolution_history)) + geom_point() +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  facet_wrap( ~ drug, scales = "free")
 ggsave("figures/mics-fluc-wide.png", width = 20, height = 6)
 
-t2 %>% 
-  ggplot(aes(x = forcats::fct_reorder(pop_rep, IC50), y = IC50, color = evolution_history)) + geom_point() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  theme(legend.position = "none") +
-  coord_flip()
-ggsave("figures/mics-fluc-tall.png", width = 10, height = 30)
 
 library(plotrix)
 
@@ -1241,22 +1251,31 @@ library(plotrix)
 
 t3 <- t2 %>% 
   # filter(IC50 < 100) %>% 
-  separate(pop_rep, into = c("evolution_temp", "well", "rep", "set"), sep = "_", remove = FALSE) %>% 
-  unite("hist_well", evolution_temp, well, remove = FALSE) %>%
+  # separate(pop_rep, into = c("evolution_temp", "well", "rep", "set"), sep = "_", remove = FALSE) %>% 
+  separate(pop_rep, into = c("evolution_temp", "everything_else"), sep = "_", remove = FALSE) %>% 
+  mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
+                          grepl("fluc", pop_rep) ~ "fluconazole",
+                          grepl("casp", pop_rep) ~ "caspofungin")) %>% 
+  
+  # unite("hist_well", evolution_temp, well, remove = FALSE) %>%
   # mutate(hist_well = ifelse(grepl("fR", hist_well), "fRS585", hist_well)) %>%
-  group_by(hist_well, evolution_history) %>% 
-  summarise(mean_ic50 = mean(IC50)) %>% 
-  group_by(evolution_history) %>% 
-  summarise(mean_ic502 = mean(mean_ic50),
-            se_ic50 = std.error(mean_ic50))
+  # group_by(drug, evolution_history) %>% 
+  # summarise(mean_ic50 = mean(IC50)) %>% View
+  group_by(evolution_history, drug) %>% 
+  summarise(mean_ic502 = mean(IC50),
+            se_ic50 = std.error(IC50))
 
 
 
   ggplot() +
-  geom_pointrange(aes(x = evolution_history, y = mean_ic502, ymin = mean_ic502 - se_ic50, ymax = mean_ic502 + se_ic50), data = t3, color = "blue") + ylab("IC50 (fluconazole)")
-  ggsave("figures/ic50s-evolution-history.png", width = 6, height = 4)
+  geom_pointrange(aes(x = evolution_history, y = mean_ic502, ymin = mean_ic502 - se_ic50, ymax = mean_ic502 + se_ic50), data = t3, color = "blue") + ylab("IC50") +
+    facet_wrap( ~ drug, scales = "free")
+  ggsave("figures/ic50s-evolution-history-all-drugs.png", width = 12, height = 4)
   
-  fit_data2 <- results$fit_data %>% 
+ 
+  
+  
+   fit_data2 <- results$fit_data %>% 
     mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                          grepl(35, pop_rep) ~ "evolved 35",
                                          grepl("fR", pop_rep) ~ "fRS585"))
