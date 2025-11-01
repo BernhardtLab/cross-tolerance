@@ -16,22 +16,75 @@ thing1 <- read_excel("data-raw/MICs/FINAL/Mar6.25(35C-ev_ALL3+40C-ev_Res)/24h.xl
 # Path to the Excel file
 ### ok these are all the data now
 
-march_data <- "data-raw/MICs/FINAL/Mar6.25(35C-ev_ALL3+40C-ev_Res)/24h.xlsx"
-january_data <- "data-raw/MICs/FINAL/Jan31.25(40C-ev_CASP_AMPB)/24h.xlsx"
-february_data <- "data-raw/MICs/FINAL/Feb26.25(40C-ev_FLZ)/24h.xlsx"
+march_data <- "data-raw/MICs/FINAL/Mar6.25(35C-ev_ALL3+40C-ev_Res)/24h.xlsx" ## has all 3 drugs
+january_data <- "data-raw/MICs/FINAL/Jan31.25(40C-ev_CASP_AMPB)/24h.xlsx" ## casp and amph
+february_data <- "data-raw/MICs/FINAL/Feb26.25(40C-ev_FLZ)/24h.xlsx" ### fluc only
+
 
 # Get all sheet names
-sheet_names <- excel_sheets(file_path)
+sheet_names_march <- excel_sheets(march_data)
 
 # Read and combine all sheets, adding a column with the sheet name
-all_data <- map_dfr(sheet_names, function(sheet) {
-  read_excel(file_path, sheet = sheet,range = "A24:M32") %>%
+all_data_march <- map_dfr(sheet_names_march, function(sheet) {
+  read_excel(march_data, sheet = sheet,range = "A24:M32") %>%
     mutate(sheet_name = sheet)
-})
+}) %>% 
+  rename("population" = "<>") %>% 
+  dplyr::select(population, sheet_name, everything()) %>% 
+  gather(key = concentration, value = OD, 3:ncol(.)) %>%
+  filter(!is.na(OD)) %>% 
+  mutate(concentration = as.numeric(concentration)) %>% 
+  mutate(drug = case_when(grepl("CASP", sheet_name) ~ "caspofungin",
+                          grepl("AMPB", sheet_name) ~ "amphotericine",
+                          grepl("FLZ", sheet_name) ~ "fluconazole",
+                          TRUE ~ NA))
 
 
 
+# Get all sheet names january
+sheet_names_jan <- excel_sheets(january_data)
 
+# Read and combine all sheets, adding a column with the sheet name
+all_data_jan <- map_dfr(sheet_names_jan, function(sheet) {
+  read_excel(january_data, sheet = sheet,range = "A24:M32") %>%
+    mutate(sheet_name = sheet)
+}) %>% 
+  rename("population" = "<>") %>% 
+  dplyr::select(population, sheet_name, everything()) %>% 
+  gather(key = concentration, value = OD, 3:ncol(.)) %>%
+  filter(!is.na(OD)) %>% 
+  mutate(concentration = as.numeric(concentration)) %>% 
+  mutate(drug = case_when(grepl("CASP", sheet_name) ~ "caspofungin",
+                          grepl("AMPB", sheet_name) ~ "amphotericine",
+                          TRUE ~ NA))
+
+
+# Get all sheet names february
+sheet_names_feb <- excel_sheets(february_data)
+
+# Read and combine all sheets, adding a column with the sheet name
+all_data_feb <- map_dfr(sheet_names_feb, function(sheet) {
+  read_excel(february_data, sheet = sheet,range = "A24:M32") %>%
+    mutate(sheet_name = sheet)
+}) %>% 
+  rename("population" = "<>") %>% 
+  dplyr::select(population, sheet_name, everything()) %>% 
+  gather(key = concentration, value = OD, 3:ncol(.)) %>%
+  filter(!is.na(OD)) %>% 
+  mutate(concentration = as.numeric(concentration)) %>% 
+  mutate(drug = "fluconazole")
+
+
+all_mic_data <- bind_rows(all_data_feb, all_data_march, all_data_jan) %>% 
+  mutate(concentration = ifelse(concentration == 0, 0.1, concentration))
+
+
+all_mic_data %>% 
+  ggplot(aes(x = concentration, y = OD, color = population)) + geom_point() +
+  scale_x_log10() +
+  facet_wrap( ~ drug)
+
+write_csv(all_mic_data, "data-processed/all_mic_data.csv")
 
 
 fluc_raw_march <- all_data %>% 
@@ -84,7 +137,7 @@ casp_raw_jan <- all_data_casp %>%
   filter(grepl("CASP", sheet_name)) %>%
   rename("population" = "<>") %>% 
   dplyr::select(population, sheet_name, everything()) %>% 
-  gather(key = concentration, value = OD, 3:ncol(all_data)) %>%
+  gather(key = concentration, value = OD, 3:ncol(all_data_casp)) %>%
   filter(!is.na(OD)) %>% 
   mutate(concentration = as.numeric(concentration)) %>% 
   mutate(concentration = ifelse(concentration == 0, 0.001, concentration)) %>% 
