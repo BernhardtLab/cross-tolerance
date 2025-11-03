@@ -1271,6 +1271,25 @@ t3 <- t2 %>%
             se_ic50 = std.error(IC50))
 
 
+### this takes an average at the population level
+t2b <- t2 %>% 
+  # filter(IC50 < 100) %>% 
+  separate(pop_rep, into = c("evolution_temp", "well", "rep", "set"), sep = "_", remove = FALSE) %>%
+  # separate(pop_rep, into = c("evolution_temp", "everything_else"), sep = "_", remove = FALSE) %>% 
+  mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
+                          grepl("fluc", pop_rep) ~ "fluconazole",
+                          grepl("casp", pop_rep) ~ "caspofungin")) %>% 
+  
+  # unite("hist_well", evolution_temp, well, remove = FALSE) %>%
+  # mutate(hist_well = ifelse(grepl("fR", hist_well), "fRS585", hist_well)) %>%
+  # group_by(drug, evolution_history) %>% 
+  # summarise(mean_ic50 = mean(IC50)) %>% View
+  group_by(evolution_history, drug, well) %>% 
+  summarise(mean_ic503 = mean(IC50),
+            se_ic503 = std.error(IC50))
+
+
+
 
   ggplot() +
   geom_pointrange(aes(x = evolution_history, y = mean_ic502, ymin = mean_ic502 - se_ic50, ymax = mean_ic502 + se_ic50), data = t3, color = "blue") + ylab("IC50") +
@@ -1278,6 +1297,16 @@ t3 <- t2 %>%
   ggsave("figures/ic50s-evolution-history-all-drugs.png", width = 12, height = 4)
   
  
+  
+  #### now make this plot with all the populations, so we can see the spread
+  
+  ggplot() +
+    geom_point(aes(x = evolution_history, y = mean_ic503), data = t2b, alpha = 0.5) +
+    geom_pointrange(aes(x = evolution_history, y = mean_ic502, ymin = mean_ic502 - se_ic50, ymax = mean_ic502 + se_ic50), data = t3, color = "blue") +
+    ylab("IC50") +
+    facet_wrap( ~ drug, scales = "free") +
+    xlab("Evolution history")
+  ggsave("figures/ic50s-evolution-history-all-drugs-all-pops.png", width = 12, height = 4)
   
   
    fit_data2 <- results$fit_data %>% 

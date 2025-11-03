@@ -23,6 +23,8 @@ library(tidyverse)
 library(conflicted)
 conflict_prefer("select", "dplyr")
 conflicts_prefer(dplyr::filter)
+library(nls.multstart)
+library(rTPC)
 
 
 # load data ---------------------------------------------------------------
@@ -219,8 +221,7 @@ lower_lims <- c(a = 0, b = 0, c = 0, topt = 0)
 upper_lims <- c(a = 100, b = 10, c = 700, topt = 100)
 
 
-library(nls.multstart)
-library(rtpc)
+
 
 
 # choose model
@@ -547,15 +548,23 @@ distinct()
 
 
 boots2 <- boots %>% 
-  left_join(well_key, by = c("curve_id" = "strain"))
+  left_join(well_key, by = c("curve_id" = "strain")) %>% 
+  filter(topt > -99, a < 100)
 
 
-boots2 %>% 
+b2b <- boots2 %>% 
   group_by(curveid, evolution_history) %>% 
   summarise(mean_tmax = mean(tmax),
-            se_tmax = std.error(tmax)) %>% 
-  ggplot(aes(x = evolution_history, y = mean_tmax)) + geom_point()
+            se_tmax = std.error(tmax)) 
+
+b3 <- b2b %>% 
+  group_by(evolution_history) %>% 
+  summarise(mean_tmax2 = mean(mean_tmax),
+            se_tmax2 = std.error(mean_tmax))
   
+  ggplot() +
+    geom_point(aes(x = evolution_history, y = mean_tmax), data = b2b) +
+    geom_pointrange(aes(x = evolution_history, ymin = mean_tmax2 - se_tmax2, ymax = mean_tmax2 + se_tmax2, y = mean_tmax2), data = b3)
   
 
 # try again ---------------------------------------------------------------
@@ -603,7 +612,7 @@ df <- d
   preds <- fits %>%
     filter(map_lgl(fit, ~ !inherits(.x, "tpc_fit_error") && !is.null(.x))) %>%
     mutate(pred = map2(data, fit, ~ {
-      tibble(temp = seq(min(.x$temp), max(.x$temp), length.out = 200)) %>%
+      tibble(temp = seq(min(.x$temp)-10, max(.x$temp) + 5, length.out = 200)) %>%
         mutate(fit = predict(.y, newdata = tibble(temp = temp)))
     })) %>%
     dplyr::select(curve_id, pred) %>%
@@ -655,6 +664,8 @@ preds2 <- preds %>%
     filter(evolution_history %in% c("35 evolved", "40 evolved")) %>%
     ggplot(aes(x = temp, y = fit, group = curve_id, color = evolution_history)) + geom_line() 
   ggsave("figures/tpcs-all-temp-evolved.png", width = 10, height = 6)
+  
+  ### ok let's go back to try the thomas model -- this sharpeschoolfield doesn't look like it allows negative performance values
   
   
   preds2 %>% 
@@ -709,3 +720,24 @@ preds2 <- preds %>%
     ylab("Tmax") + xlab("Evolution history")
   ggsave("figures/tmax-evolution-history.png", width = 8, height = 6)
   
+
+  
+  t4 <- traits %>% 
+    group_by(evolution_history) %>% 
+    summarise(mean_tmax = mean(ctmax),
+              se_tmax = std.error(ctmax),
+              mean_topt = mean(topt),
+              se_topt = std.error(topt))
+  
+  
+ggplot() +
+    geom_pointrange(aes(x = evolution_history, y = mean_tmax, ymin = mean_tmax - se_tmax, ymax = mean_tmax + se_tmax), data = t4) +
+  geom_point(aes(x = evolution_history, y = ctmax), data = traits, alpha = 0.5) +
+    ylab("Tmax") + xlab("Evolution history")
+ggsave("figures/tmax-evolution-history-all-pops.png", width = 9, height = 6)
+
+ggplot() +
+  geom_pointrange(aes(x = evolution_history, y = mean_topt, ymin = mean_topt - se_topt, ymax = mean_topt + se_topt), data = t4) +
+  geom_point(aes(x = evolution_history, y = topt), data = traits, alpha = 0.5) +
+  ylab("Topt") + xlab("Evolution history")
+ggsave("figures/topt-evolution-history-all-pops.png", width = 9, height = 6)
