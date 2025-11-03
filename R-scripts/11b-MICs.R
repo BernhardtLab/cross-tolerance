@@ -11,9 +11,9 @@ library(minpack.lm)
 library(dplyr)
 library(car)
 
-
-thing1 <- read_excel("data-raw/MICs/FINAL/Mar6.25(35C-ev_ALL3+40C-ev_Res)/24h.xlsx", sheet = "Set3_Rep3_AMPB", range = "A24:M32") %>% 
-  rename("population" = "<>")
+# 
+# thing1 <- read_excel("data-raw/MICs/FINAL/Mar6.25(35C-ev_ALL3+40C-ev_Res)/24h.xlsx", sheet = "Set3_Rep3_AMPB", range = "A24:M32") %>% 
+#   rename("population" = "<>")
 
 
 # Path to the Excel file
@@ -78,8 +78,8 @@ all_data_feb <- map_dfr(sheet_names_feb, function(sheet) {
   mutate(drug = "fluconazole")
 
 
-all_mic_data <- bind_rows(all_data_feb, all_data_march, all_data_jan) %>% 
-  mutate(concentration = ifelse(concentration == 0, 0.1, concentration))
+all_mic_data <- bind_rows(all_data_feb, all_data_march, all_data_jan) 
+
 
 
 all_mic_data %>% 
@@ -1027,7 +1027,9 @@ a2 <- all_mic_data %>%
   unite("pop_rep", population, rep, set, drug, sep = "_")
 
 a3 <- a2 %>% 
-  filter(concentration > 0) %>% 
+  mutate(concentration = as.numeric(concentration)) %>% 
+  mutate(concentration = ifelse(concentration == 0, 0.000000000001, concentration)) %>% 
+  # filter(concentration > 0) %>% 
   filter(!grepl("Blank", pop_rep)) 
 
 # data <- a3
@@ -1037,7 +1039,7 @@ a3 <- a2 %>%
 
 
 
-fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123) {
+fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 5000, seed = 123) {
   set.seed(seed)
   
   warning_log <- list()  # NEW: capture warnings
@@ -1184,7 +1186,10 @@ View(results$fit_data)
 View(results$warning_log)
 
 
-boot_params1 <- results$boot_params
+boot_params1 <- results$boot_params %>% 
+  filter(b < 50) ### filtering out the bound hitting ones
+
+
 
 b2 <- boot_params1 %>%
   group_by(pop_rep) %>% 
@@ -1220,7 +1225,7 @@ e2 <- boot_params1 %>%
 ggplot() +
   geom_pointrange(aes(x = pop_rep, y = mean_e, ymin = lower_e, ymax = upper_e, color = evolution_history), data = e2) +
   facet_wrap( ~ drug, scales = "free")
-ggsave("figures/mics-pointrange-e.png", width = 12, height = 5)
+ggsave("figures/mics-pointrange-e-all-drugs.png", width = 12, height = 5)
 
 
 
@@ -1241,7 +1246,7 @@ t2 %>%
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
   theme(legend.position = "none") +
   facet_wrap( ~ drug, scales = "free")
-ggsave("figures/mics-fluc-wide.png", width = 20, height = 6)
+ggsave("figures/mics-fluc-wide-all-drugs.png", width = 20, height = 6)
 
 
 library(plotrix)
@@ -1278,27 +1283,44 @@ t3 <- t2 %>%
    fit_data2 <- results$fit_data %>% 
     mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                          grepl(35, pop_rep) ~ "evolved 35",
-                                         grepl("fR", pop_rep) ~ "fRS585"))
+                                         grepl("fR", pop_rep) ~ "fRS585")) %>% 
+     mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
+                             grepl("fluc", pop_rep) ~ "fluconazole",
+                             grepl("casp", pop_rep) ~ "caspofungin"))
   
   
   raw_data2 <- results$raw_data %>% 
     mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                          grepl(35, pop_rep) ~ "evolved 35",
-                                         grepl("fR", pop_rep) ~ "fRS585"))
+                                   grepl("fR", pop_rep) ~ "fRS585")) %>% 
+    mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
+                            grepl("fluc", pop_rep) ~ "fluconazole",
+                            grepl("casp", pop_rep) ~ "caspofungin"))
 
 ggplot() +
-  geom_point(size = 1.5, alpha = 0.6, data = raw_data2, aes(x = concentration, y = OD)) +
   geom_ribbon(data =  fit_data2, aes(x = concentration, ymin = lower, ymax = upper, group = pop_rep), 
               fill = "skyblue", alpha = 0.3) +
   geom_line(data =  fit_data2, aes(y = fit, x = concentration, group = pop_rep), color = "blue", size = .5) +
+  geom_point(size = 1.5, alpha = 0.6, data = raw_data2, aes(x = concentration, y = OD)) +
   scale_x_log10() +
-  facet_wrap(~ evolution_history) +
+  facet_wrap(drug ~ evolution_history) +
   labs(title = "Dose-Response Curves with 95% Bootstrapped CI",
        x = "Drug concentration (log scale)",
        y = "OD") +
   theme(legend.position = "none")
 # ggsave("figures/mic-logistic-boot.png", width = 25, height = 25)
-ggsave("figures/mic-logistic-boot-facet.png", width = 15, height = 10)
+ggsave("figures/mic-logistic-boot-facet-all-drugs.png", width = 15, height = 10)
+
+
+
+raw_data2 %>% 
+  filter(drug == "caspofungin") %>% 
+  distinct(concentration) %>% 
+  mutate(concentration = as.numeric(concentration)) %>% 
+  arrange()
+  
+  
+
 
 problem_reps <- c(
 # "40_D4_Rep3_Plate2",
@@ -1319,7 +1341,7 @@ problem_reps <- c(
 "40_E11_Rep1_Plate2")
 
 
-
+#### come back here Nov 1 2025 (see how many of the bootstraps are hitting against the bounds etc.)
 
 ggplot() +
   geom_point(size = 1.5, alpha = 0.6, data = subset(raw_data2, pop_rep %in% problem_reps), aes(x = concentration, y = OD)) +
