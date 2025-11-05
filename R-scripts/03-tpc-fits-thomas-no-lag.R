@@ -18,7 +18,7 @@ theme_set(theme_cowplot())
 
 #### Fitting TPCs with the Thomas model
 
-all_blocks <- read_csv("data-processed/all-blocks-growth.csv")
+all_blocks <- read_csv("data-processed/all-blocks-growth-no-lag.csv")
 d <- all_blocks %>% 
   mutate(curve_id = strain) %>% 
   mutate(temp = test_temperature, 
@@ -28,6 +28,11 @@ all_blocks2 <- all_blocks %>%
   mutate(curve_id = strain) %>% 
   mutate(temp = test_temperature, 
          rate = mu)
+
+d %>% 
+  ggplot(aes(x = temp, y = rate)) + geom_point()
+unique(d$strain)
+
 
 # Split into list by curve_id
 d_split <- split(d, d$curve_id)
@@ -188,12 +193,12 @@ boot_results2 <- purrr::pmap_dfr(
 
 boot_results_first <- bind_cols(boots, boot_results2)
 
-write_csv(boot_results_first, "data-processed/tpc-boots-thomas.csv") 
-boot_results_first_fit <- read_csv("data-processed/tpc-boots-thomas.csv")
+write_csv(boot_results_first, "data-processed/tpc-boots-thomas-no-lag.csv") 
+boot_results_first_fit <- read_csv("data-processed/tpc-boots-thomas-no-lag.csv")
 
 # Error log - save ----------------------------------------------
 
-write_csv(fit_error_log, "data-processed/fit_error_log-tpc-thomas.csv")
+write_csv(fit_error_log, "data-processed/fit_error_log-tpc-thomas-no-lag.csv")
 
 
 # now fit the ones that failed the first time -----------------------------
@@ -258,7 +263,7 @@ for (id in names(d_split)) {
       start = start_vals,
       lower = lower_lims,
       upper = upper_lims,
-      control = nls.lm.control(maxiter = 1000)
+      control = nls.lm.control(maxiter = 10000)
     )
   }, error = function(e) {
     message("nlsLM fit error for curve_id = ", id, ": ", conditionMessage(e))
@@ -346,17 +351,17 @@ boot_results2 <- purrr::pmap_dfr(
 )
 
 boot_results_second_fit <- bind_cols(boots, boot_results2)
-write_csv(boot_results_second_fit, "data-processed/tpc-boots-second-fit-thomas.csv") ### now need to merge these with the other boots from the first fit 
+write_csv(boot_results_second_fit, "data-processed/tpc-boots-second-fit-thomas-no-lag.csv") ### now need to merge these with the other boots from the first fit 
 
 
 boot_results_all <- bind_rows(boot_results_first_fit, boot_results_second_fit)
-write_csv(boot_results_all, "data-processed/tpc-boots-all-thomas.csv")
+write_csv(boot_results_all, "data-processed/tpc-boots-all-thomas-no-lag.csv")
 
 
 bs2 <- boot_results_all %>% 
   filter(topt > -99) %>% ### removing the bound hitting ones
-  group_by(curveid) %>% 
-  sample_n(size = 4000, replace = FALSE)### sampling 5000 so all curve ids have the same number of boots
+  group_by(curveid) %>%
+  sample_n(size = 474, replace = FALSE)### sampling 400 so all curve ids have the same number of boots (come back here!)
 
 well_key <- all_blocks %>% 
   dplyr::select(strain, evolution_history) %>% 
@@ -382,19 +387,19 @@ ggplot() +
   geom_point(aes( x= evolution_history, y = mean_tmax), data = bs3, alpha = 0.5) +
   geom_pointrange(aes(x = evolution_history, y = mean_tmax2, ymin = mean_tmax2-se_tmax2, ymax = mean_tmax2 + se_tmax2), data = bs4) +ylab("Tmax") +
   xlab("Evolution history")
-ggsave("figures/tmax-thomas.png", width = 9, height = 6)
+ggsave("figures/tmax-thomas-no-lag.png", width = 9, height = 6)
 
 ggplot() +
   geom_point(aes( x= evolution_history, y = mean_topt), data = bs3, alpha = 0.5) +
   geom_pointrange(aes(x = evolution_history, y = mean_topt2, ymin = mean_topt2-se_topt2, ymax = mean_topt2 + se_topt2), data = bs4) +ylab("Topt") +
   xlab("Evolution history")
-ggsave("figures/topt-thomas.png", width = 9, height = 6)
+ggsave("figures/topt-thomas-no-lag.png", width = 9, height = 6)
 
 ggplot() +
   # geom_point(aes( x= evolution_history, y = mean_topt), data = bs3, alpha = 0.5) +
   geom_pointrange(aes(x = evolution_history, y = mean_topt2, ymin = mean_topt2-se_topt2, ymax = mean_topt2 + se_topt2), data = bs4) +ylab("Topt") +
   xlab("Evolution history")
-ggsave("figures/topt-thomas-averages.png", width = 9, height = 6)
+ggsave("figures/topt-thomas-averages-no-lag.png", width = 9, height = 6)
 
 
 
@@ -427,7 +432,7 @@ ggplot() +
   geom_point(aes(x = temp, y = rate), data = all_blocks2) +
   ylim(-2, 13) +
   facet_wrap( ~ curve_id) +ylab("Growth rate") + xlab("Temperature") + coord_cartesian()
-ggsave("figures/all-tpcs-boots.png", width = 16, height = 14)  
+ggsave("figures/all-tpcs-boots-no-lag.png", width = 16, height = 14)  
 
 
 
@@ -438,7 +443,7 @@ ggplot() +
   ylim(0, 12) +
   ylab("Growth rate") + xlab("Temperature") +
   facet_wrap( ~ evolution_history, scales = "free") + xlim(10, 45)
-ggsave("figures/all-tpcs-boots-mean.png", width = 10, height = 6)  
+ggsave("figures/all-tpcs-boots-mean-no-lag.png", width = 10, height = 6)  
 
 
 ggplot() +
@@ -448,4 +453,4 @@ ggplot() +
   ylim(0, 12) +
   ylab("Growth rate") + xlab("Temperature") +
   facet_wrap( ~ evolution_history, scales = "free") + xlim(10, 45)
-ggsave("figures/all-tpcs-boots-mean-35.png", width = 10, height = 6)  
+ggsave("figures/all-tpcs-boots-mean-35-no-lag.png", width = 10, height = 6)  
