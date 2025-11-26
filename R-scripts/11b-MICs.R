@@ -1260,6 +1260,10 @@ ggsave("figures/mics-pointrange-e-all-drugs.png", width = 12, height = 5)
 
 
 tolerances <- results$ic50_table
+
+write_csv(tolerances, "data-processed/tolerances.csv")
+
+
 t2 <- tolerances %>% 
   mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                        grepl(35, pop_rep) ~ "evolved 35",
