@@ -22,7 +22,7 @@ library(car)
 march_data <- "data-raw/MICs/FINAL/Mar6.25(35C-ev_ALL3+40C-ev_Res)/24h.xlsx" ## has all 3 drugs
 january_data <- "data-raw/MICs/FINAL/Jan31.25(40C-ev_CASP_AMPB)/24h.xlsx" ## casp and amph
 february_data <- "data-raw/MICs/FINAL/Feb26.25(40C-ev_FLZ)/24h.xlsx" ### fluc only
-
+november_data <- "data-raw/MICs/FINAL/Nov9.25(Casp-ev_CASP)/24h.xlsx"
 
 # Get all sheet names
 sheet_names_march <- excel_sheets(march_data)
@@ -78,7 +78,24 @@ all_data_feb <- map_dfr(sheet_names_feb, function(sheet) {
   mutate(drug = "fluconazole")
 
 
-all_mic_data <- bind_rows(all_data_feb, all_data_march, all_data_jan) 
+# Get all sheet names november
+sheet_names_nov <- excel_sheets(november_data)
+
+# Read and combine all sheets, adding a column with the sheet name
+all_data_nov <- map_dfr(sheet_names_nov, function(sheet) {
+  read_excel(november_data, sheet = sheet,range = "A25:M30") %>%
+    mutate(sheet_name = sheet)
+}) %>% 
+  rename("population" = "<>") %>% 
+  dplyr::select(population, sheet_name, everything()) %>% 
+  gather(key = concentration, value = OD, 3:ncol(.)) %>%
+  filter(!is.na(OD)) %>% 
+  mutate(concentration = as.numeric(concentration)) %>% 
+  mutate(drug = "caspofungin")
+
+
+
+all_mic_data <- bind_rows(all_data_feb, all_data_march, all_data_jan, all_data_nov) 
 
 
 
