@@ -1039,9 +1039,19 @@ lines(fit ~ concentration, data = newdata, col = "blue", lwd = 2)
 # a2 <- all_fluc %>%
 #   unite("pop_rep", population, rep, set, sep = "_")
 
+
+
+# start here for fitting all the MICs (nov 2025) --------------------------
+
+
+
+
 a2 <- all_mic_data %>%
-  separate(sheet_name, into = c("set", "rep", "drug_type"), sep = "_") %>%
+  separate(sheet_name, into = c("set", "rep", "drug_type"), sep = "_", remove = FALSE) %>% 
   unite("pop_rep", population, rep, set, drug, sep = "_")
+
+### nov 25 JB come back here
+
 
 a3 <- a2 %>% 
   mutate(concentration = as.numeric(concentration)) %>% 
@@ -1253,7 +1263,8 @@ tolerances <- results$ic50_table
 t2 <- tolerances %>% 
   mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                        grepl(35, pop_rep) ~ "evolved 35",
-                                       grepl("fR", pop_rep) ~ "fRS585")) %>% 
+                                       grepl("fR", pop_rep) ~ "fRS585",
+                                       grepl("WT Casp-Ev", pop_rep) ~ "caspofungin evolved")) %>% 
   mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
                           grepl("fluc", pop_rep) ~ "fluconazole",
                           grepl("casp", pop_rep) ~ "caspofungin"))
@@ -1311,7 +1322,7 @@ t2b <- t2 %>%
   ggplot() +
   geom_pointrange(aes(x = evolution_history, y = mean_ic502, ymin = mean_ic502 - se_ic50, ymax = mean_ic502 + se_ic50), data = t3, color = "blue") + ylab("IC50") +
     facet_wrap( ~ drug, scales = "free")
-  ggsave("figures/ic50s-evolution-history-all-drugs.png", width = 12, height = 4)
+  ggsave("figures/ic50s-evolution-history-all-drugs-casp.png", width = 12, height = 4)
   
  
   
@@ -1323,13 +1334,14 @@ t2b <- t2 %>%
     ylab("IC50") +
     facet_wrap( ~ drug, scales = "free") +
     xlab("Evolution history")
-  ggsave("figures/ic50s-evolution-history-all-drugs-all-pops.png", width = 12, height = 4)
+  ggsave("figures/ic50s-evolution-history-all-drugs-all-pops-casp.png", width = 12, height = 4)
   
   
    fit_data2 <- results$fit_data %>% 
     mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                          grepl(35, pop_rep) ~ "evolved 35",
-                                         grepl("fR", pop_rep) ~ "fRS585")) %>% 
+                                         grepl("fR", pop_rep) ~ "fRS585",
+           grepl("WT Casp-Ev", pop_rep) ~ "caspofungin evolved")) %>% 
      mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
                              grepl("fluc", pop_rep) ~ "fluconazole",
                              grepl("casp", pop_rep) ~ "caspofungin"))
@@ -1338,6 +1350,7 @@ t2b <- t2 %>%
   raw_data2 <- results$raw_data %>% 
     mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
                                          grepl(35, pop_rep) ~ "evolved 35",
+                                         grepl("WT Casp-Ev", pop_rep) ~ "caspofungin evolved",
                                    grepl("fR", pop_rep) ~ "fRS585")) %>% 
     mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericine",
                             grepl("fluc", pop_rep) ~ "fluconazole",
