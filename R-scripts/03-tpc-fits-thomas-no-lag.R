@@ -13,6 +13,7 @@ library(boot)
 library(car)
 library(cowplot)
 theme_set(theme_cowplot())
+library(plotrix)
 
 
 
@@ -23,6 +24,9 @@ d <- all_blocks %>%
   mutate(curve_id = strain) %>% 
   mutate(temp = test_temperature, 
          rate = mu)
+
+length(unique(d$curve_id))
+
 
 all_blocks2 <- all_blocks %>% 
   mutate(curve_id = strain) %>% 
@@ -357,11 +361,15 @@ write_csv(boot_results_second_fit, "data-processed/tpc-boots-second-fit-thomas-n
 boot_results_all <- bind_rows(boot_results_first_fit, boot_results_second_fit)
 write_csv(boot_results_all, "data-processed/tpc-boots-all-thomas-no-lag.csv")
 
+boot_results_all <- read_csv("data-processed/tpc-boots-all-thomas-no-lag.csv")
+
+
+
 
 bs2 <- boot_results_all %>% 
   filter(topt > -99) %>% ### removing the bound hitting ones
   group_by(curveid) %>%
-  sample_n(size = 474, replace = FALSE)### sampling 400 so all curve ids have the same number of boots (come back here!)
+  sample_n(size = 4000, replace = FALSE)### sampling 4000 so all curve ids have the same number of boots (come back here!)
 
 well_key <- all_blocks %>% 
   dplyr::select(strain, evolution_history) %>% 
@@ -454,3 +462,8 @@ ggplot() +
   ylab("Growth rate") + xlab("Temperature") +
   facet_wrap( ~ evolution_history, scales = "free") + xlim(10, 45)
 ggsave("figures/all-tpcs-boots-mean-35-no-lag.png", width = 10, height = 6)  
+
+
+
+#### Ok now my goal is to compare the Thomas model to the SS model via AIC and figure out why the thermal trait estimates are so different
+

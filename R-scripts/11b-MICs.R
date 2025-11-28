@@ -1256,7 +1256,7 @@ ggsave("figures/mics-pointrange-e-all-drugs.png", width = 12, height = 5)
 
 
 
-### note that this boot file is missing a bunch of fits, presumably because they failed at the fitting step
+### note that this boot file is missing a bunch of fits, presumably because they failed at the fitting step (November 25 come back to this)
 
 
 tolerances <- results$ic50_table
