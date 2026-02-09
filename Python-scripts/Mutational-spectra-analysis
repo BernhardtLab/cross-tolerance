@@ -1,1 +1,105 @@
+import pandas as pd
+import os
 
+#Define directories
+input_files = ["variant_matrix.csv"]
+output_dir = "outputs"
+os.makedirs(output_dir, exist_ok=True)
+
+#Define mutation sets
+transitions = {('A', 'G'), ('G', 'A'), ('C', 'T'), ('T', 'C')}
+transversions = {
+    ('G', 'T'), ('T', 'G'),
+    ('A', 'C'), ('C', 'A'),
+    ('G', 'C'), ('C', 'G'),
+    ('A', 'T'), ('T', 'A')
+}
+all_types = list(transitions) + list(transversions)
+
+#Define 6 grouped mutation categories (and complementary changes)
+grouped_categories = {
+    "A:T->G:C": [('A', 'G'), ('T', 'C')],   # Transition
+    "G:C->A:T": [('G', 'A'), ('C', 'T')],   # Transition
+    "A:T->T:A": [('A', 'T'), ('T', 'A')],   # Transversion
+    "G:C->T:A": [('G', 'T'), ('C', 'A')],   # Transversion
+    "A:T->C:G": [('A', 'C'), ('T', 'G')],   # Transversion
+    "G:C->C:G": [('G', 'C'), ('C', 'G')]    # Transversion
+}
+
+#Process each file
+for input_file in input_files:
+    df = pd.read_csv(input_file)
+    populations = [c for c in df.columns if c not in ['REF', 'ALT']]
+    summary_list = []
+
+    for pop in populations:
+        pop_variants = df.dropna(subset=[pop]).copy()
+
+        counts = {mut: 0 for mut in all_types}
+        counts['transition'] = 0
+        counts['transversion'] = 0
+        counts['total'] = 0
+
+        for _, row in pop_variants.iterrows():
+            ref = row['REF'].upper()
+            alt = row['ALT'].upper()
+
+            if ref not in ['A','C','G','T'] or alt not in ['A','C','G','T']:
+                continue
+
+            counts['total'] += 1
+            mut = (ref, alt)
+            if mut in transitions:
+                counts['transition'] += 1
+                counts[mut] += 1
+            elif mut in transversions:
+                counts['transversion'] += 1
+                counts[mut] += 1
+
+        #Calculate category counts
+        grouped_counts = {}
+        for label, pairs in grouped_categories.items():
+            grouped_counts[label] = sum(counts[p] for p in pairs)
+
+        #Frequencies
+        transition_freq = counts['transition'] / counts['total'] if counts['total'] > 0 else 0
+        transversion_freq = counts['transversion'] / counts['total'] if counts['total'] > 0 else 0
+        ti_tv_ratio = counts['transition'] / counts['transversion'] if counts['transversion'] > 0 else None
+
+        grouped_freqs = {
+            f"{label}_freq": grouped_counts[label] / counts['total'] if counts['total'] > 0 else 0
+            for label in grouped_categories
+        }
+
+        #Create summary
+        summary = {
+            'population': pop,
+            'total_SNVs': counts['total'],
+            'transitions': counts['transition'],
+            'transversions': counts['transversion'],
+            'ti_tv_ratio': ti_tv_ratio
+        }
+
+        #Add grouped counts (6 total)
+        summary.update({f"{label}_count": grouped_counts[label] for label in grouped_categories})
+
+        #Add individual mutation counts
+        summary.update({f"{ref}->{alt}_count": counts[(ref, alt)] for (ref, alt) in all_types})
+
+        #Add grouped frequencies (6 total)
+        summary.update(grouped_freqs)
+
+        #Add individual mutation frequencies
+        for (ref, alt) in all_types:
+            summary[f"{ref}->{alt}_freq"] = counts[(ref, alt)] / counts['total'] if counts['total'] > 0 else 0
+
+        #Add transition/transversion frequencies
+        summary['transition_freq'] = transition_freq
+        summary['transversion_freq'] = transversion_freq
+
+        summary_list.append(summary)
+
+    #Save summary
+    summary_df = pd.DataFrame(summary_list)
+    out_file = os.path.join(output_dir, os.path.basename(input_file).replace(".csv", "_mutational_spectrum.csv"))
+    summary_df.to_csv(out_file, index=False)
