@@ -1,0 +1,45 @@
+#This script will call variants (SNPs AND indels) with LoFreq
+set -euo pipefail
+
+# CONFIGURATION
+ROOT="/Users/name/LoFreq"
+REF_FASTA="$ROOT/genome.fasta"
+PROCESSED="$ROOT/Processed"
+BAM_DIR="$PROCESSED"
+VCF_DIR="$PROCESSED/vcfs"
+INDELQ_BAM_DIR="$PROCESSED/indelq_bams"
+
+# Create output directories if they don't exist
+mkdir -p "$VCF_DIR"
+mkdir -p "$INDELQ_BAM_DIR"
+
+cd "$BAM_DIR"
+
+for BAM in *.sorted.dedup.bam
+do
+    BASE="${BAM%.bam}"
+
+    #1. Add indel qualities (if not already present), output in indelq_bams/
+    INDELQ_BAM="$INDELQ_BAM_DIR/${BASE}.indelq.bam"
+    if [ ! -f "$INDELQ_BAM" ]; then
+        echo "Adding indel qualities to $BAM..."
+        lofreq indelqual --dindel -f "$REF_FASTA" -o "$INDELQ_BAM" "$BAM"
+    else
+        echo "$INDELQ_BAM already exists. Skipping indelqual."
+    fi
+
+    #2. Index the indelq BAM (if needed)
+    if [ ! -f "$INDELQ_BAM.bai" ]; then
+        echo "Indexing $INDELQ_BAM..."
+        samtools index "$INDELQ_BAM"
+    fi
+
+    #3. Call variants with LoFreq, output in vcfs/
+    VCF="$VCF_DIR/${BASE}.indelq.lofreq.vcf"
+    if [ ! -f "$VCF" ]; then
+        echo "Calling variants (SNPs + indels) on $INDELQ_BAM..."
+        lofreq call-parallel --call-indels --pp-threads 4 -f "$REF_FASTA" -o "$VCF" "$INDELQ_BAM"
+    else
+        echo "$VCF already exists. Skipping LoFreq call."
+    fi
+done
