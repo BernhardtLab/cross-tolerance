@@ -1,1 +1,67 @@
+from Bio import SeqIO
+import gffutils
 
+#Define inputs
+genome_fasta = "genome.fasta"
+annotation_gff3 = "genome_annotations.gff3"
+
+#Get genome length
+total_genome_length = 0
+for record in SeqIO.parse(genome_fasta, "fasta"):
+    total_genome_length += len(record.seq)
+
+print(f"Total genome length: {total_genome_length:,} bp")
+
+#Load GFF3 file and collect CDS intervals
+db = gffutils.create_db(
+    annotation_gff3,
+    dbfn='tmp.db',
+    force=True,
+    keep_order=True,
+    merge_strategy='merge',
+    sort_attribute_values=True
+)
+cds_intervals = {}
+
+for cds in db.features_of_type("CDS"):
+    chrom = cds.chrom
+    start, end = cds.start, cds.end
+
+    if chrom not in cds_intervals:
+        cds_intervals[chrom] = []
+    cds_intervals[chrom].append((start, end))
+
+#Merge overlapping intervals per chromosome (this is to ensure that a region of DNA is not counted twice if there is more than one coding sequence that overlap in a given genomic region) 
+def merge_intervals(intervals):
+    if not intervals:
+        return []
+    intervals = sorted(intervals)
+    merged = [intervals[0]]
+
+    for current in intervals[1:]:
+        prev_start, prev_end = merged[-1]
+        curr_start, curr_end = current
+
+        if curr_start <= prev_end:  # overlap
+            merged[-1] = (prev_start, max(prev_end, curr_end))
+        else:
+            merged.append(current)
+    return merged
+
+merged_cds_intervals = {}
+total_coding_length = 0
+
+for chrom, intervals in cds_intervals.items():
+    merged = merge_intervals(intervals)
+    merged_cds_intervals[chrom] = merged
+    for start, end in merged:
+        total_coding_length += (end - start + 1)
+
+print(f"Total coding length: {total_coding_length:,} bp")
+
+#Compute proportions of conding vs. noncoding DNA in the genome
+coding_fraction = total_coding_length / total_genome_length
+noncoding_fraction = 1 - coding_fraction
+
+print(f"Coding fraction:     {coding_fraction:.4f} ({coding_fraction*100:.2f}%)")
+print(f"Non-coding fraction: {noncoding_fraction:.4f} ({noncoding_fraction*100:.2f}%)")
