@@ -1,0 +1,18 @@
+#Align paired-end reads to the reference genome with bwa mem and write an (unsorted) BAM file
+module load bwa/0.7.18 samtools/1.20
+
+#Get the sample ID from the list
+SAMPLE=$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" sample_list.txt)
+
+#Define Paths
+R1="Illumina_DNA_Reads/${SAMPLE}_R1_001.fastq.gz"
+R2="Illumina_DNA_Reads/${SAMPLE}_R2_001.fastq.gz"
+REF="genome.fasta"
+OUT_DIR="Alignments/BAM"
+BAM="${OUT_DIR}/${SAMPLE}.bam"
+
+mkdir -p "$OUT_DIR"
+
+#Run alignment
+echo "Aligning sample: $SAMPLE"
+bwa mem -t 8 "$REF" "$R1" "$R2" | samtools view -Sb - > "$BAM"
