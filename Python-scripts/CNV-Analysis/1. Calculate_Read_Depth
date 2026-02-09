@@ -1,0 +1,15 @@
+#This calculates the depth files needed for downstream steps
+module load samtools
+
+# Directories
+BAM_DIR=../Alignments/Processed
+OUT_DIR=depth_files
+
+mkdir -p $OUT_DIR
+
+# Loop through BAM files
+for BAM in $BAM_DIR/*sorted.dedup.bam; do
+    SAMPLE=$(basename $BAM .sorted.dedup.bam)
+    echo "Processing $SAMPLE..."
+    samtools depth -a $BAM > $OUT_DIR/${SAMPLE}.depth.txt
+done
