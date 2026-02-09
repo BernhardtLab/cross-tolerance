@@ -1,1 +1,100 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from pathlib import Path
+from adjustText import adjust_text
 
+#Define directories/inputs
+INPUT_CSV = "Matrix_PCA_input.csv"
+OUTPUT_DIR = "pca_outputs"
+N_PCS = 3   #compute PC1–PC3 so we can plot PC1vPC2 and PC1vPC3
+POINT_COLOR = "red"
+
+Path(OUTPUT_DIR).mkdir(exist_ok=True, parents=True)
+df = pd.read_csv(INPUT_CSV, index_col=0)
+
+#Extract GENE column (2nd column)
+gene_col = next((c for c in df.columns if "gene" in c.lower()), None)
+if gene_col is None:
+    raise ValueError("No gene column detected in input.")
+
+#Save mapping: variant -> gene
+gene_names_series = df[gene_col].astype(str).copy()
+
+#Drop gene column for PCA input
+df = df.drop(columns=[gene_col])
+
+#Convert to numeric, fill NAs with 0 (absence)
+X = df.apply(pd.to_numeric, errors="coerce").fillna(0.0).T
+# Now X: samples × variants
+
+#Center (no scaling)
+Xc = X - X.mean(axis=0)
+
+#PCA
+pca = PCA(n_components=N_PCS)
+pcs = pca.fit_transform(Xc)
+var_ratio = pca.explained_variance_ratio_
+
+pc_df = pd.DataFrame(
+    pcs,
+    index=X.index,
+    columns=[f"PC{i+1}" for i in range(N_PCS)]
+)
+
+print("Explained variance ratios:", var_ratio)
+
+#Function to plot and export coordinates
+def plot(pc_x, pc_y):
+    fig, ax = plt.subplots(figsize=(7,7))  #square figure
+
+    #Scatter points (slightly larger)
+    ax.scatter(pc_df[pc_x], pc_df[pc_y], s=100,
+               facecolors=POINT_COLOR, edgecolor='black', zorder=2)
+
+    texts = []
+    xs = pc_df[pc_x].values
+    ys = pc_df[pc_y].values
+    labels = pc_df.index
+
+    #Create label objects (large font)
+    for x0, y0, lbl in zip(xs, ys, labels):
+        texts.append(ax.text(x0, y0, lbl, fontweight='bold', fontsize=12, fontname="Arial"))
+
+    #Repel the datapoints + red connecting lines
+    adjust_text(
+        texts,
+        x=xs,
+        y=ys,
+        ax=ax,
+        arrowprops=dict(arrowstyle="-", color="red", lw=1.0)
+    )
+
+    #Axis labels in bold, larger font
+    ax.set_xlabel(f"{pc_x} ({var_ratio[int(pc_x[2:])-1]*100:.1f}% var)",
+                  fontweight='bold', fontname="Arial", fontsize=20)
+    ax.set_ylabel(f"{pc_y} ({var_ratio[int(pc_y[2:])-1]*100:.1f}% var)",
+                  fontweight='bold', fontname="Arial", fontsize=20)
+
+    #Make tick labels bold, Arial, larger
+    ax.tick_params(axis='both', which='major', labelsize=20, width=2, length=6)
+    for tick in ax.get_xticklabels() + ax.get_yticklabels():
+        tick.set_fontweight('bold')
+        tick.set_fontname('Arial')
+    for spine in ax.spines.values():
+        spine.set_linewidth(2)
+
+    plt.tight_layout()
+    fig.savefig(Path(OUTPUT_DIR)/f"{pc_x}_vs_{pc_y}.png", dpi=300)
+    plt.close(fig)
+
+    #Export coordinates (helpful if you want to plot on Graphpad/Prism or other external program)
+    coord_df = pc_df[[pc_x, pc_y]].copy()
+    coord_df.insert(0, "Sample", coord_df.index)
+    coord_df.to_csv(Path(OUTPUT_DIR)/f"{pc_x}_{pc_y}_coordinates.csv", index=False)
+
+#Make plots and export coordinates
+plot("PC1", "PC2")
+if N_PCS >= 3:
+    plot("PC1", "PC3")
