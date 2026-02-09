@@ -1,0 +1,214 @@
+import pandas as pd
+from collections import defaultdict
+from Bio import SeqIO
+from Bio.Seq import Seq
+
+#Define inputs
+GENOME_FASTA = "genome.fasta"
+CDS_FASTA = "genome_coding_sequences.fasta"
+GFF3_PATH = "genome_annotations.gff3"
+VARIANT_TABLE = "variant_matrix.csv"
+OUTPUT_TSV = "output_matrix.tsv"
+
+#Define functions
+#This standardizes the gene/transcript IDs by removing trailing isoform or protein suffixes (in the name) so different annotation sources match
+def strip_suffix(name):
+    """Strip trailing '-X' (transcript or protein suffix)."""
+    return name.split("-", 1)[0]
+
+#When REF and ALT share bases at the beginning or end, those shared bases are not necessary to describe the actual mutation, so we remove those and shift the POS of the variant accordingly
+def normalize_alleles(pos, ref, alt):
+    """
+    Normalize REF/ALT/POS:
+      - Trim matching suffixes
+      - Trim matching prefixes (shift POS)
+    """
+    ref, alt = str(ref), str(alt)
+
+    #Trim suffixes
+    while len(ref) > 1 and len(alt) > 1 and ref[-1] == alt[-1]:
+        ref, alt = ref[:-1], alt[:-1]
+
+    #Trim prefixes
+    while len(ref) > 1 and len(alt) > 1 and ref[0] == alt[0]:
+        ref, alt = ref[1:], alt[1:]
+        pos += 1
+
+    return pos, ref, alt
+
+#Load inputs
+#This also maps the stripped gene IDs to their corresponding CDS sequence while reporting cases (if any) where multiple CDS entries collapse to the same gene name
+genome = SeqIO.to_dict(SeqIO.parse(GENOME_FASTA, "fasta"))
+raw_cds = SeqIO.to_dict(SeqIO.parse(CDS_FASTA, "fasta"))
+cds_seqs = {}
+suffix_map = defaultdict(list)
+
+for raw_id, rec in raw_cds.items():
+    key = strip_suffix(raw_id)
+    suffix_map[key].append(raw_id)
+    if key not in cds_seqs:
+        cds_seqs[key] = rec
+
+if any(len(v) > 1 for v in suffix_map.values()):
+    print("Warning: multiple CDS FASTA entries map to same stripped ID.")
+    for k, v in list({k: v for k, v in suffix_map.items() if len(v) > 1}.items())[:20]:
+        print(f"  {k}: {v}")
+
+#Collect CDS exon coordinates
+cds_exons = defaultdict(list)
+
+try:
+    with open(GFF3_PATH) as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            parts = line.strip().split("\t")
+            if len(parts) < 9:
+                continue
+
+            seqid, _, feature, s, e, _, strand, _, attrs = parts
+            if feature != "CDS":
+                continue
+
+            attributes = {
+                k: v for k, v in (item.split("=", 1) for item in attrs.split(";") if "=" in item)
+            }
+            parent = attributes.get("Parent") or attributes.get("ID")
+            if parent:
+                key = strip_suffix(parent)
+                cds_exons[key].append((seqid, int(s), int(e), strand))
+
+    #Sort exons by genomic start
+    for k in cds_exons:
+        cds_exons[k].sort(key=lambda x: x[1])
+
+except FileNotFoundError:
+    print("GFF3 not found")
+    cds_exons = {}
+
+#Load variant table
+try:
+    df = pd.read_csv(VARIANT_TABLE, sep=",", engine="python")
+    if len(df.columns) == 1:
+        df = pd.read_csv(VARIANT_TABLE, sep="\t", engine="python")
+except Exception:
+    df = pd.read_csv(VARIANT_TABLE, sep="\t", engine="python")
+
+#Handle CSVs exported with a single merged column
+if len(df.columns) == 1:
+    cols = df.columns[0].split(",")
+    df = df.iloc[1:]
+    df.columns = cols
+    df.reset_index(drop=True, inplace=True)
+
+#Finally, annotate variants
+def annotate_variant(row):
+    """Core function: returns consequence string."""
+    gene = row["ID"]
+
+    if gene == "." or pd.isna(gene):
+        return "intergenic"
+    if gene not in cds_seqs:
+        return "noncoding_or_missing_CDS"
+
+    #Extract CDS sequence
+    seq = str(cds_seqs[gene].seq)
+
+    #Raw fields
+    raw_pos = int(row["POS"])
+    start, end = int(row["Start"]), int(row["End"])
+    strand = row["Strand"]
+    raw_ref, raw_alt = str(row["REF"]), str(row["ALT"])
+
+    #Normalize alleles
+    pos, ref_norm, alt_norm = normalize_alleles(raw_pos, raw_ref, raw_alt)
+
+    #Find position inside spliced CDS
+    exons = cds_exons.get(gene)
+    if not exons:
+        #Fallback: assume contiguous CDS coordinates
+        if not (start <= pos <= end):
+            return "intron_or_UTR"
+        if strand == "+":
+            cds_pos = pos - start
+            ref, alt = ref_norm, alt_norm
+        else:
+            cds_pos = end - pos
+            seq = str(Seq(seq).reverse_complement())
+            ref = str(Seq(ref_norm).reverse_complement())
+            alt = str(Seq(alt_norm).reverse_complement())
+    else:
+        #Exon-aware mapping
+        cds_offset = 0
+        found = False
+
+        for _, es, ee, _ in exons:
+            if es <= pos <= ee:
+                cds_pos = cds_offset + (pos - es)
+                found = True
+                break
+            cds_offset += (ee - es + 1)
+
+        if not found:
+            return "intron_or_UTR"
+
+        total_len = sum(ee - es + 1 for _, es, ee, _ in exons)
+
+        if strand == "-":
+            cds_pos = total_len - 1 - cds_pos
+            seq = str(Seq(seq).reverse_complement())
+            ref = str(Seq(ref_norm).reverse_complement())
+            alt = str(Seq(alt_norm).reverse_complement())
+        else:
+            ref, alt = ref_norm, alt_norm
+
+    #Sanity checks
+    
+    #This basically verifies that the REF allele and mapped position agree with both the genome sequence and CDS sequence to catch annotation mismatches
+    contig = row.get("Contig") or row.get("CHROM")
+    try:
+        genome_sub = str(genome[contig].seq[pos - 1 : pos - 1 + len(ref_norm)])
+    except Exception:
+        genome_sub = None
+
+    if genome_sub and genome_sub != ref_norm:
+        return "annotation_mismatch"
+
+    if cds_pos < 0 or cds_pos + len(ref) > len(seq):
+        return "annotation_mismatch"
+    if seq[cds_pos : cds_pos + len(ref)] != ref:
+        return "annotation_mismatch"
+
+    #Actual annotation
+
+    #Indel. This classifies insertions/deletions as frameshift or in-frame, depending on the length
+    if len(ref) != len(alt):
+        return "inframe_indel" if (len(ref) - len(alt)) % 3 == 0 else "frameshift"
+
+    #Substitution
+    sub_len = len(ref)
+    codon_start = (cds_pos // 3) * 3
+    codon_end = min(((cds_pos + sub_len - 1) // 3 + 1) * 3, len(seq))
+    segment = seq[codon_start:codon_end]
+
+    #Ensure full codons
+    expected = (codon_end - codon_start)
+    if len(segment) < expected:
+        segment += ref[0] * (expected - len(segment))
+
+    rel = cds_pos - codon_start
+    new_segment = segment[:rel] + alt + segment[rel + sub_len:]
+
+    #This translates the original and mutated codons and classifies the change as synonymous, missense, or nonsense
+    aa_old = str(Seq(segment).translate())
+    aa_new = str(Seq(new_segment).translate())
+
+    if aa_old == aa_new:
+        return "synonymous"
+    if "*" in aa_new:
+        return "nonsense"
+    return "missense"
+
+#Run and output. The first line will apply the annotation function to every row in the variant table to assign functional consequences
+df["Consequence"] = df.apply(annotate_variant, axis=1)
+df.to_csv(OUTPUT_TSV, sep="\t", index=False)
