@@ -1,0 +1,123 @@
+#This code classifies each genome window in each sample as a deletion/duplication/triplication based on normalized read-depth thresholds 
+#The reason we set the duplication threshold as 1.5 and not 2.0, for example, is that we have population-level sequencing data, so we use relaxed thresholds to capture heterogeneous CNVs expected in populations
+#This code also maps the corresponding genes to the CNV (if there is one). The logic is that we associate a gene with a CNV window when at least 50% of the CNV overlaps the gene
+    #This therefore accounts for situations where a deletion likely affects a certain gene, even though it may not completely overlap with the gene
+#If a CNV overlaps with multiple genes, two rows will be output (which will have the same information, except the gene info column will be different)
+
+import os
+import pandas as pd
+
+#Define inputs
+input_dir = "normalized_depth"
+cnv_dir = "CNV_calls"
+gff_file = "genome_annotation.gff3"
+conversion_file = "contig_conversion.csv" #This is a file that converts the contig names to their corresponding chromosome ID
+os.makedirs(cnv_dir, exist_ok=True)
+
+#Set the CNV thresholds
+dup_thresh = 1.5
+trip_thresh = 2.5
+del_thresh = 0.5
+
+#Load GFF and contig conversion file
+gff_cols = ['chrom', 'source', 'feature', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
+gff_df = pd.read_csv(gff_file, sep='\t', comment='#', names=gff_cols)
+gff_genes = gff_df[gff_df['feature'] == 'gene'].copy()
+
+#Extract gene name from attributes
+def extract_gene_name(attr):
+    for item in attr.split(';'):
+        if item.startswith('Name='):
+            return item.replace('Name=', '')
+        if item.startswith('gene='):
+            return item.replace('gene=', '')
+    return 'unknown'
+gff_genes['gene_name'] = gff_genes['attributes'].apply(extract_gene_name)
+
+#Load contig to chromosome mapping
+conv_df = pd.read_csv(conversion_file)
+chrom_to_contig = dict(zip(conv_df['chromosome'], conv_df['contig']))
+
+#Process all of the samples
+norm_files = [f for f in os.listdir(input_dir) if f.endswith("_normalized_depth.csv")]
+norm_files.sort()
+
+for file in norm_files:
+    sample_name = file.replace("_normalized_depth.csv", "")
+    df = pd.read_csv(os.path.join(input_dir, file))
+
+    #Assign chromosome label
+    if 'chromosome' in df.columns:
+        df['chrom_label'] = df['chromosome']
+    else:
+        df['chrom_label'] = df['chrom']
+
+    #CNV classification
+    df['CNV'] = 'neutral'
+    df.loc[df['normalized_depth'] > trip_thresh, 'CNV'] = 'triplication or higher'
+    df.loc[(df['normalized_depth'] > dup_thresh) & (df['normalized_depth'] <= trip_thresh), 'CNV'] = 'duplication'
+    df.loc[df['normalized_depth'] < del_thresh, 'CNV'] = 'deletion'
+
+    #Keep only non-neutral CNVs (ie. do not keep those that did not pass any of the thresholds to be called as a duplication, deletion, or triplication)
+    df_cnv = df[df['CNV'] != 'neutral'].copy()
+    if df_cnv.empty:
+        print(f"No CNVs found for {sample_name}")
+        continue
+    results = []
+
+    #Overlap logic (include all CNVs). Loop through all of the CNVs
+    for _, cnv in df_cnv.iterrows():
+        chrom_label = cnv['chrom_label']
+        contig = chrom_to_contig.get(chrom_label, chrom_label)
+        cnv_start = cnv['start']
+        cnv_end = cnv['end']
+        cnv_len = cnv_end - cnv_start
+
+        #Only check the genes on the chromosome that the CNV affects
+        gff_subset = gff_genes[gff_genes['chrom'] == contig]
+        overlaps = []
+
+        #Measure the overlap between the given CNV and each gene (ie. how many bp overlap between a CNV and a gene)
+        for _, gene in gff_subset.iterrows():
+            overlap_start = max(cnv_start, gene['start'])
+            overlap_end = min(cnv_end, gene['end'])
+            overlap_len = max(0, overlap_end - overlap_start)
+
+            #Keep genes that overlap >= 50% of CNV
+            if overlap_len >= 0.5 * cnv_len:
+                overlaps.append({
+                    'gene_name': gene['gene_name'],
+                    'gene_start': gene['start'],
+                    'gene_end': gene['end']
+                })
+
+        #If overlaps are found, make multiple rows. Otherwise, make one blank row
+        if overlaps:
+            for g in overlaps:
+                results.append({
+                    'chrom': cnv['chrom'],
+                    'chrom_label': chrom_label,
+                    'start': cnv_start,
+                    'end': cnv_end,
+                    'normalized_depth': cnv['normalized_depth'],
+                    'CNV': cnv['CNV'],
+                    'gene_name': g['gene_name'],
+                    'gene_start': g['gene_start'],
+                    'gene_end': g['gene_end']
+                })
+        else:
+            results.append({
+                'chrom': cnv['chrom'],
+                'chrom_label': chrom_label,
+                'start': cnv_start,
+                'end': cnv_end,
+                'normalized_depth': cnv['normalized_depth'],
+                'CNV': cnv['CNV'],
+                'gene_name': '',
+                'gene_start': '',
+                'gene_end': ''
+            })
+
+    #Save results
+    out_file = os.path.join(cnv_dir, f"{sample_name}_CNV_genes.csv")
+    pd.DataFrame(results).to_csv(out_file, index=False)
