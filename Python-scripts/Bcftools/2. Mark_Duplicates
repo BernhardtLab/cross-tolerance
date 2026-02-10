@@ -1,0 +1,27 @@
+#This code goes through all of the .bam files, sorts them, and marks duplicates
+#This allows downstream tools (like when calling variants) to ignore any duplicates that may have arisen during PCR/sequencing
+
+module load samtools
+module load picard/3.1.0
+
+# Get list of BAM files
+BAM_FILES=($(ls Alignments/BAM/*.bam))
+INPUT_BAM=${BAM_FILES[$SLURM_ARRAY_TASK_ID]}
+BASENAME=$(basename "$INPUT_BAM" .bam)
+OUTDIR="Alignments/Processed"
+mkdir -p $OUTDIR
+
+#Step 1: Sort
+SORTED_BAM=${OUTDIR}/${BASENAME}.sorted.bam
+samtools sort -@ 4 -o $SORTED_BAM $INPUT_BAM
+
+#Step 2: Mark duplicates using Picard
+DEDUP_BAM=${OUTDIR}/${BASENAME}.sorted.dedup.bam
+METRICS_FILE=${OUTDIR}/${BASENAME}.dedup.metrics.txt
+
+java -jar $EBROOTPICARD/picard.jar MarkDuplicates \
+    I=$SORTED_BAM \
+    O=$DEDUP_BAM \
+    M=$METRICS_FILE \
+    CREATE_INDEX=true \
+    VALIDATION_STRINGENCY=SILENT
