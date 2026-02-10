@@ -1,0 +1,174 @@
+#This code subtracts all of the control (ancestor and 35°C-evolved) CNV intervals from the 40°C-evolved CNVs and retains only the segments that remain unique to the 40°C populations, provided they exceed a minimum unique length
+#It also checks if any of the 40°C-evolved CNVs affect a gene that is also affected by one of the control populations, and counts them (even if the CNVs themselves between the 40°C-evolved and control populations don't overlap)
+    #We don't necessarily want to ignore these, but it is important to know if the gene affected is not unique to the heat-evolution 
+
+import os
+import pandas as pd
+
+cnv_dir = "CNV_calls"                 #Directory containing *_CNV_genes.csv files
+output_dir = "CNV_calls_filtered"     
+os.makedirs(output_dir, exist_ok=True)
+
+control_prefixes = ["35_", "585_"]    #Control CNV files
+experimental_prefix = "40_"           #Experimental CNV files
+min_unique_length = 50                #Minimum bp that must be unique to 40C CNVs
+
+#Merge overlapping intervals
+def merge_intervals(intervals):
+    if not intervals:
+        return []
+    intervals = sorted(intervals, key=lambda x: x[0])
+    merged = [intervals[0]]
+    for start, end in intervals[1:]:
+        last_start, last_end = merged[-1]
+        if start <= last_end:
+            merged[-1] = (last_start, max(end, last_end))
+        else:
+            merged.append((start, end))
+    return merged
+
+#Load and merge control CNVs
+control_cnvs = []
+control_gene_map = {}  # {chrom: {gene_name: set([pop1, pop2, ...])}}
+
+for f in os.listdir(cnv_dir):
+    if any(f.startswith(prefix) for prefix in control_prefixes) and f.endswith("_CNV_genes.csv"):
+        pop_name = f.split("_CNV_genes.csv")[0]
+        df = pd.read_csv(os.path.join(cnv_dir, f), dtype=str)  #Read as str to avoid float issues
+
+        #Normalize column values early and ensure true NaNs become empty strings
+        if 'chrom_label' in df.columns:
+            df['chrom_label'] = df['chrom_label'].fillna("").astype(str).str.strip()
+        if 'gene_name' in df.columns:
+            #fillna before astype to avoid "nan" strings, then strip and remove any literal "nan"
+            df['gene_name'] = df['gene_name'].fillna("").astype(str).str.strip()
+            df['gene_name'] = df['gene_name'].replace("^nan$", "", regex=True)
+
+        for chrom, group in df.groupby('chrom_label'):
+            for _, row in group.iterrows():
+                #Ensure start/end are numeric
+                try:
+                    start = int(float(row['start']))
+                    end = int(float(row['end']))
+                except Exception:
+                    continue
+                control_cnvs.append((chrom, start, end))
+
+                gene_cell = row.get('gene_name', "")
+                #Skip if empty or literal "nan"
+                if not gene_cell or str(gene_cell).lower() == "nan":
+                    continue
+                #Split multiple gene names if present
+                if (';' in gene_cell) or (',' in gene_cell):
+                    parts = []
+                    for sep in [';', ',']:
+                        gene_cell = gene_cell.replace(sep, ';')
+                    parts = [g.strip() for g in gene_cell.split(';')]
+                    genes = [g for g in dict.fromkeys(parts) if g]
+                else:
+                    genes = [gene_cell]
+                #Dedupe and ignore empty
+                genes = [g for g in genes if g]
+                for gene_name in genes:
+                    control_gene_map.setdefault(chrom, {}).setdefault(gene_name, set()).add(pop_name)
+
+#Merge overlapping CNVs per chromosome
+control_merged = {}
+if control_cnvs:
+    df_ctrl = pd.DataFrame(control_cnvs, columns=['chrom', 'start', 'end'])
+    for chrom, group in df_ctrl.groupby('chrom'):
+        # ensure numeric
+        intervals = [(int(s), int(e)) for s, e in zip(group['start'], group['end'])]
+        control_merged[chrom] = merge_intervals(intervals)
+
+#Filter experimental CNVs
+exp_files = [f for f in os.listdir(cnv_dir) if f.startswith(experimental_prefix) and f.endswith("_CNV_genes.csv")]
+
+for f in exp_files:
+    df = pd.read_csv(os.path.join(cnv_dir, f), dtype=str)
+    #Normalize and ensure true NaNs become empty strings
+    if 'chrom_label' in df.columns:
+        df['chrom_label'] = df['chrom_label'].fillna("").astype(str).str.strip()
+    if 'gene_name' in df.columns:
+        df['gene_name'] = df['gene_name'].fillna("").astype(str).str.strip()
+        df['gene_name'] = df['gene_name'].replace("^nan$", "", regex=True)
+    if 'start' in df.columns:
+        df['start'] = df['start'].astype(float).astype(int)
+    if 'end' in df.columns:
+        df['end'] = df['end'].astype(float).astype(int)
+
+    keep_rows = []
+    for _, row in df.iterrows():
+        chrom = row['chrom_label']
+        cnv_start, cnv_end = int(row['start']), int(row['end'])
+        cnv_len = cnv_end - cnv_start
+        control_intervals = control_merged.get(chrom, [])
+
+        #Count how many control populations this gene appears in
+        gene_cell = row.get('gene_name', "")
+        gene_overlap_count = 0
+        #Skip counting when gene_cell is empty or literal "nan"
+        if gene_cell and str(gene_cell).lower() != "nan":
+            if (';' in gene_cell) or (',' in gene_cell):
+                for sep in [';', ',']:
+                    gene_cell = gene_cell.replace(sep, ';')
+                genes = [g.strip() for g in gene_cell.split(';') if g.strip()]
+            else:
+                genes = [gene_cell]
+            pops = set()
+            for g in genes:
+                pops.update(control_gene_map.get(chrom, {}).get(g, set()))
+            gene_overlap_count = len(pops)
+
+        #Compute unique regions
+        unique_regions = [(cnv_start, cnv_end)]
+        partially_overlaps = False
+        for c_start, c_end in control_intervals:
+            temp = []
+            for u_start, u_end in unique_regions:
+                # no overlap
+                if u_end <= c_start or u_start >= c_end:
+                    temp.append((u_start, u_end))
+                else:
+                    partially_overlaps = True
+                    #Overlap: keep the left portion
+                    if u_start < c_start:
+                        temp.append((u_start, c_start))
+                    #Keep the right portion
+                    if u_end > c_end:
+                        temp.append((c_end, u_end))
+            unique_regions = temp
+        unique_length = sum(u_end - u_start for u_start, u_end in unique_regions)
+
+        if unique_length >= min_unique_length:
+            for u_start, u_end in unique_regions:
+                new_row = row.copy()
+                new_row['start'] = u_start
+                new_row['end'] = u_end
+                new_row['gene_overlap_in_controls_count'] = gene_overlap_count
+                new_row['partially_overlaps_control'] = partially_overlaps
+                keep_rows.append(new_row)
+
+    if not keep_rows:
+        print(f"No unique CNVs found for {f}")
+        continue
+
+    out_df = pd.DataFrame(keep_rows)
+
+    #Reorder columns: chrom_label first, then metadata
+    if 'chrom_label' in out_df.columns:
+        cols = ['chrom_label'] + [c for c in out_df.columns if c != 'chrom_label']
+        out_df = out_df[cols]
+
+    #Write output
+    out_file = os.path.join(output_dir, f"{f.replace('_CNV_genes.csv','')}_unique_to_40C.csv")
+    out_df.to_csv(out_file, index=False)
+
+    #Safely handle NaN chromosome labels
+    chrom_list = ", ".join(
+        str(chrom) for chrom in out_df['chrom_label'].dropna().unique()
+    )
+    if chrom_list:
+        print(f"   Chromosomes involved: {chrom_list}\n")
+    else:
+        print("   No valid chromosome labels (likely unmapped contigs)\n")
