@@ -1,0 +1,6 @@
+#Use liftoff to take the annotations from CBS138 (from which our ancestor is derived) and transfer them to the newly assembled ancestor YL07 ("585")
+#Liftoff also generates a .txt with any unmapped features
+liftoff -g CBS138_features.gff \
+        -o 585_liftoff_CGD.gff3 \
+        585.fasta \
+        CBS138.fasta
