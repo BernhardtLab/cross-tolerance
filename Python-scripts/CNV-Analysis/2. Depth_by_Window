@@ -1,0 +1,72 @@
+#Compute the average sequencing depth in fixed (500bp) genomic windows for each sample, normalize the coverage relative to mean nuclear depth, and output normalized depth profiles by chromosome
+
+import os
+import pandas as pd
+
+#Directories
+depth_dir = "depth_files"
+output_dir = "normalized_depth"
+os.makedirs(output_dir, exist_ok=True)
+
+#Load contig-to-chromosome conversion table
+conversion_path = "contig_conversion.csv" 
+conversion_df = pd.read_csv(conversion_path)
+
+#Ensure consistent column naming
+#Assuming conversion file columns are: 'contig' and 'chromosome'
+conversion_df.rename(columns={'contig': 'chrom'}, inplace=True)
+
+window_size = 500
+
+def window_depth(df, window_size=500):
+    df['window'] = (df['pos'] - 1) // window_size
+    window_df = df.groupby(['chrom', 'window'])['depth'].mean().reset_index()
+    window_df['start'] = window_df['window'] * window_size + 1
+    window_df['end'] = window_df['start'] + window_size - 1
+    return window_df[['chrom', 'start', 'end', 'depth']]
+
+def normalize_depth(window_df):
+    nuclear_df = window_df[~window_df['chrom'].str.contains('mt|MT|Mito', case=False, regex=True)]
+    mean_depth = nuclear_df['depth'].mean()
+    window_df['normalized_depth'] = window_df['depth'] / mean_depth
+    return window_df, mean_depth
+
+summary_list = []  #This is to collect mean depth per sample
+
+depth_files = [f for f in os.listdir(depth_dir) if f.endswith(".depth.txt")]
+print(f"Processing {len(depth_files)} samples...")
+
+for file in depth_files:
+    sample_name = file.replace(".depth.txt", "")
+    print(f"Processing sample: {sample_name}")
+
+    file_path = os.path.join(depth_dir, file)
+    
+    #Load depth file
+    df = pd.read_csv(file_path, sep='\t', header=None, names=['chrom', 'pos', 'depth'])
+
+    if df.empty:
+        print(f"Warning: {sample_name} depth file is empty. Skipping.")
+        continue
+
+    #Compute windowed and normalized depth
+    window_df = window_depth(df, window_size)
+    normalized_df, mean_depth = normalize_depth(window_df)
+
+    #Ensure chrom column is string in both dataframes
+    normalized_df['chrom'] = normalized_df['chrom'].astype(str)
+    conversion_df['chrom'] = conversion_df['chrom'].astype(str)
+
+    #Merge in chromosome names
+    normalized_df = normalized_df.merge(conversion_df, on='chrom', how='left')
+
+    #Save output
+    output_file = os.path.join(output_dir, f"{sample_name}_normalized_depth.csv")
+    normalized_df.to_csv(output_file, index=False)
+
+    #Track mean depth
+    summary_list.append({'sample': sample_name, 'mean_depth': mean_depth})
+
+#Save mean depth summary
+summary_df = pd.DataFrame(summary_list)
+summary_df.to_csv(os.path.join(output_dir, "mean_depth_summary.csv"), index=False)
