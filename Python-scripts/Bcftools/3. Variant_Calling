@@ -1,0 +1,15 @@
+#Major variant calling on all samples is performed with Bcftools via grouped genotyping
+
+module load samtools
+module load bcftools
+
+REFERENCE="genome.fasta"
+BAM_FILES=$(ls Alignments/Processed/*.sorted.dedup.bam)
+OUTDIR="Variants"
+mkdir -p $OUTDIR
+
+#Ploidy is set to 1 since N.glab is a haploid
+bcftools mpileup -f $REFERENCE $BAM_FILES | \
+  bcftools call --ploidy 1 -mv -Oz -o ${OUTDIR}/all_samples.joint.vcf.gz
+
+bcftools index ${OUTDIR}/all_samples.joint.vcf.gz
