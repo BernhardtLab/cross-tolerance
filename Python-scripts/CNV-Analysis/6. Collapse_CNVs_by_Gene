@@ -1,0 +1,65 @@
+#This code collapses all of the CNVs that affect the same gene into one row (ie. one row per gene with the corresponding CNV info summarized). This just makes it easier to understand the affected genes
+
+import os
+import pandas as pd
+import numpy as np
+
+input_dir = "genic_CNV_calls_filtered"
+output_dir = os.path.join(input_dir, "merged_genic_CNV_calls_filtered")
+os.makedirs(output_dir, exist_ok=True)
+
+#Merge function for groupby
+def merge_values(series):
+    """Merge unique non-null values as comma-separated strings."""
+    vals = series.dropna().astype(str).unique()
+    return ", ".join(sorted(vals)) if len(vals) > 0 else np.nan
+
+#Iterate through all filtered CNV files
+files = [f for f in os.listdir(input_dir) if f.endswith("_unique_to_40C.csv")]
+if not files:
+    raise ValueError(f"No *_unique_to_40C.csv files found in {input_dir}!")
+
+for f in files:
+    in_path = os.path.join(input_dir, f)
+    df = pd.read_csv(in_path)
+    if df.empty:
+        print(f"Skipping {f} (empty file)")
+        continue
+    if "gene_name" not in df.columns:
+        print(f"No 'gene_name' column in {f}, skipping.")
+        continue
+
+    #Prepare normalized_depth as numeric
+    if "normalized_depth" in df.columns:
+        df["normalized_depth"] = pd.to_numeric(df["normalized_depth"], errors="coerce")
+
+    #Define aggregation rules
+    agg_dict = {}
+    for col in df.columns:
+        if col == "gene_name":
+            continue
+        elif col in ["start", "gene_start"]:
+            agg_dict[col] = "min"
+        elif col in ["end", "gene_end"]:
+            agg_dict[col] = "max"
+        elif col == "normalized_depth":
+            # keep all as comma-separated string for reference
+            agg_dict[col] = merge_values
+        else:
+            agg_dict[col] = merge_values
+
+    #Group by gene_name and aggregate
+    grouped = df.groupby("gene_name", dropna=False).agg(agg_dict).reset_index()
+
+    #Compute mean normalized_depth per gene
+    if "normalized_depth" in df.columns:
+        def mean_depth(val_str):
+            if pd.isna(val_str):
+                return np.nan
+            vals = [float(x) for x in val_str.split(",") if x.strip() != ""]
+            return np.mean(vals) if vals else np.nan
+        grouped["mean_normalized_depth"] = grouped["normalized_depth"].apply(mean_depth)
+
+    #Save output
+    out_path = os.path.join(output_dir, f)
+    grouped.to_csv(out_path, index=False)
