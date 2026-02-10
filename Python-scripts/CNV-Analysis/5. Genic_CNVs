@@ -1,0 +1,41 @@
+#This code filters the CNVs that were unique to the 40°C-evolved populations for only those that affect a gene, and also removes any that affect a gene that any of the control populations also had a CNV in
+
+import os
+import pandas as pd
+
+#Inputs
+input_dir = "CNV_calls_filtered"              #Directory containing CNV CSVs
+output_dir = "genic_CNV_calls_filtered"      
+os.makedirs(output_dir, exist_ok=True)
+
+#Iterate through 40C CNV files
+files = [f for f in os.listdir(input_dir) if f.endswith("_unique_to_40C.csv")]
+if not files:
+    raise ValueError("No *_unique_to_40C.csv files found in CNV_calls_filtered!")
+
+for f in files:
+    in_path = os.path.join(input_dir, f)
+    df = pd.read_csv(in_path)
+
+    #Skip empty files
+    if df.empty:
+        print(f"Skipping {f} (empty file)")
+        continue
+
+    #Filter (must have a valid gene name)
+    df = df[df['gene_name'].notna() & (df['gene_name'].astype(str).str.strip() != '')]
+
+    #Filter (gene_overlap_in_controls_count must be 0 or NaN)
+    if 'gene_overlap_in_controls_count' in df.columns:
+        df['gene_overlap_in_controls_count'] = pd.to_numeric(df['gene_overlap_in_controls_count'], errors='coerce')
+        df = df[df['gene_overlap_in_controls_count'].fillna(0) == 0]
+    else:
+        print(f"Column 'gene_overlap_in_controls_count' not found in {f}. Keeping all remaining rows.")
+
+    #Save output if anything remains
+    if not df.empty:
+        out_path = os.path.join(output_dir, f)
+        df.to_csv(out_path, index=False)
+        print(f"✅ {len(df)} genic CNVs saved to {out_path}")
+    else:
+        print(f"No genic CNVs passed filters in {f}")
