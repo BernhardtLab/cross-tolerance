@@ -1,0 +1,36 @@
+#Finally, this code will take all of the individual .tsv tables and merge them into a single matrix (.xlsx) with all variants, allele frequencies, and their corresponding sample (affected population)
+
+import glob
+import pandas as pd
+import re
+
+#This extracts just the part of the sample name we care about (example below)
+def extract_sample_tag(filename):
+    """
+    Given a filename like 40_F6_S244.sorted.dedup.indelq.lofreq.af.tsv,
+    return just the '40_F6' part (before the second underscore).
+    """
+    base = filename.split('.')[0]  #Return the part before the first dot
+    #Use regex to extract the part before the second underscore
+    match = re.match(r'([^_]+_[^_]+)', base)
+    if match:
+        return match.group(1)
+    else:
+        return base  #Fallback, just in case
+
+#Read all per-sample AF tables
+dfs = []
+for fname in glob.glob("*.af.tsv"):
+    sample = extract_sample_tag(fname)
+    df = pd.read_csv(fname, sep="\t", header=None,
+                     names=["CHROM", "POS", "REF", "ALT", "AF", "SAMPLE"])
+    df["SAMPLE"] = sample
+    dfs.append(df)
+
+#Concatenate them all, then pivot to matrix
+all_df = pd.concat(dfs, ignore_index=True)
+matrix = all_df.pivot_table(index=["CHROM", "POS", "REF", "ALT"],
+                            columns="SAMPLE", values="AF")
+
+#Write to Excel
+matrix.to_excel("variants_AF_matrix.xlsx")
