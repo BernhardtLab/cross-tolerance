@@ -1,0 +1,21 @@
+#This code first annotates the joint VCF with coding consequences using bcftools csq
+#Then, it exports a tab-delimited matrix containing the genomic coordinates of the variant and its functional consequence, as well as the genotype of each sample (ie. whether it has the variant or not)
+module load bcftools
+
+#Set paths
+REFERENCE="Combo_Assembly_and_Annotation/585/585.fasta"
+GFF="Combo_Assembly_and_Annotation/585/585_liftoff_CGD.gff3"
+VCF_IN="Variants/all_samples.joint.vcf.gz"
+VCF_ANN="Variants/all_samples.joint.ann.vcf.gz"
+OUT_MATRIX="all_samples_variant_matrix_with_annotation.tsv"
+
+#Annotate the VCF with gene/consequence info
+bcftools csq -f $REFERENCE -g $GFF -Oz -o $VCF_ANN $VCF_IN
+bcftools index $VCF_ANN
+
+#Prepare matrix header (CHROM, POS, REF, ALT, BCSQ, [samples...])
+header="CHROM\tPOS\tREF\tALT\tBCSQ\t$(bcftools query -l $VCF_ANN | tr '\n' '\t' | sed 's/\t$//')"
+echo -e "$header" > $OUT_MATRIX
+
+#Extract the SNP matrix with annotation
+bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/BCSQ[\t%GT]\n' $VCF_ANN >> $OUT_MATRIX
