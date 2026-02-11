@@ -1,0 +1,2 @@
+#This was used to take the variants (positions and allele frequencies) from the .vcf files for each sample and convert them to readable tables (.tsv)
+for f in *.af005.vcf; do   sample=$(basename $f .af005.vcf);   bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/AF\n' $f | awk -v s=$sample '{print $0 "\t" s}' > ${sample}.af.tsv; done
