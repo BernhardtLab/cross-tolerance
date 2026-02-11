@@ -1,0 +1,40 @@
+#This code takes the LoFreq calls and removes any variants with an allele frequency of less than 5%. These could represent very rare variants, but also may represent noise/false-positives, so for clarity, we can remove them
+
+set -euo pipefail
+set -x 
+
+ROOT_DIR="/Users/processed"
+VCF_DIR="$ROOT_DIR/vcfs"
+FILTERED_DIR="$VCF_DIR/filtered"
+
+mkdir -p "$FILTERED_DIR"
+
+#Check for source VCFs
+shopt -s nullglob
+VCF_FILES=("$VCF_DIR"/*.vcf)
+if [[ ${#VCF_FILES[@]} -eq 0 ]]; then
+    echo "No .vcf files found in $VCF_DIR"
+    exit 1
+fi
+
+#Filter each original VCF for AF >= 5% 
+for VCF in "${VCF_FILES[@]}"; do
+    BASE=$(basename "$VCF" .vcf)
+    OUT_VCF="$FILTERED_DIR/${BASE}.af005.vcf"
+    lofreq filter --af-min 0.05 -i "$VCF" -o "$OUT_VCF"
+    #Filter for only PASS variants using bcftools
+    bcftools view -f PASS -O v -o "${OUT_VCF}.pass" "$OUT_VCF"
+    mv "${OUT_VCF}.pass" "$OUT_VCF"
+done
+
+#Use bgzip to compress and index all filtered VCFs
+FILTERED_FILES=("$FILTERED_DIR"/*.af005.vcf)
+for VCF in "${FILTERED_FILES[@]}"; do
+    echo "Compressing: $VCF"
+    bgzip -c "$VCF" > "$VCF.gz"
+    tabix -p vcf "$VCF.gz"
+done
+
+#Merge all filtered VCFs into a multi-sample VCF
+cd "$FILTERED_DIR"
+bcftools merge *.af005.vcf.gz -o merged.af005.vcf -O v
