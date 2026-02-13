@@ -583,7 +583,7 @@ well_key <- all_blocks_no_lag %>%
   
   
 df <- d  
-  fit_sharp_high <- function(df, model_name = "sharpeschoolhigh_1981", tref = 20, iter = 2000) {
+  fit_sharp_high <- function(df, model_name = "sharpeschoolhigh_1981", tref = 25, iter = 2000) {
     # get start values and bounds
     starts <- get_start_vals(df$temp, df$rate, model_name = model_name)
     lower <- get_lower_lims(df$temp, df$rate, model_name = model_name)
@@ -613,7 +613,7 @@ df <- d
   fits <- df %>%
     group_by(curve_id) %>%
     nest() %>%
-    mutate(fit = map(data, ~ fit_sharp_high(.x, tref = 20, iter = 2000)))
+    mutate(fit = map(data, ~ fit_sharp_high(.x, tref = 25, iter = 2000)))
 
   fit_status <- fits %>%
     mutate(ok = map_lgl(fit, ~ !inherits(.x, "tpc_fit_error") && !is.null(.x))) %>%
@@ -647,6 +647,7 @@ preds2 <- preds %>%
   ggsave("figures/tpcs-all-no-lag.png", width = 10, height = 6)
   
   
+ 
   
   
   ggplot() +
@@ -672,7 +673,7 @@ preds2 <- preds %>%
       y = "Growth rate",
     ) + scale_color_manual(values = c( "#019875FF", "#FF847CFF", "#C0392BFF", "#96281BFF")) 
     
-  ggsave("figures/tpcs-all-no-lag-single.png", width = , height = 5)  
+  ggsave("figures/tpcs-all-no-lag-single.png", width = 8, height = 5)  
   
   
   
@@ -747,7 +748,7 @@ preds2 <- preds %>%
   
   # Parameter estimates
   param_estimates <- param_table %>% dplyr::select(curve_id, params) %>% unnest(params)
-  print(param_estimates)
+
   
   # Derived traits (topt, rmax, ctmax, etc.)
   trait_estimates <- param_table %>% select(curve_id, traits) %>% unnest(traits)
@@ -779,7 +780,7 @@ preds2 <- preds %>%
     ylab("Tmax") + xlab("Evolution history")
   ggsave("figures/tmax-evolution-history-no-lag.png", width = 8, height = 6)
   
-
+traits <- read_csv()
   
   t4 <- traits %>%
     group_by(evolution_history) %>% 
@@ -804,6 +805,74 @@ ggplot() +
 ggsave("figures/topt-evolution-history-all-pops-no-lag.png", width = 9, height = 6)
 
 
+traits2 <- traits %>% 
+  separate(curve_id, into = c("temp", "well"), sep = "_", remove = FALSE)
+
+ggplot() +
+  geom_point(aes(x = evolution_history, y = topt, color = well), data = filter(traits2, evolution_history %in% c("35 evolved", "40 evolved"))) +
+  geom_line(aes(x = evolution_history, y = topt, color = well, group = well), data = filter(traits2, evolution_history %in% c("35 evolved", "40 evolved"))) +
+  geom_pointrange(aes(x = evolution_history, y = mean_topt, ymin = mean_topt - se_topt, ymax = mean_topt + se_topt), data = filter(t4, evolution_history %in% c("35 evolved", "40 evolved"))) +
+  ylab("Topt") + xlab("Evolution history") 
+ggsave("figures/topts-temperature-treatments.png", width = 6, height = 4)
+
+
+traits2b <- traits2 %>% 
+  mutate(evolution_history = as.factor(evolution_history)) %>% 
+  mutate(evolution_history = fct_relevel(evolution_history, "fRS585", "35 evolved", "40 evolved", "Caspofungin evolved"))
+
+levels(traits2b$evolution_history)
+
+
+t4b <- t4 %>% 
+  mutate(evolution_history = as.factor(evolution_history)) %>% 
+  mutate(evolution_history = fct_relevel(evolution_history, "fRS585", "35 evolved", "40 evolved", "Caspofungin evolved"))
+  
+
+anc_topt <- t4b$mean_topt[t4b$evolution_history == "fRS585"]
+
+ggplot() +
+  geom_hline(yintercept = anc_topt, color = "grey") +
+  geom_point(aes(x = evolution_history, y = topt, color = well), data = traits2b) +
+  geom_line(aes(x = evolution_history, y = topt, color = well, group = well), data = traits2b) +
+  geom_pointrange(aes(x = evolution_history, y = mean_topt, ymin = mean_topt - se_topt, ymax = mean_topt + se_topt), data = t4b) +
+  ylab("Topt (°C)") + xlab("Evolution history") +
+  guides(color = guide_legend(title = "Population"))
+
+ggsave("figures/topts-temperature-treatments-all.png", width = 8, height = 5)
+
+
+
+
+# sidebar to see the correlation between thermal traits and drug r --------
+
+topts <- traits2b %>% 
+  select(evolution_history, well, topt) %>% 
+  filter(evolution_history %in% c("35 evolved", "40 evolved"))
+ 
+  ### has the topts
+casp <- t2b %>% 
+  mutate(evolution_history = case_when(grepl("35", evolution_history) ~ "35 evolved",
+                                       grepl("40", evolution_history) ~ "40 evolved",
+                                      TRUE ~ evolution_history)) %>% 
+  filter(evolution_history %in% c("35 evolved", "40 evolved")) %>% 
+  filter(drug == "caspofungin") ### has drug tolerances
+
+all_traits <- left_join(casp, traits2b)
+
+
+all_traits %>% 
+  filter(mean_ic503 < 0.04) %>% 
+  ggplot(aes(x = topt, y = mean_ic503)) + geom_point() +
+  geom_smooth(method = "lm")
+
+
+
+# calculate the average shift between the frs and the 40C -----------------
+
+traits2 %>% 
+  mutate(topt_shift = topt - 37.78100) %>% ### this is the frs topt
+  ungroup() %>% 
+  summarise(mean_topt_shift = mean(topt_shift)) ### avg shift is 	0.32045 for the 40C relative to the frs
 
 
 ggplot() +
@@ -879,10 +948,8 @@ ggsave("figures/growth-42-no-lag.png", width = 9, height = 6)
 
 # find temperature where growth = 0.1 -------------------------------------
 
-temp_at_rate <- function(model, target_rate = 0.1,
+temp_at_rate <- function(model, target_rate = 2,
                          from = 40, to = 50, by = 0.001) {
-  
- 
   # evaluate on grid
   temps <- seq(from, to, by)
   preds <- tryCatch(
@@ -900,6 +967,38 @@ temp_at_rate <- function(model, target_rate = 0.1,
 }
 
 
+
+temp_at_fract <- function(model, fraction = 0.2,
+                         from = 40, to = 50, by = 0.001) {
+  # evaluate on grid
+  temps <- seq(from, to, by)
+  preds <- tryCatch(
+    predict(model, newdata = data.frame(temp = temps)),
+    error = function(e) rep(NA_real_, length(temps))
+  )
+  
+  # # if model never reaches target_rate → return NA
+  # if (all(is.na(preds)) || max(preds, na.rm = TRUE) < target_rate)
+  #   return(NA_real_)
+  
+  # target rate = fraction of max
+  max_rate <- max(preds, na.rm = TRUE)
+  target_rate <- fraction * max_rate
+  
+  
+  
+  # find temperature closest to target
+  idx <- which.min(abs(preds - target_rate))
+  temps[idx]
+}
+
+
+
+
+
+
+
+
 param_table_full <- fits %>%
   mutate(
     params    = map(fit, ~ broom::tidy(.x$fit)),
@@ -907,36 +1006,240 @@ param_table_full <- fits %>%
     rate_40   = map_dbl(fit, predict_at_temp, temp = 40),
     rate_42   = map_dbl(fit, predict_at_temp, temp = 42),
     rate_41   = map_dbl(fit, predict_at_temp, temp = 41),
-    temp_rate = map_dbl(fit, temp_at_rate, target_rate = 1)
+    temp_rate = map_dbl(fit, temp_at_rate, target_rate = 2),
+    temp_20pct = map_dbl(fit, temp_at_fract, fraction = 0.2)
   ) %>%
-  select(curve_id, params, traits, rate_40, rate_42, temp_rate, rate_41)
+  select(curve_id, params, traits, rate_40, rate_42, temp_20pct, rate_41, temp_rate)
 
 
-growth_full <- left_join(param_table_full, well_key, by = c("curve_id" = "strain"))
+growth_full <- left_join(param_table_full, well_key, by = c("curve_id" = "strain")) %>% 
+  filter(!grepl("Fluc", evolution_history))
 
 g3 <- growth_full %>% 
-  group_by(evolution_history) %>% 
+  group_by(evolution_history) %>%
   summarise(mean_40 = mean(rate_40),
             se_40 = std.error(rate_40),
             mean_42 = mean(rate_42),
             se_42 = std.error(rate_42),
             mean_tmax = mean(temp_rate),
-            se_tmax = std.error(temp_rate))
+            se_tmax = std.error(temp_rate),
+            mean_tmax_20 = mean(temp_20pct),
+            se_tmax_20 = std.error(temp_20pct))
 
   
 ggplot() +
   geom_pointrange(aes(x = evolution_history, y = mean_tmax, ymin = mean_tmax - se_tmax, ymax = mean_tmax + se_tmax), data = g3) +
   geom_point(aes(x = evolution_history, y = temp_rate), data = growth_full, alpha = 0.5) +
-  ylab("Temperature at growth rate of 1") + xlab("Evolution history")
+  ylab("Temperature at growth rate of 2") + xlab("Evolution history")
 ggsave("figures/tmax_est-no-lag.png", width = 9, height = 6)
+
+
+growth_full_2 <- growth_full %>% 
+separate(curve_id, into = c("temp", "well"), sep = "_", remove = FALSE)
+
+growth_full_2b <- growth_full_2 %>% 
+  mutate(evolution_history = as.factor(evolution_history)) %>% 
+  mutate(evolution_history = fct_relevel(evolution_history, "fRS585", "35 evolved", "40 evolved", "Caspofungin evolved"))
+
+
+g3b <- g3 %>% 
+  mutate(evolution_history = as.factor(evolution_history)) %>% 
+  mutate(evolution_history = fct_relevel(evolution_history, "fRS585", "35 evolved", "40 evolved", "Caspofungin evolved"))
+
+anc_tmax <- g3b$mean_tmax_20[g3b$evolution_history == "fRS585"]
+
+ggplot() +
+  geom_hline(yintercept =  anc_tmax, color = "grey") +
+  geom_pointrange(aes(x = evolution_history, y = mean_tmax_20, ymin = mean_tmax_20 - se_tmax_20, ymax = mean_tmax_20 + se_tmax_20), data = g3b) +
+  geom_point(aes(x = evolution_history, y = temp_20pct, color = well), data = growth_full_2b) +
+  geom_line(aes(x = evolution_history, y = temp_20pct, color = well, group = well), data = growth_full_2b) +
+  geom_pointrange(aes(x = evolution_history, y = mean_tmax_20, ymin = mean_tmax_20 - se_tmax_20, ymax = mean_tmax_20 + se_tmax_20), data = g3b) +
+  ylab("Temperature at 20 percent max growth (°C)") + xlab("Evolution history") +
+  guides(color = guide_legend(title = "Population"))
+# ggsave("figures/tmax_est-50pct-no-lag.png", width = 9, height = 6)
+ggsave("figures/tmax_est-20pct-no-lag.png", width = 8, height = 5)
+
+ggplot() +
+  geom_point(aes(x = evolution_history, y = temp_20pct), data = growth_full, alpha = 0.5) +
+  geom_pointrange(aes(x = evolution_history, y = mean_tmax_20, ymin = mean_tmax_20 - se_tmax_20, ymax = mean_tmax_20 + se_tmax_20), data = g3) +
+  ylab("Temperature at 20 percent max growth") + xlab("Evolution history")
+# ggsave("figures/tmax_est-50pct-no-lag.png", width = 9, height = 6)
+ggsave("figures/tmax_est-20pct-no-lag.png", width = 9, height = 6)
 
 
 # merge all the traits ----------------------------------------------------
 
 p2 <- param_table_full %>% 
-  select(curve_id, rate_40, rate_42, rate_41, temp_rate)
+  select(curve_id, rate_40, rate_42, rate_41, temp_rate, temp_20pct)
 
 p3 <- left_join(traits, p2)
 
 write_csv(p3, "data-processed/all-SS-traits.csv")
 
+
+p4 <- p3 %>% 
+  group_by(evolution_history) %>% 
+  summarise_all(.funs = c("mean", "std.error"))
+
+
+# plots -------------------------------------------------------------------
+
+ggplot() +
+  geom_vline(xintercept = 35, color = "darkgrey", linetype = "dashed") +
+  geom_vline(xintercept = 40, color = "darkgrey", linetype = "dashed") +
+  geom_hline(yintercept = 1, color = "darkgrey") +
+  geom_vline(aes(xintercept = topt, color = evolution_history), data = filter(p3, evolution_history == "fRS585")) +
+  geom_point(aes(x = topt, y = 0, color = evolution_history), data = p3, alpha = 0.2, size = 4) +
+  geom_pointrange(aes(x = topt_mean, xmin =topt_mean - topt_std.error, xmax = topt_mean + topt_std.error,  y = 0, color = evolution_history), data = p4, position = position_dodge(width = 0.7)) +
+  
+  geom_line(data = filter(preds2, evolution_history != "Fluconazole evolved"), aes(x = temp, y = fit, color = evolution_history, group = curve_id), size = 1, alpha = 0.5) +
+  geom_point(data = filter(df, evolution_history != "Fluconazole evolved"), aes(x = temp, y = rate, color = evolution_history), size = 1.5) +
+  labs(
+    x = "Temperature (°C)",
+    y = "Growth rate",
+  ) + scale_color_manual(values = c( "#019875FF", "#FF847CFF", "#C0392BFF", "darkgrey")) 
+
+ggsave("figures/tpcs-all-no-lag-single.png", width = 10, height = 5)  
+
+
+
+# big plot of TPCs --------------------------------------------------------
+
+ggplot() +
+  geom_vline(xintercept = 35, color = "darkgrey") +
+  geom_vline(xintercept = 40, color = "darkgrey") +
+  geom_hline(yintercept = 1, color = "darkgrey") +
+  # geom_pointrange(aes(x = topt_mean, xmin = topt_mean - topt_std.error, xmax = topt_mean + topt_std.error,  y = 0, color = evolution_history), data = p4, position = position_dodge(width = 0.7)) +
+  geom_line(data = filter(preds2, evolution_history == "fRS585"), aes(x = temp, y = fit, color = evolution_history, group = curve_id), size = 1, alpha = 0.5, color = "#019875FF") +
+  geom_point(data = filter(df, evolution_history == "fRS585"), aes(x = temp, y = rate, color = evolution_history), size = 1.5, color = "#019875FF") +
+  
+  geom_line(data = filter(preds2, evolution_history == "35 evolved"), aes(x = temp, y = fit, color = evolution_history, group = curve_id), size = 1, alpha = 0.5, color = "#FF847CFF") +
+  geom_point(data = filter(df, evolution_history == "35 evolved"), aes(x = temp, y = rate, color = evolution_history), size = 1.5, color = "#FF847CFF") +
+
+  geom_line(data = filter(preds2, evolution_history == "40 evolved"), aes(x = temp, y = fit, color = evolution_history, group = curve_id), size = 1, alpha = 0.5, color = "#C0392BFF") +
+  geom_point(data = filter(df, evolution_history == "40 evolved"), aes(x = temp, y = rate, color = evolution_history), size = 1.5, color = "#C0392BFF") +
+
+  # geom_line(data = filter(preds2, evolution_history == "Caspofungin evolved"), aes(x = temp, y = fit, color = evolution_history, group = curve_id), size = 1, alpha = 0.5, color = "#2A363BFF") +
+  # geom_point(data = filter(df, evolution_history == "Caspofungin evolved"), aes(x = temp, y = rate, color = evolution_history), size = 1.5, color = "#2A363BFF") +
+labs(
+  x = "Temperature (°C)",
+  y = expression("Growth rate (" * day^{-1} * ")")
+) + scale_color_manual(values = c("#FF847CFF","#C0392BFF", "#2A363BFF","#019875FF")) +
+  theme(legend.position = "none")
+ggsave("figures/tpcs-all-no-lag-single-frs-35-40-casp.png", width = 6, height = 4) 
+ggsave("figures/tpcs-all-no-lag-single-frs-35-40.png", width = 6, height = 4)  
+
+
+
+ggsave("figures/tpcs-all-no-lag-single.png", width = 6, height = 4)  
+
+unique(p4$evolution_history)
+
+
+## "Fluconazole evolved" "35 evolved"          "fRS585"              "Caspofungin evolved" "40 evolved"   
+
+library(visreg)
+
+mod1 <- lm(rate_41 ~ evolution_history, data = p3)
+summary(mod1)
+
+visreg(mod1, "evolution_history")
+
+mod1b <- lm(rate_42 ~ evolution_history, data = p3)
+summary(mod1b)
+
+visreg(mod1b, "evolution_history")
+
+
+mod1d <- lm(eh ~ evolution_history, data = p3)
+summary(mod1d)
+
+visreg(mod1d, "evolution_history")
+
+mod1e <- lm(ctmax ~ evolution_history, data = p3)
+summary(mod1e)
+
+visreg(mod1e, "evolution_history")
+
+mod1f <- lm(temp_20pct ~ evolution_history, data = p3)
+summary(mod1f)
+
+visreg(mod1f, "evolution_history")
+
+
+mod1c <- lm(temp_rate ~ evolution_history, data = p3)
+summary(mod1c)
+
+visreg(mod1c, "evolution_history")
+
+
+growth_42_raw <- all_blocks_no_lag %>%
+  filter(!grepl("Fluc", evolution_history)) %>% 
+  filter(test_temperature == 41)
+
+mod2 <- lm(mu ~ evolution_history, data =growth_42_raw)
+summary(mod2)
+
+
+
+visreg(mod2, "evolution_history")
+
+
+
+# test for hot-cold trade-off ---------------------------------------------
+library(vegan)
+growth_wide <- preds %>% 
+  ungroup() %>% 
+  spread(key = temp, value = fit) %>% 
+  select(-curve_id)
+
+
+cov_mat <- cov(growth_wide)
+pca_res <- prcomp(cov_mat, center = TRUE,scale. = TRUE)
+
+
+pca16 <- rda(growth_wide)
+
+
+loadings16 <- scores(pca_res,choices=c(1,2))
+names(growth_wide)
+
+loadings16 <- scores(pca_res,choices=c(1,2))
+summary(eigenvals(pca_res))
+
+pcs16 <- as_data_frame((loadings16)) %>% 
+  select(PC1)
+pc1_16 <- pcs16 %>% 
+  mutate(temperature = names(growth_wide)) %>% 
+  mutate(temperature = as.numeric(temperature))
+
+
+pc1_16 %>% 
+  ggplot(aes(x = temperature, y = PC1)) + geom_point() +
+  # xlim(0, 40) + 
+  geom_hline(yintercept = 0) +
+  xlab("Temperature (°C)") + geom_line() +
+  ylab("PC1 loadings")
+
+ggsave("figures/generalist-specialist-trade-off.png", width = 8, height = 6)
+
+
+pc2 <- as_data_frame((loadings16)) %>% 
+  select(PC2)
+pc2b <- pc2 %>% 
+  mutate(temperature = names(growth_wide)) %>% 
+  mutate(temperature = as.numeric(temperature))
+
+
+pc2b %>% 
+  ggplot(aes(x = temperature, y = PC2)) + geom_point() +
+  # xlim(0, 40) + 
+  geom_hline(yintercept = 0) +
+  xlab("Temperature (°C)") + geom_line() +
+  ylab("PC2 loadings")
+
+
+
+# new graphs for seminar --------------------------------------------------
+
+traits <- "data-processed/all-SS-traits.csv"
