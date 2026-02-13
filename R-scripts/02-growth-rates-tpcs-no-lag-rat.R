@@ -300,10 +300,11 @@ param_table_40 <- fits %>%
     params  = map(fit, ~ broom::tidy(.x$fit)),
     traits  = map(fit, ~ calc_params(.x$fit)),
     rate_40 = map_dbl(fit, predict_at_temp, temp = 40),
+    rate_35 = map_dbl(fit, predict_at_temp, temp = 35),
     rate_41 = map_dbl(fit, predict_at_temp, temp = 41),
     rate_42 = map_dbl(fit, predict_at_temp, temp = 42)
   ) %>%
-  select(curve_id, params, traits, rate_40, rate_42, rate_41)
+  select(curve_id, params, traits, rate_40, rate_42, rate_41, rate_35)
 
 growth_40 <- left_join(param_table_40, well_key, by = c("curve_id" = "strain")) %>% 
   filter(!grepl("Fluc", evolution_history))
@@ -319,13 +320,25 @@ g2 <- growth_40 %>%
             mean_42 = mean(rate_42),
             se_42 = std.error(rate_42),
             mean_41 = mean(rate_41),
-            se_41 = std.error(rate_41))
+            se_41 = std.error(rate_41),
+            mean_35 = mean(rate_35),
+            se_35 = std.error(rate_35))
 
 ggplot() +
   geom_pointrange(aes(x = evolution_history, y = mean_40, ymin = mean_40 - se_40, ymax = mean_40 + se_40), data = g2) +
   geom_point(aes(x = evolution_history, y = rate_40), data = growth_40, alpha = 0.5) +
   ylab("Growth at 40C") + xlab("Evolution history")
 ggsave("figures/growth-40-no-lag.png", width = 9, height = 6)
+
+
+ggplot() +
+  geom_pointrange(aes(x = evolution_history, y = mean_35, ymin = mean_35 - se_35, ymax = mean_35 + se_35), data = g2) +
+  geom_point(aes(x = evolution_history, y = rate_35), data = growth_40, alpha = 0.5) +
+  ylab("Growth at 35C") + xlab("Evolution history")
+ggsave("figures/growth-35-no-lag.png", width = 9, height = 6)
+
+
+
 
 ggplot() +
   geom_pointrange(aes(x = evolution_history, y = mean_41, ymin = mean_41 - se_41, ymax = mean_41 + se_41), data = g2) +

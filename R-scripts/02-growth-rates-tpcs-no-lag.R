@@ -780,7 +780,7 @@ preds2 <- preds %>%
     ylab("Tmax") + xlab("Evolution history")
   ggsave("figures/tmax-evolution-history-no-lag.png", width = 8, height = 6)
   
-traits <- read_csv()
+
   
   t4 <- traits %>%
     group_by(evolution_history) %>% 
@@ -842,6 +842,19 @@ ggsave("figures/topts-temperature-treatments-all.png", width = 8, height = 5)
 
 
 
+ggplot() +
+  geom_hline(yintercept = anc_topt, color = "grey") +
+  geom_point(aes(x = evolution_history, y = topt), data = traits2b, alpha = 0.5) +
+  # geom_line(aes(x = evolution_history, y = topt, group = well), data = traits2b) +
+  geom_pointrange(aes(x = evolution_history, y = mean_topt, ymin = mean_topt - se_topt, ymax = mean_topt + se_topt), data = t4b) +
+  ylab("Topt (°C)") + xlab("Evolution history") +
+  guides(color = guide_legend(title = "Population"))
+
+ggsave("figures/topts-temperature-treatments-all-grey.png", width = 8, height = 5)
+
+
+
+
 
 # sidebar to see the correlation between thermal traits and drug r --------
 
@@ -850,7 +863,7 @@ topts <- traits2b %>%
   filter(evolution_history %in% c("35 evolved", "40 evolved"))
  
   ### has the topts
-casp <- t2b %>% 
+casp <- traits2b %>% 
   mutate(evolution_history = case_when(grepl("35", evolution_history) ~ "35 evolved",
                                        grepl("40", evolution_history) ~ "40 evolved",
                                       TRUE ~ evolution_history)) %>% 
@@ -1058,6 +1071,21 @@ ggplot() +
   guides(color = guide_legend(title = "Population"))
 # ggsave("figures/tmax_est-50pct-no-lag.png", width = 9, height = 6)
 ggsave("figures/tmax_est-20pct-no-lag.png", width = 8, height = 5)
+
+
+ggplot() +
+  geom_hline(yintercept =  anc_tmax, color = "grey") +
+  geom_pointrange(aes(x = evolution_history, y = mean_tmax_20, ymin = mean_tmax_20 - se_tmax_20, ymax = mean_tmax_20 + se_tmax_20), data = g3b) +
+  geom_point(aes(x = evolution_history, y = temp_20pct), data = growth_full_2b, alpha = 0.5) +
+  # geom_line(aes(x = evolution_history, y = temp_20pct, color = well, group = well), data = growth_full_2b) +
+  geom_pointrange(aes(x = evolution_history, y = mean_tmax_20, ymin = mean_tmax_20 - se_tmax_20, ymax = mean_tmax_20 + se_tmax_20), data = g3b) +
+  ylab("Temperature at 20 percent max growth (°C)") + xlab("Evolution history") +
+  guides(color = guide_legend(title = "Population"))
+# ggsave("figures/tmax_est-50pct-no-lag.png", width = 9, height = 6)
+ggsave("figures/tmax_est-20pct-no-lag-grey.png", width = 8, height = 5)
+
+
+
 
 ggplot() +
   geom_point(aes(x = evolution_history, y = temp_20pct), data = growth_full, alpha = 0.5) +
