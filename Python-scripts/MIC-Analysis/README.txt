@@ -1,1 +1,4 @@
-The MIC_Analysis_Notebook.ipynb file is an organized Jupyter notebook that you can use to input the raw MIC data from Table_S2.xlsx and fit the dose-response curves (to identify IC50 values for each population and group them by evolution history).
+The MIC_Analysis_Notebook.ipynb file is an organized Jupyter notebook 
+that you can use to input the raw MIC data from Table_S2.xlsx and 
+fit the dose-response curves (to identify IC50 values for each population 
+and group them by evolution history).
