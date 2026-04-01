@@ -46,8 +46,7 @@ plate_layout_b3 <- read_excel("data-raw/Growth-Curves/well-plate-layout.xlsx", s
 
 # growth rate fitting function --------------------------------------------
 
-# Reads one Biotek Excel file, fits growth rates per well using multistart
-# nonlinear least squares, and returns a summary data frame of per-well
+# Reads one Biotek Excel file, fits growth rates per well using growthTools, and returns a summary data frame of per-well
 # growth rate estimates. Also saves an OD time series plot and per-well
 # growth rate plots to figures/.
 # Arguments:
