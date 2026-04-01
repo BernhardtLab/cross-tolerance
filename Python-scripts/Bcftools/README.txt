@@ -24,9 +24,16 @@ samtools faidx 585.fasta
 5. Call variants for each sample using Bcftools with the '3. Variant_Calling' script.
 This may take several hours.
 
-6. Next, we need to organize the variants into a usable table, and also annotate what genomic features these variants impact. Since we are using a custom reference assembly from the YL07 strain, but is similar to a well-characterized WT (CBS138), we can basically take the annotations from CBS138 and lift them on to YL07.
+6. Next, we need to organize the variants into a usable table, and also annotate what genomic features these variants impact. Since we are using a custom reference assembly from the YL07 strain, but is similar to a well-characterized WT (CBS138), we can basically take the annotations from CBS138 and lift them on to YL07. 
 
 For this we can use Liftoff (Shumate and Salzberg 2021, https://pubmed.ncbi.nlm.nih.gov/33320174/).
-I retrieved the .fasta and .gff3 (annotations) for CBS138 from the Candida Genome Database (Lew-Smith et al. 2025, https://pubmed.ncbi.nlm.nih.gov/39776186/): https://www.candidagenome.org/. 
+I retrieved the .fasta and .gff3 (annotations) for CBS138 from the Candida Genome Database (Lew-Smith et al. 2025, https://pubmed.ncbi.nlm.nih.gov/39776186/): https://www.candidagenome.org/. The CBS138.fasta and CBS_features.gff files used are listed in this directory. The command can be run similarly to:
 
+liftoff -g CBS138_features.gff \
+        -o 585_liftoff_CGD.gff3 \
+        585.fasta \
+        CBS138.fasta
 
+The corresponding annotations are listed in 585_liftoff_CGD.gff3. 
+
+7. Now we can actually annotate the variants using the script in '4. Variant_Annotation'. 
