@@ -28,7 +28,7 @@ library(rTPC)
 
 all_blocks_no_lag <- read_csv("data-processed/all-blocks-growth-no-lag.csv")
 
-d <- all_blocks %>% 
+df <- all_blocks_no_lag %>% 
   mutate(curve_id = strain) %>% 
   mutate(temp = test_temperature, 
          rate = mu)
@@ -40,7 +40,6 @@ length(unique(d$curve_id))
 
 # fit SS model ------------------------------------------------------------
 
-df <- d  
 
 
 fit_sharp_high <- function(df, 
@@ -280,5 +279,6 @@ fits_all2 <- fits_all %>%
     )
   )
 
+### ok it looks like for all but 6 populations, the sharpeschoolfield model is the best fit, so we will go with that
 
 
