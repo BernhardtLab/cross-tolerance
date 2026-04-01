@@ -1,4 +1,5 @@
-#This code takes the LoFreq calls and removes any variants with an allele frequency of less than 5%. These could represent very rare variants, but also may represent noise/false-positives, so for clarity, we can remove them
+#This code takes the LoFreq calls and removes any variants with an allele frequency of less than 5%. 
+#These could represent very rare variants, but also may represent noise/false-positives, so for clarity, we can remove them.
 
 set -euo pipefail
 set -x 
@@ -22,7 +23,8 @@ for VCF in "${VCF_FILES[@]}"; do
     BASE=$(basename "$VCF" .vcf)
     OUT_VCF="$FILTERED_DIR/${BASE}.af005.vcf"
     lofreq filter --af-min 0.05 -i "$VCF" -o "$OUT_VCF"
-    #Filter for only PASS variants using bcftools
+    
+    #Also filter for only PASS variants using bcftools (ie. remove low-quality variants)
     bcftools view -f PASS -O v -o "${OUT_VCF}.pass" "$OUT_VCF"
     mv "${OUT_VCF}.pass" "$OUT_VCF"
 done
