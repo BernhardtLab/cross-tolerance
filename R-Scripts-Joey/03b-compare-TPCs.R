@@ -11,7 +11,7 @@ conflicts_prefer(dplyr::filter)
 library(nls.multstart)
 
 
-# read in data ------------------------------------------------------------
+# read in growth rate data ------------------------------------------------------------
 
 all_blocks_no_lag <- read_csv("data-processed/all-blocks-growth-no-lag.csv")
 
