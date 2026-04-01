@@ -1,3 +1,4 @@
+#Import libraries
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,11 +7,12 @@ from pathlib import Path
 from adjustText import adjust_text
 
 #Define directories/inputs
-INPUT_CSV = "Matrix_PCA_input.csv"
+INPUT_CSV = "Lofreq_matrix_PCA_input.csv"
 OUTPUT_DIR = "pca_outputs"
 N_PCS = 3   #compute PC1–PC3 so we can plot PC1vPC2 and PC1vPC3
 POINT_COLOR = "red"
 
+#Create output folder (if it doesn't already exist) and read data
 Path(OUTPUT_DIR).mkdir(exist_ok=True, parents=True)
 df = pd.read_csv(INPUT_CSV, index_col=0)
 
@@ -71,13 +73,13 @@ def plot(pc_x, pc_y):
         arrowprops=dict(arrowstyle="-", color="red", lw=1.0)
     )
 
-    #Axis labels in bold, larger font
+    #Axis labels in bold
     ax.set_xlabel(f"{pc_x} ({var_ratio[int(pc_x[2:])-1]*100:.1f}% var)",
                   fontweight='bold', fontname="Arial", fontsize=20)
     ax.set_ylabel(f"{pc_y} ({var_ratio[int(pc_y[2:])-1]*100:.1f}% var)",
                   fontweight='bold', fontname="Arial", fontsize=20)
 
-    #Make tick labels bold, Arial, larger
+    #Make tick labels bold
     ax.tick_params(axis='both', which='major', labelsize=20, width=2, length=6)
     for tick in ax.get_xticklabels() + ax.get_yticklabels():
         tick.set_fontweight('bold')
@@ -89,7 +91,7 @@ def plot(pc_x, pc_y):
     fig.savefig(Path(OUTPUT_DIR)/f"{pc_x}_vs_{pc_y}.png", dpi=300)
     plt.close(fig)
 
-    #Export coordinates (helpful if you want to plot on Graphpad/Prism or other external program)
+    #Export coordinates
     coord_df = pc_df[[pc_x, pc_y]].copy()
     coord_df.insert(0, "Sample", coord_df.index)
     coord_df.to_csv(Path(OUTPUT_DIR)/f"{pc_x}_{pc_y}_coordinates.csv", index=False)
