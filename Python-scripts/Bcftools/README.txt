@@ -36,4 +36,4 @@ liftoff -g CBS138_features.gff \
 
 The corresponding annotations are listed in 585_liftoff_CGD.gff3. 
 
-7. Now we can actually annotate the variants using the script in '4. Variant_Annotation'. 
+7. Now we can actually annotate the variants using the script in '4. Variant_Annotation'. The resulting output 'all_samples_variant_matrix_with_annotation.tsv' is listed in the directory and was subsequently filtered and organized in Excel following the methods stated in the manuscript. All of these filtering steps and the final list of organized warm-evolved-specific major variants are listed in Table S4: Major Variants (Bcftools). 
