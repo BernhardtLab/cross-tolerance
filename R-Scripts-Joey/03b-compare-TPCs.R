@@ -1,6 +1,17 @@
-#### compare the Thomas and the SS model
+#### Comparing TPC model fits to growth rates across temperatures
 
-# load packages -----------------------------------------------------------
+# Author: Joey Bernhardt
+# Description: Fits four TPC models (Sharpe-Schoolfield, Thomas, Briere2, Lactin2) to
+#              per-population growth rate data and compares them by AIC to select the
+#              best-fitting model. The sharpeschoolhigh model was the best fit for all
+#              but 6 populations and is used in downstream analyses.
+# Input: "data-processed/all-blocks-growth-no-lag.csv" (growth rate data without lag phase)
+# Output: fits_all2 (data frame of AIC comparisons across four TPC models per population)
+# Requires: 09-growth-rates-no-lag.R (produces input file)
+# Written for R version 4.2.3
+# Last updated: April 01 2026
+
+# load packages -----------------------------------------------------
 
 library(tidyverse)
 library(rTPC)

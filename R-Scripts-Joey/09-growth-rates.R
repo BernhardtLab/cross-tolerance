@@ -19,7 +19,6 @@ library(cowplot)
 theme_set(theme_cowplot())
 library(growthTools)
 library(growthrates)
-
 library(dplyr)
 
 
@@ -42,7 +41,7 @@ plate_layout <- read_excel("data-raw/Growth-Curves/well-plate-layout.xlsx", shee
 
 
 d2 <- left_join(data, plate_layout)
-
+View(d2)
 
 
 d2 %>% 
