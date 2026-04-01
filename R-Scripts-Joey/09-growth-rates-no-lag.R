@@ -1,10 +1,22 @@
 ### Estimate growth rates in common garden experiments
 
 # Author: Joey Bernhardt
-# Input: Excel spreadsheets that are outputs from the Biotek plate reader
-# Output: 
+# Description: Imports OD growth curve data from the Biotek plate reader across
+#              three experimental blocks and five temperatures, and estimates
+#              per-well growth rates using get.growth.rate() from growthTools
+#              (saturation and linear regression methods). All time points are
+#              included in the fit — the lag phase is not separated out or
+#              excluded. Results are combined across all blocks and temperatures.
+# Input: data-raw/Growth-Curves/Block {1,2,3}/Block{N}_{T}C/*.xlsx
+#        data-raw/Growth-Curves/well-plate-layout.xlsx
+# Output: "data-processed/all-blocks-growth-no-lag.csv"
+#         figures/od_time_{temp}C_block{N}.png (OD time series, all blocks/temps)
+#         figures/block{N}/block{N}_{temp}_no_lag/ (per-well growth rate fits)
+#         figures/casp-od-time-{35,25,38}.png
+#         figures/{35,25,38}-casp-od.png
+
 # Written for R version 4.2.3
-# Last updated: July 10 2025
+# Last updated: April 01 2026
 
 
 # load packages -----------------------------------------------------------
@@ -141,95 +153,6 @@ all_blocks <- bind_rows(all_blocks_raw) |>
 # save output -------------------------------------------------------------
 
 write_csv(all_blocks, "data-processed/all-blocks-growth-no-lag.csv")
-
-
-all_blocks_no_lag <- read_csv("data-processed/all-blocks-growth-no-lag.csv")
-
-
-
-
-all_blocks_no_lag %>% 
-  ggplot(aes(x = evolution_history, y = mu, color = factor(block))) + geom_point()
-
-all_sum <- all_blocks_no_lag %>% 
-  group_by(evolution_history, test_temperature, block) %>% 
-  summarise(mean_growth_rate = mean(mu),
-            se_growth_rate = std.error(mu))
-
-all_sum %>% 
-  ggplot(aes(x = evolution_history, y = mean_growth_rate, color = factor(block))) + geom_point(size = 4) +
-  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate - se_growth_rate, ymax = mean_growth_rate + se_growth_rate), width = 0.4) +
-  facet_wrap(~ test_temperature, scales = "free") +
-  # theme(legend.position="none") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
-
-ggsave("figures/all-growth-rates.png", width = 14, height = 6)
-
-all_sum %>% 
-  ggplot(aes(x = evolution_history, y = mean_growth_rate, color = evolution_history)) + geom_point() +
-  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate - se_growth_rate, ymax = mean_growth_rate + se_growth_rate), width = 0.1) +
-  facet_grid(test_temperature ~ block) +
-  theme(legend.position="none") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
-
-# ggsave("figures/all-growth-rates-same-scale.png", width = 14, height = 6)
-ggsave("figures/all-growth-rates-same-scale-grid.png", width = 14, height = 6)
-
-all_sum2 <- all_sum %>% 
-  dplyr::select(-se_growth_rate) %>%
-  ungroup() %>% 
-  mutate(test_temperature = as.factor(test_temperature)) %>% 
-  dplyr::select(-block)
-
-View(all_sum2)
-
-all_sum3 <- all_sum2 %>% 
-  group_by(evolution_history, test_temperature) %>%
-  summarise(mean_growth_rate2 = mean(mean_growth_rate),
-            se_growth_rate = plotrix::std.error(mean_growth_rate))
-
-all_sum3 %>% 
-  ggplot(aes(x = evolution_history, y = mean_growth_rate2, color = evolution_history)) + geom_point() +
-  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate), width = 1) +
-  facet_wrap( ~ test_temperature, scales = "free") +
-  theme(legend.position="none") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
-ggsave("figures/all-growth-rates-same-scale-wrap.png", width = 14, height = 6)
-
-all_sum3 %>% 
-  ggplot(aes(x = evolution_history, y = mean_growth_rate2, color = evolution_history)) + geom_point() +
-  geom_errorbar(aes(x = evolution_history, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate), width = 1) +
-  facet_wrap( ~ test_temperature) +
-  theme(legend.position="none") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
-ggsave("figures/all-growth-rates-wrap.png", width = 14, height = 6)
-
-all_sum3b <- all_sum3 %>% 
-  mutate(test_temperature = as.numeric(as.character(test_temperature)))
-
-all_sum3b %>% 
-  ggplot(aes(x = test_temperature, y = mean_growth_rate2, color = evolution_history)) + geom_point() +
-  geom_errorbar(aes(x = test_temperature, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate), width = 1) 
-ggsave("figures/all-growth-rates-wrap-no.png", width = 14, height = 6)
-
-
-
-
-ab2 <- all_blocks %>% 
-  filter(!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")) %>% 
-  mutate(test_temperature = as.numeric(as.character(test_temperature)))
-
-  
-  ggplot() + 
-  geom_jitter(aes( x= test_temperature, y = mu, color = evolution_history), data = ab2, alpha = 0.6) + 
-  geom_point() +
-  # geom_smooth(method = "lm", aes(color = evolution_history)) +
-    
-    geom_pointrange(aes(x = test_temperature, y = mean_growth_rate2, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate, color = evolution_history), position = position_dodge2(width = 2), data = filter(all_sum3b,!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")), size = 1) +
-    geom_pointrange(aes(x = test_temperature, y = mean_growth_rate2, ymin = mean_growth_rate2 - se_growth_rate, ymax = mean_growth_rate2 + se_growth_rate), shape = 21, color = "black", position = position_dodge2(width = 2), data = filter(all_sum3b,!evolution_history %in% c("Caspofungin evolved", "Fluconazole evolved")), size = 1) +
-    ylab("Growth rate (per day)") +
-    xlab("Temperature (C)")
-ggsave("figures/growth-rates-temp.png", width = 8, height = 6)
 
 
 
