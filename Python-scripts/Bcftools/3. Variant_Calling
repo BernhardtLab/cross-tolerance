@@ -3,13 +3,15 @@
 module load samtools
 module load bcftools
 
-REFERENCE="genome.fasta"
+REFERENCE="585.fasta"
 BAM_FILES=$(ls Alignments/Processed/*.sorted.dedup.bam)
 OUTDIR="Variants"
 mkdir -p $OUTDIR
 
-#Ploidy is set to 1 since N.glab is a haploid
+#This summarizes base calls at each genomic position across samples
 bcftools mpileup -f $REFERENCE $BAM_FILES | \
+  
+  #Call variants. Ploidy is set to 1 since N.glab is a haploid
   bcftools call --ploidy 1 -mv -Oz -o ${OUTDIR}/all_samples.joint.vcf.gz
 
 bcftools index ${OUTDIR}/all_samples.joint.vcf.gz
