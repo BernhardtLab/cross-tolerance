@@ -19,7 +19,6 @@ library(cowplot)
 theme_set(theme_cowplot())
 library(growthTools)
 library(growthrates)
-
 library(dplyr)
 
 
@@ -303,7 +302,7 @@ d38 %>%
   filter(grepl("CASP", strain)) %>% 
   mutate(casp = ifelse(grepl("CASP_1", strain), "casp", "not_casp")) %>% 
   ggplot(aes(x = days, y = od, color = well, group = well)) + geom_line()
-ggsave("figures/casp-od-time-25.png", width = 8, height = 6)
+ggsave("figures/casp-od-time-38.png", width = 8, height = 6)
 
 
 gdat38 <- d38 %>%
@@ -358,7 +357,7 @@ ggsave("figures/38-casp-od.png", width = 8, height = 6)
 
 
 
-block1_all <- bind_rows(summary_df, summary_df_41, summary_df_41, summary_df_25, summary_df_38)
+
 
 
 
@@ -916,9 +915,9 @@ d25_b3 <- left_join(datab3_25, plate_layout_block3)
 
 
 
-d35_b3 %>% 
+d25_b3 %>% 
   ggplot(aes(x = days, y = od, color = strain, group = well)) + geom_line()
-ggsave("figures/od_time_35C_block3.png", width = 8, height = 6)
+ggsave("figures/od_time_25C_block3.png", width = 8, height = 6)
 
 
 
