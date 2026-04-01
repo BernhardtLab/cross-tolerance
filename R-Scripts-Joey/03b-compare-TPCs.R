@@ -6,39 +6,42 @@
 #              best-fitting model. The sharpeschoolhigh model was the best fit for all
 #              but 6 populations and is used in downstream analyses.
 # Input: "data-processed/all-blocks-growth-no-lag.csv" (growth rate data without lag phase)
-# Output: fits_all2 (data frame of AIC comparisons across four TPC models per population)
+# Output: "data-processed/tpc-model-fits-aic-comparison.csv"
 # Requires: 09-growth-rates-no-lag.R (produces input file)
 # Written for R version 4.2.3
 # Last updated: April 01 2026
 
-# load packages -----------------------------------------------------
+# load packages -----------------------------------------------------------
 
 library(tidyverse)
 library(rTPC)
 library(minpack.lm)
 library(conflicted)
-conflict_prefer("select", "dplyr")
+conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 library(nls.multstart)
 
 
-# read in growth rate data ------------------------------------------------------------
+# read in growth rate data ------------------------------------------------
 
-all_blocks_no_lag <- read_csv("data-processed/all-blocks-growth-no-lag.csv")
-
-df <- all_blocks_no_lag |>
+df <- read_csv("data-processed/all-blocks-growth-no-lag.csv") |>
   mutate(curve_id = strain, temp = test_temperature, rate = mu)
-
-length(unique(df$curve_id))
 
 
 # fit TPC models ----------------------------------------------------------
 
-fit_tpc_model <- function(df, model_name, tref = 20, iter = 2000) {
+# The function fit_tpc_model fits a named rTPC model to a single curve's temperature-rate data using
+# nonlinear least squares. Automatically retrieves start values and
+# parameter bounds from rTPC, and handles models with or without a tref argument.
+# Returns a list with the fitted model object, its AIC, and an error flag.
+# If fitting fails or start values contain NA, returns a list with fit = NULL
+# and error = TRUE.
 
-  starts <- get_start_vals(df$temp, df$rate, model_name = model_name)
-  lower  <- get_lower_lims(df$temp, df$rate, model_name = model_name)
-  upper  <- get_upper_lims(df$temp, df$rate, model_name = model_name)
+fit_tpc_model <- function(curve_data, model_name, tref = 20, iter = 2000) {
+
+  starts <- get_start_vals(curve_data$temp, curve_data$rate, model_name = model_name)
+  lower  <- get_lower_lims(curve_data$temp, curve_data$rate, model_name = model_name)
+  upper  <- get_upper_lims(curve_data$temp, curve_data$rate, model_name = model_name)
 
   # Guard: model cannot be fit if rTPC produced NA values
   if (any(is.na(starts)) || any(is.na(lower)) || any(is.na(upper))) {
@@ -70,7 +73,7 @@ fit_tpc_model <- function(df, model_name, tref = 20, iter = 2000) {
   tryCatch({
     fit <- nls_multstart(
       formula = formula,
-      data = df,
+      data = curve_data,
       iter = iter,
       start_lower = starts * 0.5,
       start_upper = starts * 1.5,
@@ -94,7 +97,7 @@ fits_all <- df |>
   group_by(curve_id) |>
   nest() |>
   mutate(
-    sharpeschool = map(data, ~ fit_tpc_model(.x, "sharpeschoolhigh_1981", tref = 20)),
+    sharpeschool = map(data, ~ fit_tpc_model(.x, "sharpeschoolhigh_1981")),
     thomas       = map(data, ~ fit_tpc_model(.x, "thomas_2012")),
     briere       = map(data, ~ fit_tpc_model(.x, "briere2_1999")),
     lactin       = map(data, ~ fit_tpc_model(.x, "lactin2_1995"))
@@ -107,7 +110,7 @@ fits_all <- df |>
   )
 
 
-fits_all2 <- fits_all |>
+fits_aic <- fits_all |>
   mutate(
     best_model = pmap_chr(
       list(AIC_sharp, AIC_thomas, AIC_briere, AIC_lactin),
@@ -126,3 +129,7 @@ fits_all2 <- fits_all |>
 
 # For all but 6 populations, the sharpeschoolhigh model is the best fit,
 # so we will go with that
+
+fits_aic |>
+  select(curve_id, starts_with("AIC_"), best_model) |>
+  write_csv("data-processed/tpc-model-fits-aic-comparison.csv")
