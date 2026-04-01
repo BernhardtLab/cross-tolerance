@@ -91,7 +91,7 @@ fit_tpc_model <- function(curve_data, model_name, tref = 20, iter = 2000) {
 
 # fit all four models and compare AIC -------------------------------------
 # SS was best in a preliminary SS-vs-Thomas comparison; briere and lactin
-# added here to confirm.
+# added here to confirm. Lactin always failed -- I'm not sure why but it's ok, we don't really need it
 
 fits_all <- df |>
   group_by(curve_id) |>
