@@ -1,0 +1,2 @@
+chrom_label,chrom,start,end,normalized_depth,CNV,gene_name,gene_start,gene_end,gene_overlap_in_controls_count,partially_overlaps_control
+ChrC,contig_7,128001,128500,1.5049606203264048,duplication,CAGL0C00869g,128079,128513,0,False
