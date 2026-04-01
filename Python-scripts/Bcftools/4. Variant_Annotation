@@ -3,8 +3,8 @@
 module load bcftools
 
 #Set paths
-REFERENCE="Combo_Assembly_and_Annotation/585/585.fasta"
-GFF="Combo_Assembly_and_Annotation/585/585_liftoff_CGD.gff3"
+REFERENCE="585.fasta"
+GFF="585_liftoff_CGD.gff3"
 VCF_IN="Variants/all_samples.joint.vcf.gz"
 VCF_ANN="Variants/all_samples.joint.ann.vcf.gz"
 OUT_MATRIX="all_samples_variant_matrix_with_annotation.tsv"
