@@ -1,0 +1,368 @@
+chrom,chrom_label,start,end,normalized_depth,CNV,gene_name,gene_start,gene_end
+contig_10,ChrK,5001,5500,1.5515363456466682,duplication,CAGL0K13024g,2436,10527
+contig_10,ChrK,1306001,1306500,1.648793039277817,duplication,,,
+contig_10,ChrK,1306501,1307000,2.343101484870201,duplication,,,
+contig_11,ChrI,4001,4500,1.7138315022127235,duplication,CAGL0I00209g,4000,10179
+contig_11,ChrI,976001,976500,1.52061130344896,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,978001,978500,1.5023059972886723,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,983501,984000,1.6492835590531232,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,985501,986000,1.6957268632332432,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,986001,986500,1.5987823185500163,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,988001,988500,1.525003685073292,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,988501,989000,1.5221497518351472,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,989001,989500,1.5546801314793115,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,992001,992500,1.5108677970031066,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,992501,993000,1.6701306495036332,duplication,CAGL0I10147g,970813,996988
+contig_11,ChrI,1014001,1014500,3.2171854281122774,triplication or higher,,,
+contig_11,ChrI,1014501,1015000,4.4880552768701545,triplication or higher,,,
+contig_11,ChrI,1015001,1015500,4.070355391843574,triplication or higher,,,
+contig_11,ChrI,1015501,1016000,4.013588876028602,triplication or higher,,,
+contig_11,ChrI,1016001,1016500,3.8994315465028153,triplication or higher,,,
+contig_11,ChrI,1016501,1017000,4.138894382265892,triplication or higher,,,
+contig_11,ChrI,1017001,1017500,4.142149649865651,triplication or higher,,,
+contig_11,ChrI,1017501,1018000,4.205894924302023,triplication or higher,,,
+contig_11,ChrI,1018001,1018500,4.064669821720708,triplication or higher,,,
+contig_11,ChrI,1018501,1019000,4.107612598413416,triplication or higher,,,
+contig_11,ChrI,1019001,1019500,4.032986703506618,triplication or higher,,,
+contig_11,ChrI,1019501,1020000,2.7204449702011426,triplication or higher,,,
+contig_11,ChrI,1040501,1041000,1.5517816055343212,duplication,CAGL0I10362g,1035293,1048432
+contig_11,ChrI,1041001,1041500,1.5309345150838112,duplication,CAGL0I10362g,1035293,1048432
+contig_11,ChrI,1042501,1043000,1.5675005346975397,duplication,CAGL0I10362g,1035293,1048432
+contig_11,ChrI,1043001,1043500,1.5390503877297852,duplication,CAGL0I10362g,1035293,1048432
+contig_11,ChrI,1131001,1131500,0.389274438108343,deletion,,,
+contig_13,ChrH,1,500,0.4763838872359306,deletion,,,
+contig_13,ChrH,1057001,1057500,0.3500266711348401,deletion,,,
+contig_19,ChrG,501,1000,2.2788433943051,duplication,,,
+contig_19,ChrG,1001,1500,1.94335016434914,duplication,,,
+contig_19,ChrG,1501,2000,1.7875655429826018,duplication,,,
+contig_19,ChrG,2501,3000,1.6404542030976133,duplication,CAGL0G10219g,2698,7012
+contig_19,ChrG,4001,4500,0.1997753266701273,deletion,CAGL0G10219g,2698,7012
+contig_19,ChrG,984501,985000,0.4266630191026289,deletion,,,
+contig_19,ChrG,996501,997000,0.0287994565047151,deletion,,,
+contig_20,ChrD,1,500,1.874766581219976,duplication,,,
+contig_20,ChrD,501,1000,2.249412207786733,duplication,,,
+contig_20,ChrD,1001,1500,2.106113544337078,duplication,,,
+contig_20,ChrD,1501,2000,1.9416556414889916,duplication,,,
+contig_20,ChrD,667501,668000,0.0983826594790107,deletion,,,
+contig_21,,501,1000,0.4538645702786954,deletion,CaglfMp09,510,1292
+contig_21,,1001,1500,0.3597293661267671,deletion,CaglfMp09,510,1292
+contig_21,,7501,8000,0.3725712722338835,deletion,,,
+contig_23,,11501,12000,0.4135527632899018,deletion,,,
+contig_23,,12001,12500,0.0052644167804318,deletion,,,
+contig_24,ChrE,699501,700000,1.8617901035277864,duplication,,,
+contig_24,ChrE,700501,701000,0.2804435333545603,deletion,,,
+contig_24,ChrE,701001,701500,0.2608352209598693,deletion,,,
+contig_26,ChrB,513001,513500,0.2883513437698388,deletion,,,
+contig_28,,15001,15500,0.1173655270460972,deletion,,,
+contig_29,ChrJ,1,500,0.4560496129141499,deletion,,,
+contig_29,ChrJ,508501,509000,1.5571773230626884,duplication,,,
+contig_29,ChrJ,512001,512500,1.6454708826177893,duplication,,,
+contig_29,ChrJ,520001,520500,1.5542342044108517,duplication,,,
+contig_29,ChrJ,520501,521000,1.5549030950135418,duplication,,,
+contig_29,ChrJ,532501,533000,1.534011411856186,duplication,,,
+contig_29,ChrJ,533001,533500,1.5422164699158518,duplication,,,
+contig_29,ChrJ,533501,534000,1.563687858262206,duplication,,,
+contig_29,ChrJ,535501,536000,1.75394264202071,duplication,,,
+contig_29,ChrJ,536001,536500,1.6138769498173908,duplication,,,
+contig_29,ChrJ,536501,537000,1.6128959102667786,duplication,,,
+contig_29,ChrJ,537001,537500,1.656462984855331,duplication,,,
+contig_29,ChrJ,1248001,1248500,0.4793715985946134,deletion,,,
+contig_3,,1,500,2.0473849494208824,duplication,,,
+contig_3,,501,1000,1.877263772803352,duplication,CaglfMp09,510,1292
+contig_3,,1001,1500,1.9287237565036484,duplication,CaglfMp09,510,1292
+contig_3,,1501,2000,1.9612541361478129,duplication,,,
+contig_3,,3001,3500,1.7521143410400235,duplication,CaglfMp04,1850,7443
+contig_3,,3001,3500,1.7521143410400235,duplication,CaglfMp07,2977,7443
+contig_3,,3501,4000,1.778290259958632,duplication,CaglfMp04,1850,7443
+contig_3,,3501,4000,1.778290259958632,duplication,CaglfMp07,2977,7443
+contig_3,,4001,4500,1.6934972278909426,duplication,CaglfMp04,1850,7443
+contig_3,,4001,4500,1.6934972278909426,duplication,CaglfMp07,2977,7443
+contig_3,,4501,5000,1.6294175081532254,duplication,CaglfMp04,1850,7443
+contig_3,,4501,5000,1.6294175081532254,duplication,CaglfMp07,2977,7443
+contig_3,,4501,5000,1.6294175081532254,duplication,CaglfMp06,4463,7443
+contig_3,,5001,5500,1.5834870201018345,duplication,CaglfMp04,1850,7443
+contig_3,,5001,5500,1.5834870201018345,duplication,CaglfMp07,2977,7443
+contig_3,,5001,5500,1.5834870201018345,duplication,CaglfMp06,4463,7443
+contig_3,,5501,6000,1.9212321817535187,duplication,CaglfMp04,1850,7443
+contig_3,,5501,6000,1.9212321817535187,duplication,CaglfMp07,2977,7443
+contig_3,,5501,6000,1.9212321817535187,duplication,CaglfMp06,4463,7443
+contig_3,,6001,6500,2.054096151801207,duplication,CaglfMp04,1850,7443
+contig_3,,6001,6500,2.054096151801207,duplication,CaglfMp07,2977,7443
+contig_3,,6001,6500,2.054096151801207,duplication,CaglfMp06,4463,7443
+contig_3,,6001,6500,2.054096151801207,duplication,CaglfMp05,6088,7443
+contig_3,,6501,7000,1.7913113303576669,duplication,CaglfMp04,1850,7443
+contig_3,,6501,7000,1.7913113303576669,duplication,CaglfMp07,2977,7443
+contig_3,,6501,7000,1.7913113303576669,duplication,CaglfMp06,4463,7443
+contig_3,,6501,7000,1.7913113303576669,duplication,CaglfMp05,6088,7443
+contig_3,,7001,7500,1.8328048440778797,duplication,CaglfMp04,1850,7443
+contig_3,,7001,7500,1.8328048440778797,duplication,CaglfMp07,2977,7443
+contig_3,,7001,7500,1.8328048440778797,duplication,CaglfMp06,4463,7443
+contig_3,,7001,7500,1.8328048440778797,duplication,CaglfMp05,6088,7443
+contig_3,,7501,8000,2.0437506438129325,duplication,,,
+contig_3,,8001,8500,2.078243102558321,duplication,,,
+contig_3,,8501,9000,2.0280094182962904,duplication,,,
+contig_3,,9001,9500,1.9883887982636104,duplication,,,
+contig_3,,9501,10000,2.265822323906065,duplication,,,
+contig_3,,10001,10500,1.7468524016321942,duplication,,,
+contig_32,ChrA,7501,8000,1.6306215112380678,duplication,CAGL0A04851g,1,16907
+contig_32,ChrA,9001,9500,1.6556603161321028,duplication,CAGL0A04851g,1,16907
+contig_32,ChrA,13001,13500,1.7470753651664244,duplication,CAGL0A04851g,1,16907
+contig_32,ChrA,13501,14000,1.7939868927684277,duplication,CAGL0A04851g,1,16907
+contig_32,ChrA,224001,224500,0.4561387983278419,deletion,,,
+contig_32,ChrA,489001,489500,2.7308796636031087,triplication or higher,,,
+contig_32,ChrA,489501,490000,3.7851850315633366,triplication or higher,,,
+contig_32,ChrA,504001,504500,1.5990052820842462,duplication,CAGL0A00099g,495052,512901
+contig_32,ChrA,504501,505000,1.5779129317460832,duplication,CAGL0A00099g,495052,512901
+contig_32,ChrA,505001,505500,1.5957277181310645,duplication,CAGL0A00099g,495052,512901
+contig_32,ChrA,505501,506000,1.5188944842353884,duplication,CAGL0A00099g,495052,512901
+contig_32,ChrA,506001,506500,1.6036875163030777,duplication,CAGL0A00099g,495052,512901
+contig_32,ChrA,516501,517000,0.016025504022785,deletion,,,
+contig_34,,1,500,17.34460088399688,triplication or higher,,,
+contig_34,,501,1000,5.701222162969295,triplication or higher,CaglfMp09,510,1292
+contig_34,,1001,1500,10.03665890065898,triplication or higher,CaglfMp09,510,1292
+contig_34,,1501,2000,7.821761447971058,triplication or higher,,,
+contig_34,,2001,2500,12.973155535529042,triplication or higher,CaglfMp04,1850,7443
+contig_34,,2501,3000,8.800772030421797,triplication or higher,CaglfMp04,1850,7443
+contig_34,,3001,3500,9.04881896225273,triplication or higher,CaglfMp04,1850,7443
+contig_34,,3001,3500,9.04881896225273,triplication or higher,CaglfMp07,2977,7443
+contig_34,,3501,4000,10.776630278061678,triplication or higher,CaglfMp04,1850,7443
+contig_34,,3501,4000,10.776630278061678,triplication or higher,CaglfMp07,2977,7443
+contig_34,,4001,4500,12.338445242636352,triplication or higher,CaglfMp04,1850,7443
+contig_34,,4001,4500,12.338445242636352,triplication or higher,CaglfMp07,2977,7443
+contig_34,,4501,5000,1.8289698712891227,duplication,CaglfMp04,1850,7443
+contig_34,,4501,5000,1.8289698712891227,duplication,CaglfMp07,2977,7443
+contig_34,,4501,5000,1.8289698712891227,duplication,CaglfMp06,4463,7443
+contig_34,,5001,5500,0.4327276272336864,deletion,CaglfMp04,1850,7443
+contig_34,,5001,5500,0.4327276272336864,deletion,CaglfMp07,2977,7443
+contig_34,,5001,5500,0.4327276272336864,deletion,CaglfMp06,4463,7443
+contig_34,,6001,6500,6.349823084044518,triplication or higher,CaglfMp04,1850,7443
+contig_34,,6001,6500,6.349823084044518,triplication or higher,CaglfMp07,2977,7443
+contig_34,,6001,6500,6.349823084044518,triplication or higher,CaglfMp06,4463,7443
+contig_34,,6001,6500,6.349823084044518,triplication or higher,CaglfMp05,6088,7443
+contig_34,,6501,7000,8.975709219378697,triplication or higher,CaglfMp04,1850,7443
+contig_34,,6501,7000,8.975709219378697,triplication or higher,CaglfMp07,2977,7443
+contig_34,,6501,7000,8.975709219378697,triplication or higher,CaglfMp06,4463,7443
+contig_34,,6501,7000,8.975709219378697,triplication or higher,CaglfMp05,6088,7443
+contig_34,,7001,7500,7.36490916633368,triplication or higher,CaglfMp04,1850,7443
+contig_34,,7001,7500,7.36490916633368,triplication or higher,CaglfMp07,2977,7443
+contig_34,,7001,7500,7.36490916633368,triplication or higher,CaglfMp06,4463,7443
+contig_34,,7001,7500,7.36490916633368,triplication or higher,CaglfMp05,6088,7443
+contig_34,,7501,8000,11.491250701622418,triplication or higher,,,
+contig_34,,8001,8500,17.754786897919907,triplication or higher,,,
+contig_34,,8501,9000,18.590164371619647,triplication or higher,,,
+contig_34,,9001,9500,14.614501592763576,triplication or higher,,,
+contig_34,,9501,10000,9.8243307270117,triplication or higher,,,
+contig_34,,10001,10500,18.66742123623036,triplication or higher,,,
+contig_34,,10501,11000,11.113282918395637,triplication or higher,,,
+contig_35,,1,500,0.0520396888892943,deletion,,,
+contig_35,,501,1000,2.109703257238182,duplication,CaglfMp09,510,1292
+contig_35,,1001,1500,8.411098661647932,triplication or higher,CaglfMp09,510,1292
+contig_35,,1501,2000,4.723367146697687,triplication or higher,,,
+contig_36,ChrF,1,500,0.4796614511891125,deletion,,,
+contig_36,ChrF,4501,5000,1.5564638397531525,duplication,CAGL0F09251g,3956,8668
+contig_37,,1,500,4.266763969146828,triplication or higher,,,
+contig_37,,501,1000,15.685908263799249,triplication or higher,CaglfMp09,510,1292
+contig_37,,1001,1500,9.770707997029373,triplication or higher,CaglfMp09,510,1292
+contig_37,,1501,2000,5.877430244071306,triplication or higher,,,
+contig_37,,2001,2500,13.181737921801258,triplication or higher,CaglfMp04,1850,7443
+contig_37,,2501,3000,3.4733036398823387,triplication or higher,CaglfMp04,1850,7443
+contig_37,,3001,3500,4.56680599716021,triplication or higher,CaglfMp04,1850,7443
+contig_37,,3001,3500,4.56680599716021,triplication or higher,CaglfMp07,2977,7443
+contig_37,,3501,4000,9.095217673726005,triplication or higher,CaglfMp04,1850,7443
+contig_37,,3501,4000,9.095217673726005,triplication or higher,CaglfMp07,2977,7443
+contig_37,,4001,4500,16.231611513827303,triplication or higher,CaglfMp04,1850,7443
+contig_37,,4001,4500,16.231611513827303,triplication or higher,CaglfMp07,2977,7443
+contig_37,,4501,5000,1.702460361966991,duplication,CaglfMp04,1850,7443
+contig_37,,4501,5000,1.702460361966991,duplication,CaglfMp07,2977,7443
+contig_37,,4501,5000,1.702460361966991,duplication,CaglfMp06,4463,7443
+contig_37,,5001,5500,2.4273817008091614,duplication,CaglfMp04,1850,7443
+contig_37,,5001,5500,2.4273817008091614,duplication,CaglfMp07,2977,7443
+contig_37,,5001,5500,2.4273817008091614,duplication,CaglfMp06,4463,7443
+contig_37,,5501,6000,7.291152829210379,triplication or higher,CaglfMp04,1850,7443
+contig_37,,5501,6000,7.291152829210379,triplication or higher,CaglfMp07,2977,7443
+contig_37,,5501,6000,7.291152829210379,triplication or higher,CaglfMp06,4463,7443
+contig_37,,6501,7000,4.854651919851207,triplication or higher,CaglfMp04,1850,7443
+contig_37,,6501,7000,4.854651919851207,triplication or higher,CaglfMp07,2977,7443
+contig_37,,6501,7000,4.854651919851207,triplication or higher,CaglfMp06,4463,7443
+contig_37,,6501,7000,4.854651919851207,triplication or higher,CaglfMp05,6088,7443
+contig_37,,7001,7500,6.660968696062557,triplication or higher,CaglfMp04,1850,7443
+contig_37,,7001,7500,6.660968696062557,triplication or higher,CaglfMp07,2977,7443
+contig_37,,7001,7500,6.660968696062557,triplication or higher,CaglfMp06,4463,7443
+contig_37,,7001,7500,6.660968696062557,triplication or higher,CaglfMp05,6088,7443
+contig_37,,7501,8000,3.2556912304738077,triplication or higher,,,
+contig_37,,8001,8500,14.433719816543912,triplication or higher,,,
+contig_4,ChrM,1,500,5.670118749944202,triplication or higher,,,
+contig_4,ChrM,501,1000,8.897003091795487,triplication or higher,,,
+contig_4,ChrM,1001,1500,10.030349032640268,triplication or higher,,,
+contig_4,ChrM,1501,2000,11.491585146923766,triplication or higher,,,
+contig_4,ChrM,2001,2500,11.988726939196512,triplication or higher,,,
+contig_4,ChrM,2501,3000,13.626817728831288,triplication or higher,,,
+contig_4,ChrM,3001,3500,12.510305534820876,triplication or higher,,,
+contig_4,ChrM,3501,4000,10.772483156325,triplication or higher,,,
+contig_4,ChrM,4001,4500,12.155436773740323,triplication or higher,,,
+contig_4,ChrM,4501,5000,12.28352932415549,triplication or higher,,,
+contig_4,ChrM,5001,5500,11.804246910974566,triplication or higher,,,
+contig_4,ChrM,5501,6000,11.864313287096143,triplication or higher,,,
+contig_4,ChrM,6001,6500,12.171646222678849,triplication or higher,,,
+contig_4,ChrM,6501,7000,13.04659972370442,triplication or higher,,,
+contig_4,ChrM,7001,7500,13.213844670730383,triplication or higher,,,
+contig_4,ChrM,7501,8000,12.470082913245774,triplication or higher,CAGL0L13486r,7333,9132
+contig_4,ChrM,8001,8500,13.013957862293145,triplication or higher,CAGL0L13486r,7333,9132
+contig_4,ChrM,8501,9000,12.516704588253278,triplication or higher,CAGL0L13486r,7333,9132
+contig_4,ChrM,9001,9500,11.454573200241574,triplication or higher,,,
+contig_4,ChrM,9501,10000,11.12237983059222,triplication or higher,,,
+contig_4,ChrM,10001,10500,10.579173772147543,triplication or higher,CAGL0L13464r,9922,13329
+contig_4,ChrM,10501,11000,10.694089177689712,triplication or higher,CAGL0L13464r,9922,13329
+contig_4,ChrM,11001,11500,10.52891779153209,triplication or higher,CAGL0L13464r,9922,13329
+contig_4,ChrM,11501,12000,8.865542937115626,triplication or higher,CAGL0L13464r,9922,13329
+contig_4,ChrM,12001,12500,9.4861842309984,triplication or higher,CAGL0L13464r,9922,13329
+contig_4,ChrM,12501,13000,10.804879757848626,triplication or higher,CAGL0L13464r,9922,13329
+contig_4,ChrM,13001,13500,11.854324520762638,triplication or higher,CAGL0L13464r,9922,13329
+contig_4,ChrM,13501,14000,13.378904575120892,triplication or higher,,,
+contig_4,ChrM,14001,14500,12.334097453718863,triplication or higher,,,
+contig_4,ChrM,14501,15000,10.651748402539424,triplication or higher,,,
+contig_4,ChrM,15001,15500,11.806030619248409,triplication or higher,,,
+contig_4,ChrM,15501,16000,11.982640034712034,triplication or higher,,,
+contig_4,ChrM,16001,16500,11.28463039445143,triplication or higher,,,
+contig_4,ChrM,16501,17000,12.06437846636077,triplication or higher,,,
+contig_4,ChrM,17001,17500,12.285335328782752,triplication or higher,,,
+contig_4,ChrM,17501,18000,12.922453627845128,triplication or higher,,,
+contig_4,ChrM,18001,18500,12.855007158740538,triplication or higher,,,
+contig_4,ChrM,18501,19000,12.855809827463764,triplication or higher,CAGL0L13530r,18335,20134
+contig_4,ChrM,19001,19500,12.753268898071363,triplication or higher,CAGL0L13530r,18335,20134
+contig_4,ChrM,19501,20000,12.61545513756377,triplication or higher,CAGL0L13530r,18335,20134
+contig_4,ChrM,20001,20500,11.500213835698467,triplication or higher,,,
+contig_4,ChrM,20501,21000,10.754155553811287,triplication or higher,,,
+contig_4,ChrM,21001,21500,10.63174857351899,triplication or higher,CAGL0L13508r,20924,24331
+contig_4,ChrM,21501,22000,10.984187032076433,triplication or higher,CAGL0L13508r,20924,24331
+contig_4,ChrM,22001,22500,10.783163109614618,triplication or higher,CAGL0L13508r,20924,24331
+contig_4,ChrM,22501,23000,8.987526286692889,triplication or higher,CAGL0L13508r,20924,24331
+contig_4,ChrM,23001,23500,9.68620481755618,triplication or higher,CAGL0L13508r,20924,24331
+contig_4,ChrM,23501,24000,11.226592986491347,triplication or higher,CAGL0L13508r,20924,24331
+contig_4,ChrM,24001,24500,11.771270604261945,triplication or higher,CAGL0L13508r,20924,24331
+contig_4,ChrM,24501,25000,13.330343117365588,triplication or higher,,,
+contig_4,ChrM,25001,25500,12.302347446444506,triplication or higher,,,
+contig_4,ChrM,25501,26000,10.869895924430107,triplication or higher,,,
+contig_4,ChrM,26001,26500,11.43820767682909,triplication or higher,,,
+contig_4,ChrM,26501,27000,12.008102470321104,triplication or higher,,,
+contig_4,ChrM,27001,27500,11.837468477574845,triplication or higher,,,
+contig_4,ChrM,27501,28000,12.057533485859906,triplication or higher,,,
+contig_4,ChrM,28001,28500,12.094433950774985,triplication or higher,,,
+contig_4,ChrM,28501,29000,13.059843757637688,triplication or higher,,,
+contig_4,ChrM,29001,29500,13.215628379004224,triplication or higher,,,
+contig_4,ChrM,29501,30000,12.328590254423382,triplication or higher,CAGL0M14234r,29337,31136
+contig_4,ChrM,30001,30500,12.8760995090787,triplication or higher,CAGL0M14234r,29337,31136
+contig_4,ChrM,30501,31000,12.544552733678612,triplication or higher,CAGL0M14234r,29337,31136
+contig_4,ChrM,31001,31500,11.776331876488966,triplication or higher,,,
+contig_4,ChrM,31501,32000,10.957654371503056,triplication or higher,,,
+contig_4,ChrM,32001,32500,10.47357824233619,triplication or higher,CAGL0M14212r,31926,35333
+contig_4,ChrM,32501,33000,10.97593738130992,triplication or higher,CAGL0M14212r,31926,35333
+contig_4,ChrM,33001,33500,11.03631590637942,triplication or higher,CAGL0M14212r,31926,35333
+contig_4,ChrM,33501,34000,8.9597227339744,triplication or higher,CAGL0M14212r,31926,35333
+contig_4,ChrM,34001,34500,9.537755696465812,triplication or higher,CAGL0M14212r,31926,35333
+contig_4,ChrM,34501,35000,10.84802320172214,triplication or higher,CAGL0M14212r,31926,35333
+contig_4,ChrM,35001,35500,11.570759497928856,triplication or higher,CAGL0M14212r,31926,35333
+contig_4,ChrM,35501,36000,13.214803413927571,triplication or higher,,,
+contig_4,ChrM,36001,36500,12.338021611921317,triplication or higher,,,
+contig_4,ChrM,36501,37000,10.754133257457866,triplication or higher,,,
+contig_4,ChrM,37001,37500,11.818851022466635,triplication or higher,,,
+contig_4,ChrM,37501,38000,12.28872437450305,triplication or higher,,,
+contig_4,ChrM,38001,38500,11.739386818867043,triplication or higher,,,
+contig_4,ChrM,38501,39000,11.581506340278745,triplication or higher,,,
+contig_4,ChrM,39001,39500,12.113229776710575,triplication or higher,,,
+contig_4,ChrM,39501,40000,12.968584783077326,triplication or higher,,,
+contig_4,ChrM,40001,40500,13.241246889087256,triplication or higher,,,
+contig_4,ChrM,40501,41000,12.216484189412512,triplication or higher,CAGL0M14190r,40339,42138
+contig_4,ChrM,41001,41500,12.492356970315358,triplication or higher,CAGL0M14190r,40339,42138
+contig_4,ChrM,41501,42000,12.69931172278769,triplication or higher,CAGL0M14190r,40339,42138
+contig_4,ChrM,42001,42500,11.466345674848922,triplication or higher,,,
+contig_4,ChrM,42501,43000,11.066772725155245,triplication or higher,,,
+contig_4,ChrM,43001,43500,10.689607610651688,triplication or higher,CAGL0M14168r,42928,46335
+contig_4,ChrM,43501,44000,11.19923536084132,triplication or higher,CAGL0M14168r,42928,46335
+contig_4,ChrM,44001,44500,10.826172775367596,triplication or higher,CAGL0M14168r,42928,46335
+contig_4,ChrM,44501,45000,9.04215235257925,triplication or higher,CAGL0M14168r,42928,46335
+contig_4,ChrM,45001,45500,10.01656988622485,triplication or higher,CAGL0M14168r,42928,46335
+contig_4,ChrM,45501,46000,11.233750115940133,triplication or higher,CAGL0M14168r,42928,46335
+contig_4,ChrM,46001,46500,11.713054825474478,triplication or higher,CAGL0M14168r,42928,46335
+contig_4,ChrM,46501,47000,12.940892712125953,triplication or higher,,,
+contig_4,ChrM,47001,47500,12.416549368677137,triplication or higher,,,
+contig_4,ChrM,47501,48000,11.018612601761554,triplication or higher,,,
+contig_4,ChrM,48001,48500,11.550848854322112,triplication or higher,,,
+contig_4,ChrM,48501,49000,11.917445497303165,triplication or higher,,,
+contig_4,ChrM,49001,49500,11.519633959529903,triplication or higher,,,
+contig_4,ChrM,49501,50000,11.597648900157,triplication or higher,,,
+contig_4,ChrM,50001,50500,11.933498871767728,triplication or higher,,,
+contig_4,ChrM,50501,51000,12.39050722787907,triplication or higher,,,
+contig_4,ChrM,51001,51500,13.118773019734688,triplication or higher,,,
+contig_4,ChrM,51501,52000,12.2484571602211,triplication or higher,CAGL0M14146r,51341,53140
+contig_4,ChrM,52001,52500,12.28511236524852,triplication or higher,CAGL0M14146r,51341,53140
+contig_4,ChrM,52501,53000,12.507384712522462,triplication or higher,CAGL0M14146r,51341,53140
+contig_4,ChrM,53001,53500,11.27497607341927,triplication or higher,,,
+contig_4,ChrM,53501,54000,10.728447858314563,triplication or higher,,,
+contig_4,ChrM,54001,54500,9.863572309036188,triplication or higher,CAGL0M14124r,53930,57337
+contig_4,ChrM,54501,55000,10.50095816433964,triplication or higher,CAGL0M14124r,53930,57337
+contig_4,ChrM,55001,55500,10.631726277165566,triplication or higher,CAGL0M14124r,53930,57337
+contig_4,ChrM,55501,56000,8.766903869572252,triplication or higher,CAGL0M14124r,53930,57337
+contig_4,ChrM,56001,56500,9.613005889268456,triplication or higher,CAGL0M14124r,53930,57337
+contig_4,ChrM,56501,57000,10.539553152114864,triplication or higher,CAGL0M14124r,53930,57337
+contig_4,ChrM,57001,57500,7.135769542205454,triplication or higher,CAGL0M14124r,53930,57337
+contig_4,ChrM,57001,57500,7.135769542205454,triplication or higher,CAGL0M14113g,57100,63910
+contig_4,ChrM,1469501,1470000,0.4586835067299888,deletion,,,
+contig_5,ChrL,1,500,0.1257514333057497,deletion,CAGL0M14278r,1,1210
+contig_5,ChrL,1001,1500,8.178436213678873,triplication or higher,,,
+contig_5,ChrL,1501,2000,9.900138328649916,triplication or higher,,,
+contig_5,ChrL,2001,2500,8.041402825541082,triplication or higher,CAGL0M14256r,1999,5408
+contig_5,ChrL,3501,4000,5.644767796102245,triplication or higher,CAGL0M14256r,1999,5408
+contig_5,ChrL,4001,4500,8.15585000766137,triplication or higher,CAGL0M14256r,1999,5408
+contig_5,ChrL,4501,5000,4.951663353594704,triplication or higher,CAGL0M14256r,1999,5408
+contig_5,ChrL,5001,5500,7.354050842216676,triplication or higher,CAGL0M14256r,1999,5408
+contig_5,ChrL,5501,6000,12.69358155995798,triplication or higher,,,
+contig_5,ChrL,6001,6500,12.61583417557196,triplication or higher,,,
+contig_5,ChrL,6501,7000,11.091722344635588,triplication or higher,,,
+contig_5,ChrL,7001,7500,11.356848283188544,triplication or higher,,,
+contig_5,ChrL,7501,8000,9.417422277041853,triplication or higher,,,
+contig_5,ChrL,8001,8500,5.8791693596383,triplication or higher,,,
+contig_5,ChrL,8501,9000,11.053930025583597,triplication or higher,,,
+contig_5,ChrL,9001,9500,12.057734153040714,triplication or higher,,,
+contig_5,ChrL,9501,10000,12.889365839365388,triplication or higher,,,
+contig_5,ChrL,10001,10500,13.364835576110975,triplication or higher,,,
+contig_5,ChrL,10501,11000,12.220073902313615,triplication or higher,CAGL0L13442r,10395,12194
+contig_5,ChrL,11001,11500,12.30943768683302,triplication or higher,CAGL0L13442r,10395,12194
+contig_5,ChrL,11501,12000,12.6195576665936,triplication or higher,CAGL0L13442r,10395,12194
+contig_5,ChrL,12001,12500,11.6862323123066,triplication or higher,,,
+contig_5,ChrL,12501,13000,10.917944566056685,triplication or higher,,,
+contig_5,ChrL,13001,13500,10.508694998977424,triplication or higher,CAGL0L13420r,12984,16391
+contig_5,ChrL,13501,14000,10.624591444070203,triplication or higher,CAGL0L13420r,12984,16391
+contig_5,ChrL,14001,14500,10.971054479910284,triplication or higher,CAGL0L13420r,12984,16391
+contig_5,ChrL,14501,15000,9.123021226444491,triplication or higher,CAGL0L13420r,12984,16391
+contig_5,ChrL,15001,15500,9.584042926171971,triplication or higher,CAGL0L13420r,12984,16391
+contig_5,ChrL,15501,16000,10.69725525987578,triplication or higher,CAGL0L13420r,12984,16391
+contig_5,ChrL,16001,16500,9.147212769908451,triplication or higher,CAGL0L13420r,12984,16391
+contig_5,ChrL,16501,17000,9.091226626463284,triplication or higher,,,
+contig_5,ChrL,17001,17500,12.689523623634992,triplication or higher,,,
+contig_5,ChrL,17501,18000,10.714557230132032,triplication or higher,,,
+contig_5,ChrL,18001,18500,11.34019290718156,triplication or higher,,,
+contig_5,ChrL,18501,19000,11.826721635224956,triplication or higher,,,
+contig_5,ChrL,19001,19500,11.57033586721382,triplication or higher,,,
+contig_5,ChrL,19501,20000,11.557359389521627,triplication or higher,,,
+contig_5,ChrL,20001,20500,11.591829551913596,triplication or higher,,,
+contig_5,ChrL,20501,21000,11.896442332378694,triplication or higher,,,
+contig_5,ChrL,21001,21500,12.524240755710254,triplication or higher,,,
+contig_5,ChrL,21501,22000,11.99039916570324,triplication or higher,CAGL0L13398r,21380,23179
+contig_5,ChrL,22001,22500,12.215124111853708,triplication or higher,CAGL0L13398r,21380,23179
+contig_5,ChrL,22501,23000,12.626179683560236,triplication or higher,CAGL0L13398r,21380,23179
+contig_5,ChrL,23001,23500,11.277941488424528,triplication or higher,CAGL0L13392r,23181,23581
+contig_5,ChrL,23501,24000,10.491348436014324,triplication or higher,,,
+contig_5,ChrL,24001,24500,10.42675590014788,triplication or higher,CAGL0L13365r,23969,27376
+contig_5,ChrL,24501,25000,10.92472265749728,triplication or higher,CAGL0L13365r,23969,27376
+contig_5,ChrL,25001,25500,10.658794050221095,triplication or higher,CAGL0L13365r,23969,27376
+contig_5,ChrL,25501,26000,8.72231116272624,triplication or higher,CAGL0L13365r,23969,27376
+contig_5,ChrL,26001,26500,9.758177446405645,triplication or higher,CAGL0L13365r,23969,27376
+contig_5,ChrL,26501,27000,10.554246449020624,triplication or higher,CAGL0L13365r,23969,27376
+contig_5,ChrL,27001,27500,6.7594516891319705,triplication or higher,CAGL0L13365r,23969,27376
+contig_5,ChrL,431501,432000,1.5146135843781712,duplication,CAGL0L09911g,426733,438585
+contig_7,ChrC,501,1000,1.538671349721594,duplication,,,
+contig_7,ChrC,28001,28500,1.5149034369726704,duplication,CAGL0C00253g,20281,35229
+contig_7,ChrC,524001,524500,0.3742665885585666,deletion,,,
+contig_7,ChrC,524501,525000,0.2246357607367781,deletion,,,
+contig_7,ChrC,594501,595000,0.3792135700290661,deletion,,,
