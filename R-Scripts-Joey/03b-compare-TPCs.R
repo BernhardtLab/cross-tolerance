@@ -24,8 +24,11 @@ library(nls.multstart)
 
 # read in growth rate data ------------------------------------------------
 
-df <- read_csv("data-processed/all-blocks-growth-no-lag.csv") |>
-  mutate(curve_id = strain, temp = test_temperature, rate = mu)
+# df <- read_csv("data-processed/all-blocks-growth-no-lag.csv") |>
+#   mutate(curve_id = strain, temp = test_temperature, rate = mu)
+
+df <- read_csv("data-processed/all-blocks-growth-logistic.csv") |> 
+  mutate(curve_id = strain, temp = test_temperature, rate = r)
 
 
 # fit TPC models ----------------------------------------------------------
@@ -127,7 +130,7 @@ fits_aic <- fits_all |>
     )
   )
 
-# For all but 6 populations, the sharpeschoolhigh model is the best fit,
+# For all but 6 populations (5 using the logistic growth rates), the sharpeschoolhigh model is the best fit,
 # so we will go with that
 
 fits_aic |>

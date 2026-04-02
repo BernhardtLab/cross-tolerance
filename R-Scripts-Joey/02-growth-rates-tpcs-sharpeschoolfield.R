@@ -31,6 +31,8 @@ library(rTPC)
 
   
 all_blocks_no_lag <- read_csv("data-processed/all-blocks-growth-no-lag.csv")
+all_blocks_no_lag <- read_csv("data-processed/all-blocks-growth-logistic.csv") |> 
+  mutate(mu = r)
   
 d <- all_blocks_no_lag %>% 
     mutate(curve_id = strain) %>% 
