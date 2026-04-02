@@ -283,6 +283,9 @@ gr_list <- df_all %>%
 growth_rates <- bind_rows(gr_list)
 cat(sprintf("Growth rates estimated: %s wells\n",
             format(nrow(growth_rates), big.mark = ",")))
+
+
+
 print(
   growth_rates %>%
     group_by(temp) %>%
@@ -317,32 +320,30 @@ logistic3 <- function(t, K, r, t_mid) {
 LOGISTIC_OUT <- file.path(OUT, "logistic_fits")
 dir.create(LOGISTIC_OUT, showWarnings = FALSE)
 
-# Get unique combinations of strain, block, temp with fitted parameters
-plot_groups <- growth_rates %>%
-  select(strain, evo_history, block, temp, r2, mu, K, r, t_mid) %>%
-  distinct() %>%
+# Get fitted parameters for each well (not aggregated)
+plot_wells <- growth_rates %>%
+  filter(!is.na(K), !is.na(r), !is.na(t_mid)) %>%
+  select(strain, evo_history, block, well, temp, r2, mu, K, r, t_mid) %>%
   arrange(strain, temp)
 
-cat(sprintf("\nGenerating logistic fit plots for %d groups...\n", nrow(plot_groups)))
+cat(sprintf("\nGenerating logistic fit plots for %d wells...\n", nrow(plot_wells)))
 
-for (i in seq_len(nrow(plot_groups))) {
-  group_data <- plot_groups[i, ]
-  strain_id <- group_data$strain
-  block_id <- group_data$block
-  temp_id <- group_data$temp
-  evo_hist <- group_data$evo_history
-  K_fit <- group_data$K
-  r_fit <- group_data$r
-  t_mid_fit <- group_data$t_mid
-  r2_val <- group_data$r2
-  mu_val <- group_data$mu
+for (i in seq_len(nrow(plot_wells))) {
+  well_data <- plot_wells[i, ]
+  strain_id <- well_data$strain
+  block_id <- well_data$block
+  well_id <- well_data$well
+  temp_id <- well_data$temp
+  evo_hist <- well_data$evo_history
+  K_fit <- well_data$K
+  r_fit <- well_data$r
+  t_mid_fit <- well_data$t_mid
+  r2_val <- well_data$r2
+  mu_val <- well_data$mu
   
-  # Skip if no fitted parameters
-  if (is.na(K_fit) || is.na(r_fit) || is.na(t_mid_fit)) next
-  
-  # Get raw time series data for this group
+  # Get raw time series data for this specific well
   raw_data <- df_all %>%
-    filter(strain == strain_id, block == block_id, temp == temp_id) %>%
+    filter(strain == strain_id, block == block_id, well == well_id, temp == temp_id) %>%
     arrange(time_h)
   
   if (nrow(raw_data) == 0) next
@@ -361,7 +362,7 @@ for (i in seq_len(nrow(plot_groups))) {
               linetype = "solid", inherit.aes = FALSE) +
     labs(
       x = "Time (h)", y = "OD600",
-      title = sprintf("%s | Block %d | %d°C", strain_id, block_id, temp_id),
+      title = sprintf("%s | Block %d | Well %s | %d°C", strain_id, block_id, well_id, temp_id),
       subtitle = sprintf("R² = %.3f, μ = %.3f day⁻¹", r2_val, mu_val)
     ) +
     theme_bw(base_size = 11) +
@@ -369,7 +370,7 @@ for (i in seq_len(nrow(plot_groups))) {
           plot.subtitle = element_text(size = 9))
   
   # Save individual plot
-  filename <- sprintf("%s_block%d_%dC.png", strain_id, block_id, temp_id)
+  filename <- sprintf("%s_block%d_well%s_%dC.png", strain_id, block_id, well_id, temp_id)
   filepath <- file.path(LOGISTIC_OUT, filename)
   ggsave(filepath, plot = p, width = 5, height = 4, dpi = 150)
 }
