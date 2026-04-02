@@ -4,7 +4,7 @@
 # Description: Fits four TPC models (Sharpe-Schoolfield, Thomas, Briere2, Lactin2) to
 #              per-population growth rate data and compares them by AIC to select the
 #              best-fitting model. The sharpeschoolhigh model was the best fit for all
-#              but 6 populations and is used in downstream analyses.
+#              but 6 populations, which were better fit by Briere, and is used in downstream analyses.
 # Input: "data-processed/all-blocks-growth-no-lag.csv" (growth rate data without lag phase)
 # Output: "data-processed/tpc-model-fits-aic-comparison.csv"
 # Requires: 09-growth-rates-no-lag.R (produces input file)

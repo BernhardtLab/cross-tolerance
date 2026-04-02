@@ -21,8 +21,8 @@ library(car)       # for Wald chi-sq tests
 library(minpack.lm)  # nlsLM for robust nonlinear fitting
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-DATA_PATH  <- "Table_S1.xlsx"
-OUT        <- "Processed_Outputs"
+DATA_PATH  <- "R-Script-Drafts/TPC-Analysis/Table_S1.xlsx"
+OUT        <- "R-Script-Drafts/TPC-Analysis/Processed_Outputs"
 dir.create(OUT, showWarnings = FALSE)
 
 # Boltzmann constant (eV K⁻¹) and reference temperature (15°C in Kelvin)
