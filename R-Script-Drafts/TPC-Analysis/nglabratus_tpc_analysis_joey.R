@@ -281,10 +281,29 @@ gr_list <- df_all %>%
   })
 
 growth_rates <- bind_rows(gr_list)
+# Add flag for which method was used (logistic fit vs fallback)
+growth_rates <- growth_rates %>%
+  mutate(
+    fit_method = ifelse(!is.na(K) & !is.na(r) & !is.na(t_mid), "logistic_nls", "fallback_lm")
+  )
+
 cat(sprintf("Growth rates estimated: %s wells\n",
             format(nrow(growth_rates), big.mark = ",")))
+cat(sprintf("  Logistic NLS: %d wells\n", sum(growth_rates$fit_method == "logistic_nls")))
+cat(sprintf("  Fallback LM:  %d wells\n", sum(growth_rates$fit_method == "fallback_lm")))
+
+growth_rates |>
+  select(temp, mu, r) |> 
+  gather(mu, r, key = parameter, value = value) |> 
+  ggplot(aes(x = temp, y = value, color = parameter)) + geom_point()
+  
 
 
+growth_rates |>
+  ggplot(aes(x = temp, y = r, color = evo_history)) + geom_point()
+
+length(unique(growth_rates$mu))
+length(unique(growth_rates$r))
 
 print(
   growth_rates %>%
@@ -304,6 +323,12 @@ mu_mean <- growth_rates %>%
   summarise(mu      = mean(mu, na.rm = TRUE),
             n_wells = sum(!is.na(mu)),
             .groups = "drop")
+### change this to use the r, not the mu
+# mu_mean <- growth_rates %>%
+#   group_by(strain, evo_history, block, temp) %>%
+#   summarise(mu      = mean(r, na.rm = TRUE),
+#             n_wells = sum(!is.na(r)),
+#             .groups = "drop")
 
 cat(sprintf("mu_mean rows: %d\n", nrow(mu_mean)))
 
@@ -376,6 +401,165 @@ for (i in seq_len(nrow(plot_wells))) {
 }
 
 cat(sprintf("Logistic fit plots saved to: %s\n", LOGISTIC_OUT))
+
+# =============================================================================
+# 4c. Plot fitted logistic curves using mu-derived r estimates
+# =============================================================================
+# Alternative: use mu to derive r, keeping K and t_mid fixed from the fit
+# This allows comparison of fits using the growth rate metric directly
+
+LOGISTIC_MU_OUT <- file.path(OUT, "logistic_fits_mu_derived")
+dir.create(LOGISTIC_MU_OUT, showWarnings = FALSE)
+
+# For wells with fitted parameters, derive r from mu
+plot_wells_mu <- growth_rates %>%
+  filter(!is.na(K), !is.na(t_mid), !is.na(mu)) %>%
+  mutate(
+    # Derive r from mu: mu = r * K / 4 * 24, so r = mu / (K / 4 * 24)
+    r_from_mu = mu / (K / 4 * 24)
+  ) %>%
+  select(strain, evo_history, block, well, temp, r2, mu, K, r, t_mid, r_from_mu) %>%
+  arrange(strain, temp)
+
+cat(sprintf("\nGenerating μ-derived logistic fit plots for %d wells...\n", nrow(plot_wells_mu)))
+
+for (i in seq_len(nrow(plot_wells_mu))) {
+  well_data <- plot_wells_mu[i, ]
+  strain_id <- well_data$strain
+  block_id <- well_data$block
+  well_id <- well_data$well
+  temp_id <- well_data$temp
+  evo_hist <- well_data$evo_history
+  K_fit <- well_data$K
+  r_fit_orig <- well_data$r
+  r_fit_mu <- well_data$r_from_mu
+  t_mid_fit <- well_data$t_mid
+  r2_val <- well_data$r2
+  mu_val <- well_data$mu
+  
+  # Get raw time series data for this specific well
+  raw_data <- df_all %>%
+    filter(strain == strain_id, block == block_id, well == well_id, temp == temp_id) %>%
+    arrange(time_h)
+  
+  if (nrow(raw_data) == 0) next
+  
+  # Create prediction data using mu-derived r
+  time_pred <- seq(min(raw_data$time_h), max(raw_data$time_h), length.out = 200)
+  od_pred <- logistic3(time_pred, K_fit, r_fit_mu, t_mid_fit)
+  pred_df <- data.frame(time_h = time_pred, OD = od_pred)
+  
+  # Create plot
+  p <- ggplot(raw_data, aes(x = time_h, y = OD)) +
+    geom_point(color = EVO_COLORS[evo_hist], size = 2, alpha = 0.6) +
+    geom_line(color = EVO_COLORS[evo_hist], linewidth = 0.5, alpha = 0.3) +
+    geom_line(data = pred_df, aes(x = time_h, y = OD), 
+              color = "#FF8C00", linewidth = 1.2, 
+              linetype = "solid", inherit.aes = FALSE) +
+    labs(
+      x = "Time (h)", y = "OD600",
+      title = sprintf("%s | Block %d | Well %s | %d°C", strain_id, block_id, well_id, temp_id),
+      subtitle = sprintf("R² = %.3f, μ = %.3f day⁻¹ (r_original = %.3f, r_μ = %.3f)", r2_val, mu_val, r_fit_orig, r_fit_mu)
+    ) +
+    theme_bw(base_size = 11) +
+    theme(plot.title = element_text(face = "bold", size = 10),
+          plot.subtitle = element_text(size = 9))
+  
+  # Save individual plot
+  filename <- sprintf("%s_block%d_well%s_%dC_mu.png", strain_id, block_id, well_id, temp_id)
+  filepath <- file.path(LOGISTIC_MU_OUT, filename)
+  ggsave(filepath, plot = p, width = 5, height = 4, dpi = 150)
+}
+
+cat(sprintf("μ-derived logistic fit plots saved to: %s\n", LOGISTIC_MU_OUT))
+
+# =============================================================================
+# 4d. Comparison: logistic r vs exponential using sliding-window mu
+# =============================================================================
+# Compare:
+# 1. Logistic fit with r from NLS (for wells that fit logistic successfully)
+# 2. Simple exponential using mu from sliding-window method
+
+LOGISTIC_COMPARE_OUT <- file.path(OUT, "logistic_fits_comparison")
+dir.create(LOGISTIC_COMPARE_OUT, showWarnings = FALSE)
+
+# Get wells where logistic fit succeeded (has K, r, t_mid)
+plot_wells_compare <- growth_rates %>%
+  filter(!is.na(K), !is.na(r), !is.na(t_mid), !is.na(mu)) %>%
+  arrange(strain, temp)
+
+cat(sprintf("\nGenerating comparison plots (logistic r vs exponential μ from sliding-window) for %d wells...\n", 
+            nrow(plot_wells_compare)))
+
+for (i in seq_len(nrow(plot_wells_compare))) {
+  well_data <- plot_wells_compare[i, ]
+  strain_id <- well_data$strain
+  block_id <- well_data$block
+  well_id <- well_data$well
+  temp_id <- well_data$temp
+  evo_hist <- well_data$evo_history
+  K_fit <- well_data$K
+  r_fit <- well_data$r
+  t_mid_fit <- well_data$t_mid
+  r2_val <- well_data$r2
+  mu_val <- well_data$mu        # This is from sliding-window fallback
+  fit_method_used <- well_data$fit_method
+  
+  # Get raw time series data for this specific well
+  raw_data <- df_all %>%
+    filter(strain == strain_id, block == block_id, well == well_id, temp == temp_id) %>%
+    arrange(time_h)
+  
+  if (nrow(raw_data) == 0) next
+  
+  # Convert mu (day^-1) to per-hour rate for exponential model
+  mu_per_hour <- mu_val / 24
+  
+  # Create prediction data for both fits
+  time_pred <- seq(min(raw_data$time_h), max(raw_data$time_h), length.out = 200)
+  
+  # Logistic predictions using r from NLS
+  od_pred_logistic <- logistic3(time_pred, K_fit, r_fit, t_mid_fit)
+  
+  # Exponential predictions: OD = OD_0 * exp(mu_per_hour * time)
+  # Use minimum OD as initial value
+  od_0 <- min(raw_data$OD, na.rm = TRUE)
+  od_pred_exponential <- od_0 * exp(mu_per_hour * time_pred)
+  
+  pred_df_combined <- data.frame(
+    time_h = c(time_pred, time_pred),
+    OD = c(od_pred_logistic, od_pred_exponential),
+    method = c(rep("Logistic (NLS r)", length(time_pred)), rep("Exponential (sliding-window μ)", length(time_pred)))
+  )
+  
+  # Create plot
+  p <- ggplot(raw_data, aes(x = time_h, y = OD)) +
+    geom_point(color = EVO_COLORS[evo_hist], size = 2, alpha = 0.6) +
+    geom_line(color = EVO_COLORS[evo_hist], linewidth = 0.5, alpha = 0.3) +
+    geom_line(data = pred_df_combined, aes(x = time_h, y = OD, color = method, linetype = method),
+              linewidth = 1.2, inherit.aes = FALSE) +
+    scale_color_manual(values = c("Logistic (NLS r)" = "#FF8C00", "Exponential (sliding-window μ)" = "#1E90FF"),
+                       name = "Fit Method") +
+    scale_linetype_manual(values = c("Logistic (NLS r)" = "solid", "Exponential (sliding-window μ)" = "dashed"),
+                          name = "Fit Method") +
+    labs(
+      x = "Time (h)", y = "OD600",
+      title = sprintf("%s | Block %d | Well %s | %d°C", strain_id, block_id, well_id, temp_id),
+      subtitle = sprintf("Logistic: R² = %.3f, r = %.3f h⁻¹ | Exponential: μ = %.3f day⁻¹ (%.4f h⁻¹, method: %s)", 
+                        r2_val, r_fit, mu_val, mu_per_hour, fit_method_used)
+    ) +
+    theme_bw(base_size = 11) +
+    theme(plot.title = element_text(face = "bold", size = 10),
+          plot.subtitle = element_text(size = 8),
+          legend.position = "topright")
+  
+  # Save individual plot
+  filename <- sprintf("%s_block%d_well%s_%dC_comparison.png", strain_id, block_id, well_id, temp_id)
+  filepath <- file.path(LOGISTIC_COMPARE_OUT, filename)
+  ggsave(filepath, plot = p, width = 6, height = 4.5, dpi = 150)
+}
+
+cat(sprintf("Comparison plots saved to: %s\n", LOGISTIC_COMPARE_OUT))
 
 # =============================================================================
 # 5. Sharpe–Schoolfield High model + Topt / CTmax extraction
