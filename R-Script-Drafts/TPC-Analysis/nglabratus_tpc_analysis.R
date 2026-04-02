@@ -428,6 +428,25 @@ for (sid in unique(mu_mean$strain)) {
 tpc_params <- bind_rows(fit_params_ssh)
 tpc_preds  <- bind_rows(fit_preds_ssh)
 
+
+tpc_params |> 
+  ggplot(aes(x = evo_history, y = ctmax)) + geom_point()
+
+library(plotrix)
+tpc_params_sum <- tpc_params |> 
+  group_by(evo_history) |> 
+  summarise(mean_tmax = mean(ctmax),
+            se_tmax = std.error(ctmax))
+
+
+
+tpc_params |> 
+  ggplot(aes(x = evo_history, y = ctmax)) + geom_point() +
+  geom_pointrange(aes(x = evo_history, y = mean_tmax, ymin = mean_tmax - se_tmax, ymax = mean_tmax + se_tmax), data = tpc_params_sum, color = "blue")
+ggsave("R-Script-Drafts/TPC-Analysis/Processed_Outputs/tmax-means.png", width = 6, height = 4)
+
+
+
 # Flag poor fits (R² < 0.9)
 bad_strains      <- tpc_params %>% filter(r2 < 0.9) %>% pull(strain)
 tpc_params_clean <- tpc_params %>% filter(!strain %in% bad_strains)
