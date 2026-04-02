@@ -29,7 +29,19 @@ library(plotrix)
 # read in data ------------------------------------------------------------
 
 all_blocks_no_lag <- read_csv("data-processed/all-blocks-growth-no-lag.csv")
+all_blocks_no_lag_prefactor <- read_csv("data-raw/all-blocks-growth-no-lag-prefactor.csv")
+# 
+# reference  <- arrange(all_blocks_no_lag_prefactor, block, test_temperature, strain)
+# refactored <- arrange(all_blocks_no_lag, block, test_temperature, strain)
+# 
+# # Detailed comparison
+# waldo::compare(reference, refactored) ### this is a sanity check for me to make sure that the outputs after refactoring the code are the same as in my kludgy version, and they are! woohoo.
+# all.equal(reference, refactored)
 
+
+
+
+all.equal(all_blocks_no_lag, all_blocks_no_lag_prefactor)
 
 # fluconazole and caspofungin diagnostic plots ----------------------------
 
