@@ -94,3 +94,5 @@ all_blocks |>
   mutate(unique_well = paste(test_temperature, block, well, sep = "_")) |>
   ggplot(aes(x = days, y = od, color = factor(evolution_history), group = unique_well)) + geom_line() +
   facet_wrap( ~ test_temperature)
+
+write_csv(all_blocks, "data-processed/all-blocks-tpc-experiment.csv")
