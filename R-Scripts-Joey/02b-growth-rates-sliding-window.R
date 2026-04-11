@@ -192,3 +192,19 @@ walk(seq_len(nrow(series_keys)), function(i) {
 })
 
 message("Diagnostic plots saved to figures/diagnostic/")
+
+
+
+
+# now plots all the growth rates over the temperature gradient ------------
+
+growth_summary |>
+  filter(window_size == 4) |>
+  ggplot(aes(x = test_temperature, y = mu, color = evolution_history)) +
+  geom_point()
+ggsave("figures/mu-temp.png")
+
+growth_summary |>
+  filter(window_size == 4, test_temperature == 42) |>
+  arrange((mu)) |> View()  # or arrange(mu) to see the lowest
+
