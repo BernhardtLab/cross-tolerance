@@ -284,8 +284,7 @@ growth_rates <- bind_rows(gr_list)
 # Add flag for which method was used (logistic fit vs fallback)
 growth_rates <- growth_rates %>%
   mutate(
-    fit_method = ifelse(!is.na(K) & !is.na(r) & !is.na(t_mid), "logistic_nls", "fallback_lm")
-  )
+    fit_method = ifelse(!is.na(K) & !is.na(r) & !is.na(t_mid), "logistic_nls", "fallback_lm"))
 
 cat(sprintf("Growth rates estimated: %s wells\n",
             format(nrow(growth_rates), big.mark = ",")))
@@ -295,9 +294,9 @@ cat(sprintf("  Fallback LM:  %d wells\n", sum(growth_rates$fit_method == "fallba
 growth_rates |>
   select(temp, mu, r) |> 
   gather(mu, r, key = parameter, value = value) |> 
-  ggplot(aes(x = temp, y = value, color = parameter)) + geom_point()
+  ggplot(aes(x = temp, y = value, color = parameter)) + geom_point() +
+  facet_wrap( ~ parameter, scales = "free")
   
-
 
 growth_rates |>
   ggplot(aes(x = temp, y = r, color = evo_history)) + geom_point()
@@ -317,7 +316,7 @@ print(
     )
 )
 
-# Average across replicate wells → one value per strain × block × temperature
+# Average across replicate wells → one value per strain × block × temperature (JB notes, I don't think we want to do this -- because this will make some of those weirdo OD measurements influence the normal ones... I think we want to keep them as separate estimates of growth rate )
 mu_mean <- growth_rates %>%
   group_by(strain, evo_history, block, temp) %>%
   summarise(mu      = mean(mu, na.rm = TRUE),
