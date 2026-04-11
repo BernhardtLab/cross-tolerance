@@ -41,8 +41,9 @@ excluded_series <- tribble(
 )
 
 growth_rates <- read_csv("data-processed/all-blocks-growth-sliding-window.csv") |>
-  filter(window_size == 4) |>       # use the chosen window size
-  filter(!is.na(mu), mu > 0) |>     # drop failed fits and negative rates
+  filter(evolution_history %in% c("35 evolved", "40 evolved", "fRS585")) |> 
+  filter(window_size == 5) |>       # use the chosen window size
+  filter(!is.na(mu)) |>     # drop failed fits
   anti_join(excluded_series, by = c("well", "block", "test_temperature")) |>
   rename(temp = test_temperature,
          rate = mu)
@@ -139,13 +140,12 @@ ggsave("figures/tpcs-sliding-window-by-evolution-history.png", width = 12, heigh
 
 # plot: all TPC curves on one panel, coloured by evolution history --------
 
-ggplot() +
+growth_rates |>
+  left_join(strain_key, by = c("strain", "evolution_history")) |> 
+  filter(evolution_history %in% c("35 evolved", "40 evolved", "fRS585")) |> 
+ggplot(aes(x = temp, y = rate, color = evolution_history)) +
+  geom_point()+
   geom_vline(xintercept = c(35, 40), color = "grey80", linetype = "dashed") +
-  geom_point(
-    data  = growth_rates |> left_join(strain_key, by = c("strain", "evolution_history")),
-    aes(x = temp, y = rate, color = evolution_history),
-    alpha = 0.4, size = 1.5
-  ) +
   geom_line(
     data = preds,
     aes(x = temp, y = rate, color = evolution_history, group = strain),

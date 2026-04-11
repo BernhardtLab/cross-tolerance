@@ -36,6 +36,8 @@ mod_topt    <- lm(topt    ~ evolution_history, data = traits)
 mod_tmax    <- lm(tmax    ~ evolution_history, data = traits)
 mod_breadth <- lm(breadth ~ evolution_history, data = traits)
 
+summary(mod_topt)
+
 
 # three pairwise contrasts of interest ------------------------------------
 # 1. 35 evolved vs 40 evolved  (did opposite thermal directions diverge?)
