@@ -45,7 +45,7 @@ fit_window <- function(days, od) {
 # For one time series (a data frame with days + od columns), slide a window of
 # `window_size` consecutive points across every position and return the row
 # corresponding to the maximum growth rate.
-max_growth_in_series <- function(df, window_size = 4, min_r_squared = 0.95) {
+max_growth_in_series <- function(df, window_size = 4, min_r_squared = 0.97) {
   df <- arrange(df, days)
   n  <- nrow(df)
 
@@ -205,6 +205,13 @@ message("Diagnostic plots saved to figures/diagnostic/")
 
 
 # now plots all the growth rates over the temperature gradient ------------
+### ok now we only have 5 wells that seems to have somewhat sketchy growth rates, because they include what look like some outlier OD readings. They are 
+## f5 block 1 42C,
+##f10, block 1, 41C
+## b2 block 2 35C,
+## b2 block3, 41C
+## d8 block 3, 41C
+
 
 growth_summary |>
   filter(window_size == 6) |>
