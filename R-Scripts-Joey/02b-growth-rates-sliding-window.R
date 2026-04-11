@@ -110,6 +110,7 @@ message("Done. Results written to data-processed/all-blocks-growth-sliding-windo
 # can see whether the estimates shift meaningfully as the window grows.
 
 growth_summary |>
+  filter(strain != "WT_FLZ_2") |> 
   ggplot(aes(x = factor(window_size), y = mu, color = factor(window_size))) +
   geom_jitter(width = 0.15, alpha = 0.7, size = 2) +
   stat_summary(fun = mean, geom = "crossbar", width = 0.4, color = "black", linewidth = 0.5) +
@@ -123,6 +124,12 @@ growth_summary |>
   )
 
 ggsave("figures/growth-rates-window-size-comparison.png", width = 14, height = 6)
+
+
+growth_summary |> 
+  filter(strain != "WT_FLZ_2") |> 
+  filter(test_temperature == 25) |> View()
+
 
 
 # plot: diagnostic — one plot per well × temperature ----------------------
@@ -211,6 +218,7 @@ message("Diagnostic plots saved to figures/diagnostic/")
 ## b2 block 2 35C,
 ## b2 block3, 41C
 ## d8 block 3, 41C
+### consider taking these out
 
 
 growth_summary |>
@@ -224,7 +232,7 @@ growth_summary |>
   arrange((mu)) |> View()  # or arrange(mu) to see the lowest
 
 
-
+### note that the code below here, I don't end up using, because I didn't find the rolling median approach to be very good -- but I'm leaving the code here for now.
 # outlier detection using rolling median ----------------------------------
 # For a given time series, compute a rolling median of OD values and flag
 # points that deviate more than `threshold` * MAD from the rolling median.
@@ -302,6 +310,3 @@ outlier_data |>
 
 ggsave("figures/outlier-detection.png", width = 10, height = 5)
 
-
-all_blocks |> 
-  filter(well == "b3", test_temperature == 42, strain == "fRS585", block == 1) |> View ()
