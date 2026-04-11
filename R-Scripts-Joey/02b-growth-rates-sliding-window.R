@@ -27,7 +27,7 @@ all_blocks <- read_csv("data-processed/all-blocks-tpc-experiment.csv")
 # dev subset — comment this out when ready to run on the full dataset -----
 
 all_blocks <- all_blocks |>
-  filter(strain == "fRS585", test_temperature == 35, block == 1)
+  filter(strain == "fRS585", block == 1)
 
 
 # sliding window function -------------------------------------------------
@@ -74,14 +74,20 @@ max_growth_in_series <- function(df, window_size = 4) {
 }
 
 
-# apply to every time series ----------------------------------------------
-# Each unique well × block × test_temperature is one time series.
+# apply across window sizes 4, 5, 6 --------------------------------------
+# Runs the full sliding window analysis for each window size and stacks
+# results so we can compare how sensitive mu estimates are to window choice.
 
-growth_summary <- all_blocks |>
-  filter(od > 0) |>
-  group_by(well, block, test_temperature, strain, evolution_history) |>
-  group_modify(~ max_growth_in_series(.x)) |>
-  ungroup()
+window_sizes <- c(4, 5, 6)
+
+growth_summary <- map_dfr(window_sizes, function(ws) {
+  all_blocks |>
+    filter(od > 0) |>
+    group_by(well, block, test_temperature, strain, evolution_history) |>
+    group_modify(~ max_growth_in_series(.x, window_size = ws)) |>
+    ungroup() |>
+    mutate(window_size = ws)
+})
 
 
 # save results ------------------------------------------------------------
@@ -89,68 +95,72 @@ growth_summary <- all_blocks |>
 write_csv(growth_summary, "data-processed/all-blocks-growth-sliding-window.csv")
 
 message("Done. Results written to data-processed/all-blocks-growth-sliding-window.csv")
-message(nrow(growth_summary), " time series fit")
 
 
-# plot: max growth rates by evolution history and temperature --------------
+# plot: compare mu estimates across window sizes --------------------------
+# Each panel is one temperature; points are coloured by window size so you
+# can see whether the estimates shift meaningfully as the window grows.
 
 growth_summary |>
-  ggplot(aes(x = evolution_history, y = mu, color = evolution_history)) +
-  geom_jitter(width = 0.2, alpha = 0.7, size = 2) +
+  ggplot(aes(x = factor(window_size), y = mu, color = factor(window_size))) +
+  geom_jitter(width = 0.15, alpha = 0.7, size = 2) +
   stat_summary(fun = mean, geom = "crossbar", width = 0.4, color = "black", linewidth = 0.5) +
-  facet_wrap(~test_temperature, scales = "free_y",
+  facet_wrap(~ test_temperature, scales = "free_y",
              labeller = labeller(test_temperature = function(x) paste0(x, "°C"))) +
   labs(
-    title = "Maximum growth rates (sliding window, 4-point windows)",
-    x     = NULL,
-    y     = "Max growth rate (per day)"
-  ) +
-  theme(
-    legend.position = "none",
-    axis.text.x     = element_text(angle = 45, hjust = 1, vjust = 1)
+    title = "Max growth rate by window size — fRS585 block 1, all temperatures",
+    x     = "Window size (time points)",
+    y     = "Max growth rate (per day)",
+    color = "Window size"
   )
 
-ggsave("figures/growth-rates-sliding-window.png", width = 14, height = 6)
+ggsave("figures/growth-rates-window-size-comparison.png", width = 14, height = 6)
 
 
-# plot: diagnostic — log OD curves with max window highlighted ------------
-# Shows every time series; the 4 points used for the max growth rate are
-# highlighted in red with the fitted line drawn through them.
+# plot: diagnostic — log OD curves with all window sizes overlaid ----------
+# One panel per well × temperature. The raw points are shown in grey.
+# For each window size (4, 5, 6) the fitted line through the max-growth window
+# is drawn in a different colour, so you can see whether the windows agree.
 
-plot_data <- all_blocks |>
+# Build one joined data frame per window size, then stack them
+plot_data <- map_dfr(window_sizes, function(ws) {
+  all_blocks |>
+    filter(od > 0) |>
+    left_join(
+      growth_summary |>
+        filter(window_size == ws) |>
+        select(well, block, test_temperature, days_start, days_end, mu),
+      by = c("well", "block", "test_temperature")
+    ) |>
+    mutate(
+      window_size    = ws,
+      in_max_window  = days >= days_start & days <= days_end
+    )
+})
+
+# Raw OD points (just need one copy, not one per window size)
+raw_points <- all_blocks |>
   filter(od > 0) |>
-  left_join(
-    growth_summary |> select(well, block, test_temperature, days_start, days_end, mu),
-    by = c("well", "block", "test_temperature")
-  ) |>
-  mutate(in_max_window = days >= days_start & days <= days_end)
-
-length(unique(plot_data$mu))
-
-
-
+  mutate(facet_label = paste0(well, " | ", test_temperature, "°C"))
 
 plot_data |>
-  mutate(series_id = paste(well, block, test_temperature, sep = "_")) |>
+  mutate(facet_label = paste0(well, " | ", test_temperature, "°C")) |>
   ggplot(aes(x = days, y = log(od))) +
-  geom_point(aes(color = in_max_window), alpha = 0.6, size = 1.5) +
+  geom_point(data = raw_points, color = "gray60", alpha = 0.5, size = 1.5) +
   geom_smooth(
-    data    = filter(plot_data, in_max_window),
-    aes(group = interaction(well, block, test_temperature)),
+    data    = ~ filter(.x, in_max_window),
+    aes(color = factor(window_size), group = interaction(window_size, well, test_temperature)),
     method  = "lm", formula = y ~ x,
-    se      = FALSE, color = "red", linewidth = 0.8
+    se      = FALSE, linewidth = 0.9
   ) +
-  facet_wrap(~ well, scales = "free") +
-  scale_color_manual(values = c("FALSE" = "gray60", "TRUE" = "tomato")) +
+  facet_wrap(~ facet_label, scales = "free") +
+  scale_color_brewer(palette = "Set1") +
   labs(
-    title = "ln(OD) over time — red points and line = max growth window",
-    x     = "Days",
-    y     = "ln(OD)",
-    color = "In max window"
+    title  = "ln(OD) over time — fitted lines show max growth window per window size",
+    x      = "Days",
+    y      = "ln(OD)",
+    color  = "Window size"
   ) +
-  theme(
-    legend.position = "none",
-    strip.text      = element_text(size = 6)
-  )
+  theme(strip.text = element_text(size = 8))
 
-ggsave("figures/growth-rates-sliding-window-diagnostic.png", width = 24, height = 20)
+ggsave("figures/growth-rates-sliding-window-diagnostic.png", width = 20, height = 16)
