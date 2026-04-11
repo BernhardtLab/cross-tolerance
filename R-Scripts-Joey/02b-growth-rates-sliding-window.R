@@ -15,6 +15,7 @@
 
 library(tidyverse)
 library(cowplot)
+library(zoo)
 
 theme_set(theme_cowplot())
 
@@ -44,7 +45,7 @@ fit_window <- function(days, od) {
 # For one time series (a data frame with days + od columns), slide a window of
 # `window_size` consecutive points across every position and return the row
 # corresponding to the maximum growth rate.
-max_growth_in_series <- function(df, window_size = 4) {
+max_growth_in_series <- function(df, window_size = 4, min_r_squared = 0.95) {
   df <- arrange(df, days)
   n  <- nrow(df)
 
@@ -70,7 +71,14 @@ max_growth_in_series <- function(df, window_size = 4) {
     )
   })
 
-  windows[which.max(windows$mu), ]
+  # Only consider windows with a good enough fit; if none pass the threshold,
+  # fall back to the best available so the series still returns a result
+  eligible <- filter(windows, r_squared >= min_r_squared)
+  if (nrow(eligible) == 0) {
+    eligible <- windows  # fall back to all windows
+  }
+
+  eligible[which.max(eligible$mu), ]
 }
 
 
@@ -199,12 +207,94 @@ message("Diagnostic plots saved to figures/diagnostic/")
 # now plots all the growth rates over the temperature gradient ------------
 
 growth_summary |>
-  filter(window_size == 4) |>
+  filter(window_size == 6) |>
   ggplot(aes(x = test_temperature, y = mu, color = evolution_history)) +
   geom_point()
 ggsave("figures/mu-temp.png")
 
 growth_summary |>
-  filter(window_size == 4, test_temperature == 42) |>
+  filter(window_size == 6, test_temperature == 35) |>
   arrange((mu)) |> View()  # or arrange(mu) to see the lowest
 
+
+
+# outlier detection using rolling median ----------------------------------
+# For a given time series, compute a rolling median of OD values and flag
+# points that deviate more than `threshold` * MAD from the rolling median.
+# k is the rolling window size (must be odd); a k of 3 works well for sparse
+# time series like these since it only looks one point either side.
+
+# Spike detection based on direction reversal.
+# A measurement error typically appears as a point that breaks the local trend:
+# the OD jumps up (or down) then immediately returns, creating a sharp V or Λ
+# shape. We detect this by looking at the difference before and after each point:
+# if those differences are opposite in sign AND both large relative to the
+# typical step size in the series, the point is flagged as a spike.
+
+detect_outliers <- function(df, threshold = 3) {
+  df <- arrange(df, days)
+  n  <- nrow(df)
+
+  od <- df$od
+
+  # first differences between consecutive OD readings
+  diffs <- diff(od)  # length n-1
+
+  # for each interior point i, diff_before = od[i] - od[i-1]
+  #                              diff_after = od[i+1] - od[i]
+  diff_before <- c(NA, diffs)        # shift right: index i = diff between i and i-1
+  diff_after  <- c(diffs, NA)        # index i = diff between i+1 and i
+
+  # typical step size across the whole series
+  mad_diff <- mad(diffs, na.rm = TRUE)
+
+  # a point is a spike if:
+  # 1. the differences either side are opposite in sign (direction reversal), AND
+  # 2. at least one of the differences is large (at least threshold * MAD)
+  # Using OR rather than AND for condition 2 catches spikes during the exponential
+  # phase, where the global MAD is inflated by large legitimate diffs — meaning
+  # both diffs around a spike may not both clear the threshold even though the
+  # spike itself is obvious
+  is_outlier <- !is.na(diff_before) & !is.na(diff_after) &
+    sign(diff_before) != sign(diff_after) &
+    (abs(diff_before) > threshold * mad_diff |
+     abs(diff_after)  > threshold * mad_diff)
+
+  df |> mutate(is_outlier = is_outlier)
+}
+
+# apply to the two wells of interest
+outlier_wells <- list(
+  list(well = "b2",  block = 2, test_temperature = 35),
+  list(well = "f10", block = 1, test_temperature = 38)
+)
+
+outlier_data <- map_dfr(outlier_wells, function(w) {
+  all_blocks |>
+    filter(well == w$well, block == w$block, test_temperature == w$test_temperature) |>
+    detect_outliers()
+})
+
+# plot: OD time series with outliers highlighted in red
+outlier_data |>
+  mutate(series_label = paste0(well, " | block ", block, " | ", test_temperature, "°C")) |>
+  ggplot(aes(x = days, y = od, color = is_outlier)) +
+  geom_line(color = "gray70") +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_manual(
+    values = c("FALSE" = "steelblue", "TRUE" = "red"),
+    labels = c("FALSE" = "Normal", "TRUE" = "Outlier")
+  ) +
+  facet_wrap(~ series_label, scales = "free") +
+  labs(
+    title = "OD time series — potential outliers flagged by spike detection",
+    x     = "Days",
+    y     = "OD",
+    color = NULL
+  )
+
+ggsave("figures/outlier-detection.png", width = 10, height = 5)
+
+
+all_blocks |> 
+  filter(well == "b3", test_temperature == 42, strain == "fRS585", block == 1) |> View ()
