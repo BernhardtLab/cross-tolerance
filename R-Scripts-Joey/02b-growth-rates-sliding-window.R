@@ -125,6 +125,11 @@ plot_data <- all_blocks |>
   ) |>
   mutate(in_max_window = days >= days_start & days <= days_end)
 
+length(unique(plot_data$mu))
+
+
+
+
 plot_data |>
   mutate(series_id = paste(well, block, test_temperature, sep = "_")) |>
   ggplot(aes(x = days, y = log(od))) +
@@ -135,7 +140,7 @@ plot_data |>
     method  = "lm", formula = y ~ x,
     se      = FALSE, color = "red", linewidth = 0.8
   ) +
-  facet_wrap(~ paste(strain, test_temperature, sep = " | "), scales = "free") +
+  facet_wrap(~ well, scales = "free") +
   scale_color_manual(values = c("FALSE" = "gray60", "TRUE" = "tomato")) +
   labs(
     title = "ln(OD) over time — red points and line = max growth window",
