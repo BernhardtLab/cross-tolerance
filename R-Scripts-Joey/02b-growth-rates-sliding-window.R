@@ -26,8 +26,8 @@ all_blocks <- read_csv("data-processed/all-blocks-tpc-experiment.csv")
 
 # dev subset — comment this out when ready to run on the full dataset -----
 
-all_blocks <- all_blocks |>
-  filter(strain == "fRS585", block == 1)
+# all_blocks <- all_blocks |>
+#   filter(strain == "fRS585", block == 1)
 
 
 # sliding window function -------------------------------------------------
@@ -117,10 +117,12 @@ growth_summary |>
 ggsave("figures/growth-rates-window-size-comparison.png", width = 14, height = 6)
 
 
-# plot: diagnostic — log OD curves with all window sizes overlaid ----------
-# One panel per well × temperature. The raw points are shown in grey.
-# For each window size (4, 5, 6) the fitted line through the max-growth window
-# is drawn in a different colour, so you can see whether the windows agree.
+# plot: diagnostic — one plot per well × temperature ----------------------
+# For each well × block × temperature combination, saves an individual PNG
+# showing the raw ln(OD) points in grey and the fitted line for each window
+# size (4, 5, 6) in a different colour, with R² values annotated.
+
+dir.create("figures/diagnostic", showWarnings = FALSE)
 
 # Build one joined data frame per window size, then stack them
 plot_data <- map_dfr(window_sizes, function(ws) {
@@ -129,38 +131,64 @@ plot_data <- map_dfr(window_sizes, function(ws) {
     left_join(
       growth_summary |>
         filter(window_size == ws) |>
-        select(well, block, test_temperature, days_start, days_end, mu),
+        select(well, block, test_temperature, days_start, days_end, mu, r_squared),
       by = c("well", "block", "test_temperature")
     ) |>
     mutate(
-      window_size    = ws,
-      in_max_window  = days >= days_start & days <= days_end
+      window_size   = ws,
+      in_max_window = days >= days_start & days <= days_end
     )
 })
 
-# Raw OD points (just need one copy, not one per window size)
-raw_points <- all_blocks |>
-  filter(od > 0) |>
-  mutate(facet_label = paste0(well, " | ", test_temperature, "°C"))
+# Unique well × block × temperature combinations to iterate over
+series_keys <- plot_data |>
+  distinct(well, block, test_temperature)
 
-plot_data |>
-  mutate(facet_label = paste0(well, " | ", test_temperature, "°C")) |>
-  ggplot(aes(x = days, y = log(od))) +
-  geom_point(data = raw_points, color = "gray60", alpha = 0.5, size = 1.5) +
-  geom_smooth(
-    data    = ~ filter(.x, in_max_window),
-    aes(color = factor(window_size), group = interaction(window_size, well, test_temperature)),
-    method  = "lm", formula = y ~ x,
-    se      = FALSE, linewidth = 0.9
-  ) +
-  facet_wrap(~ facet_label, scales = "free") +
-  scale_color_brewer(palette = "Set1") +
-  labs(
-    title  = "ln(OD) over time — fitted lines show max growth window per window size",
-    x      = "Days",
-    y      = "ln(OD)",
-    color  = "Window size"
-  ) +
-  theme(strip.text = element_text(size = 8))
+walk(seq_len(nrow(series_keys)), function(i) {
+  w    <- series_keys$well[i]
+  b    <- series_keys$block[i]
+  temp <- series_keys$test_temperature[i]
 
-ggsave("figures/growth-rates-sliding-window-diagnostic.png", width = 20, height = 16)
+  pd <- plot_data |>
+    filter(well == w, block == b, test_temperature == temp)
+
+  raw <- pd |> filter(window_size == window_sizes[1])  # one copy of the raw points
+
+  r2_labels <- pd |>
+    distinct(window_size, r_squared) |>
+    arrange(window_size) |>
+    mutate(
+      label        = paste0("W", window_size, ": R²=", round(r_squared, 3)),
+      label_y_rank = row_number()
+    )
+
+  p <- ggplot(pd, aes(x = days, y = log(od))) +
+    geom_point(data = raw, color = "gray60", alpha = 0.6, size = 2) +
+    geom_smooth(
+      data    = ~ filter(.x, in_max_window),
+      aes(color = factor(window_size), group = factor(window_size)),
+      method  = "lm", formula = y ~ x,
+      se      = FALSE, linewidth = 0.9
+    ) +
+    geom_text(
+      data  = r2_labels,
+      aes(label = label, color = factor(window_size),
+          vjust = label_y_rank * 1.8),
+      x     = -Inf, y = Inf,
+      hjust = -0.05,
+      size  = 3.5,
+      show.legend = FALSE
+    ) +
+    scale_color_brewer(palette = "Set1") +
+    labs(
+      title = paste0(w, " | block ", b, " | ", temp, "°C"),
+      x     = "Days",
+      y     = "ln(OD)",
+      color = "Window size"
+    )
+
+  fname <- paste0("figures/diagnostic/", w, "_block", b, "_", temp, "C.png")
+  ggsave(fname, p, width = 6, height = 4)
+})
+
+message("Diagnostic plots saved to figures/diagnostic/")
