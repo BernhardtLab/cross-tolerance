@@ -40,7 +40,10 @@ excluded_series <- tribble(
   "d8",  3,      41
 )
 
-growth_rates <- read_csv("data-processed/all-blocks-growth-sliding-window.csv") |>
+#"data-processed/all-blocks-growth-sliding-window-variable.csv"
+#"data-processed/all-blocks-growth-sliding-window.csv"
+
+growth_rates <- read_csv("data-processed/all-blocks-growth-sliding-window-variable.csv") |>
   filter(evolution_history %in% c("35 evolved", "40 evolved", "fRS585")) |> 
   filter(window_size == 5) |>       # use the chosen window size
   filter(!is.na(mu)) |>     # drop failed fits
@@ -187,7 +190,7 @@ ggplot() +
 ggsave("figures/tpcs-sliding-window-per-strain.png", width = 18, height = 14)
 
 
-# plot: derived traits (topt, ctmax, breadth) by evolution history --------
+# plot: derived traits (topt, tmax, breadth) by evolution history --------
 
 trait_summary <- traits |>
   group_by(evolution_history) |>
