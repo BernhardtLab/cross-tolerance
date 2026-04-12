@@ -46,7 +46,8 @@ PRIMARY <- c("40 evolved", "35 evolved", "fRS585")
 
 all_blocks <- read_csv("data-processed/all-blocks-tpc-experiment.csv",
                        show_col_types = FALSE) %>%
-  filter(od > 0)
+  filter(od > 0) |> 
+  filter(evolution_history %in% PRIMARY)
 
 cat(sprintf("Loaded %s rows across %d wells\n",
             format(nrow(all_blocks), big.mark = ","),
@@ -58,52 +59,44 @@ cat(sprintf("Loaded %s rows across %d wells\n",
 #    (mirrors 02b-growth-rates-sliding-window-variable.R exactly)
 # =============================================================================
 
-fit_window <- function(days, od) {
-  fit <- lm(log(od) ~ days)
-  list(
-    growth_rate = coef(fit)[["days"]],
-    r_squared   = summary(fit)$r.squared
-  )
-}
+max_growth_in_series <- function(df) {
 
-max_growth_in_series <- function(df, min_window_size = MIN_WINDOW) {
+  df    <- arrange(df, days)
+  n     <- nrow(df)
+  ln_OD <- log(pmax(df$od, 1e-6))
 
-  df <- arrange(df, days)
-  n  <- nrow(df)
+  best_mu    <- NA_real_
+  best_r2    <- NA_real_
+  best_start <- NA_integer_
+  best_end   <- NA_integer_
 
-  if (n < min_window_size) {
-    return(tibble(
-      mu          = NA_real_,
-      r_squared   = NA_real_,
-      days_start  = NA_real_,
-      days_end    = NA_real_,
-      window_size = NA_integer_,
-      window_idx  = NA_integer_
-    ))
+  # Direct translation of the fallback in nglabratus_tpc_analysis.R.
+  # time_h replaced by days — slope is already day⁻¹, no * 24 needed.
+  for (start in seq_len(n - 4)) {
+    for (end in (start + 4):n) {
+      x <- df$days[start:end]
+      y <- ln_OD[start:end]
+      if (diff(range(x)) == 0) next
+      fit_lm <- lm(y ~ x)
+      slope  <- coef(fit_lm)[["x"]]
+      r2_sw  <- summary(fit_lm)$r.squared
+      if (is.na(best_mu) || slope > best_mu) {
+        best_mu    <- slope   # already day⁻¹ (days, not hours)
+        best_r2    <- r2_sw
+        best_start <- start
+        best_end   <- end
+      }
+    }
   }
 
-  # No R² filter — mirrors the fallback in nglabratus_tpc_analysis.R:
-  # pick the window with the steepest slope regardless of fit quality.
-  # Outer loop capped so start can never yield a window < min_window_size.
-  windows <- map_dfr(seq_len(n - min_window_size + 1L), function(start) {
-
-    map_dfr((start + min_window_size - 1L):n, function(end) {
-
-      wd  <- df[start:end, ]
-      fit <- fit_window(wd$days, wd$od)
-
-      tibble(
-        window_idx  = start,
-        window_size = end - start + 1L,
-        days_start  = wd$days[1],
-        days_end    = wd$days[nrow(wd)],
-        mu          = fit$growth_rate,
-        r_squared   = fit$r_squared
-      )
-    })
-  })
-
-  slice_max(windows, mu, n = 1, with_ties = FALSE)
+  tibble(
+    mu          = best_mu,
+    r_squared   = best_r2,
+    days_start  = if (!is.na(best_start)) df$days[best_start] else NA_real_,
+    days_end    = if (!is.na(best_end))   df$days[best_end]   else NA_real_,
+    window_size = if (!is.na(best_start)) best_end - best_start + 1L else NA_integer_,
+    window_idx  = if (!is.na(best_start)) best_start else NA_integer_
+  )
 }
 
 # =============================================================================
