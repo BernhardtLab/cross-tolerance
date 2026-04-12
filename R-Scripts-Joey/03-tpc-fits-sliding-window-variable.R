@@ -227,4 +227,4 @@ p_tmax    <- plot_trait("tmax",   "tmax_mean",   "tmax_se",   "Tmax (°C)")
 p_breadth <- plot_trait("breadth","breadth_mean","breadth_se","Thermal breadth (°C)")
 
 plot_grid(p_topt, p_tmax, p_breadth, nrow = 1)
-ggsave("figures/tpcs-sliding-window-traits.png", width = 14, height = 5)
+ggsave("figures/tpcs-sliding-window-traits-variable.png", width = 14, height = 5)
