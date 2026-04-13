@@ -310,8 +310,16 @@ walk(seq_len(nrow(series_keys)), function(i) {
 
 cat(sprintf("Diagnostic plots saved to %s/\n", diag_dir))
 
+
+
+#### filter out poor fit growth rates
+growth_rates |> 
+  filter(r2 < 0.95) |> View()
+
+
 # Average across replicate wells → one value per strain × block × temperature
 mu_mean <- growth_rates %>%
+  filter(r2 > 0.95) |>
   group_by(strain, evo_history, block, temp) %>%
   summarise(mu      = mean(mu, na.rm = TRUE),
             n_wells = sum(!is.na(mu)),
@@ -455,7 +463,9 @@ library(plotrix)
 tpc_params_sum <- tpc_params |>
   group_by(evo_history) |>
   summarise(mean_tmax = mean(ctmax),
-            se_tmax = std.error(ctmax))
+            se_tmax = std.error(ctmax),
+            mean_topt = mean(topt),
+            se_topt = std.error(topt))
 
 
 
@@ -463,6 +473,23 @@ tpc_params |>
   ggplot(aes(x = evo_history, y = ctmax)) + geom_point() +
   geom_pointrange(aes(x = evo_history, y = mean_tmax, ymin = mean_tmax - se_tmax, ymax = mean_tmax + se_tmax), data = tpc_params_sum, color = "blue")
 ggsave(file.path(OUT, "tmax-means.png"), width = 6, height = 4)
+
+
+tpc_params |>
+  ggplot(aes(x = evo_history, y = topt)) + geom_point() +
+  geom_pointrange(aes(x = evo_history, y = mean_topt, ymin = mean_topt - se_topt, ymax = mean_topt + se_topt), data = tpc_params_sum, color = "blue")
+ggsave(file.path(OUT, "topt-means.png"), width = 6, height = 4)
+
+
+
+
+mod1 <- lm(ctmax ~ evo_history, data = tpc_params)
+summary(mod1)
+
+
+mod2 <- lm(topt ~ evo_history, data = tpc_params)
+summary(mod2)
+
 
 
 
@@ -481,6 +508,7 @@ print(
     summarise(mean_topt  = round(mean(topt,  na.rm = TRUE), 2),
               mean_ctmax = round(mean(ctmax, na.rm = TRUE), 2))
 )
+
 
 # =============================================================================
 # 6. SSH QC plot — per-strain fit grid
