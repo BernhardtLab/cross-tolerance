@@ -5,14 +5,18 @@ library(broom)        # for tidy model output
 library(ggrepel)
 theme_set(theme_cowplot())
 
-edata <- read_csv("data-processed/all-blocks-tpc-experiment.csv")
+edata <- read_csv("data-processed/all-blocks-tpc-experiment.csv") |> 
+  filter(evolution_history %in% c("35 evolved", "40 evolved", "fRS585")) |>
+  mutate(rep.id = paste(well, block, test_temperature, strain, evolution_history)) |> 
+  rename(RFU = od,
+         time_days = days)
 
 # ── Quick look ──────────────────────────────────────────────────────────────
 edata |>
-  ggplot(aes(x = time_days, y = RFU, group = rep.id, color = rep.id)) +
-  facet_wrap( ~ treatment) +
-  geom_line() + geom_point() +
-  labs(title = "Raw RFU trajectories")
+  ggplot(aes(x = time_days, y = RFU, group = unique_well, color = evolution_history)) +
+  facet_wrap( ~ test_temperature) +
+   geom_line() +
+  labs(title = "Raw OD trajectories")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -52,7 +56,7 @@ fit_logistic <- function(df) {
         lower = c(K = 0, N0 = 0, r = 0),   # enforce biologically sensible bounds
         control = nls.lm.control(maxiter = 200)
       )
-      tidy(fit, conf.int = TRUE) |>
+      tidy(fit) |>
         mutate(rep.id = unique(df$rep.id),
                converged = TRUE,
                AIC = AIC(fit))
@@ -75,7 +79,6 @@ growth_logistic <- edata |>
 growth_rates_logistic <- growth_logistic |>
   filter(term == "r") |>
   select(rep.id, r = estimate, r_se = std.error,
-         r_conf.low = conf.low, r_conf.high = conf.high,
          converged, AIC)
 
 print(growth_rates_logistic)
@@ -156,7 +159,7 @@ fit_exponential <- function(df) {
         lower = c(N0 = 0, r = 0),
         control = nls.lm.control(maxiter = 200)
       )
-      tidy(fit, conf.int = TRUE) |>
+      tidy(fit) |>
         mutate(rep.id = unique(df$rep.id),
                converged = TRUE,
                n_points  = nrow(df),
@@ -190,7 +193,6 @@ growth_exponential <- edata_exp_phase |>
 growth_rates_exponential <- growth_exponential |>
   filter(term == "r") |>
   select(rep.id, r = estimate, r_se = std.error,
-         r_conf.low = conf.low, r_conf.high = conf.high,
          converged, n_points)
 
 print(growth_rates_exponential)
@@ -246,37 +248,48 @@ pred_exponential <- growth_exponential |>
 # --- Combine predictions ---
 pred_both <- bind_rows(pred_logistic, pred_exponential)
 
-# --- Faceted plot ---
-ggplot() +
-  # raw data
-  geom_point(data = edata,
-             aes(x = time_days, y = RFU),
-             size = 1, alpha = 0.6, color = "grey40") +
-  geom_line(data = edata,
-            aes(x = time_days, y = RFU),
-            alpha = 0.4, color = "grey40") +
-  # model fits
-  geom_line(data = pred_both,
-            aes(x = time_days, y = RFU_pred, color = model),
-            linewidth = 0.9) +
-  # inflection point marker
-  geom_vline(data = inflection_times,
-             aes(xintercept = t_inflection),
-             linetype = "dashed", color = "grey60", linewidth = 0.5) +
-  facet_wrap(~ rep.id, scales = "free_y") +
-  scale_color_manual(values = c("Logistic" = "#2166ac",
-                                "Exponential (phase only)" = "#d6604d")) +
-  labs(
-    title = "Model fits by well",
-    subtitle = "Dashed line = inflection point (end of exponential phase)",
-    x = "Time (days)", y = "RFU", color = NULL
-  ) +
-  theme(
-    legend.position = "bottom",
-    strip.text = element_text(size = 7)
-  )
+# --- Individual plots for each well ---
+dir.create("figures/exp-log", showWarnings = FALSE, recursive = TRUE)
 
-ggsave("figures/exponential-logistic-plate1.png", width = 15, height = 10)
+unique_wells <- unique(edata$rep.id)
+
+well <- unique_wells[1]
+
+for (well in unique_wells) {
+  well_data <- edata |> filter(rep.id == well) |> ungroup()
+  
+  p <- ggplot() +
+    # raw data
+    geom_point(data = well_data,
+               aes(x = time_days, y = RFU),
+               size = 1, alpha = 0.6, color = "grey40") +
+    geom_line(data = well_data,
+              aes(x = time_days, y = RFU),
+              alpha = 0.4, color = "grey40") +
+    # model fits
+    geom_line(data = pred_both |> filter(rep.id == well) |> ungroup(),
+              aes(x = time_days, y = RFU_pred, color = model),
+              linewidth = 0.9) +
+    # inflection point marker
+    geom_vline(data = inflection_times |> filter(rep.id == well) |> ungroup(),
+               aes(xintercept = t_inflection),
+               linetype = "dashed", color = "grey60", linewidth = 0.5) +
+    scale_color_manual(values = c("Logistic" = "#2166ac",
+                                  "Exponential (phase only)" = "#d6604d")) +
+    labs(
+      title = paste("Model fits -", well),
+      subtitle = "Dashed line = inflection point (end of exponential phase)",
+      x = "Time (days)", y = "RFU", color = NULL
+    ) +
+    theme(
+      legend.position = "bottom"
+    )
+  
+  ggsave(glue::glue("figures/exp-log/well-{well}.png"), 
+         plot = p, width = 8, height = 6)
+}
+
+rm(well, p, well_data, unique_wells)
 # ══════════════════════════════════════════════════════════════════════════════
 # COMPARE the two approaches
 # ══════════════════════════════════════════════════════════════════════════════
