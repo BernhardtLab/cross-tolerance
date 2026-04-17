@@ -1,4 +1,6 @@
-
+library(tidyverse)
+library(cowplot)
+theme_set(theme_cowplot())
 
 
 mu_mean <- read_csv("data-processed/all-blocks-growth-sliding-window-variable.csv") |>
