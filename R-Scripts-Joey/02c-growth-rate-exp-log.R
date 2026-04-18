@@ -7,13 +7,13 @@ theme_set(theme_cowplot())
 
 edata <- read_csv("data-processed/all-blocks-tpc-experiment.csv") |> 
   filter(evolution_history %in% c("35 evolved", "40 evolved", "fRS585")) |>
-  mutate(rep.id = paste(well, block, test_temperature, strain, evolution_history)) |> 
+  mutate(rep.id = paste(well, block, test_temperature, strain, evolution_history, sep = "_")) |> 
   rename(RFU = od,
          time_days = days)
 
 # ── Quick look ──────────────────────────────────────────────────────────────
 edata |>
-  ggplot(aes(x = time_days, y = RFU, group = unique_well, color = evolution_history)) +
+  ggplot(aes(x = time_days, y = RFU, group = rep.id, color = evolution_history)) +
   facet_wrap( ~ test_temperature) +
    geom_line() +
   labs(title = "Raw OD trajectories")
@@ -251,27 +251,26 @@ pred_both <- bind_rows(pred_logistic, pred_exponential)
 # --- Individual plots for each well ---
 dir.create("figures/exp-log", showWarnings = FALSE, recursive = TRUE)
 
-unique_wells <- unique(edata$rep.id)
+unique_wells <- as.vector(unique(edata$rep.id), mode = "character")
 
-well <- unique_wells[1]
+
 
 for (well in unique_wells) {
-  well_data <- edata |> filter(rep.id == well) |> ungroup()
   
   p <- ggplot() +
     # raw data
-    geom_point(data = well_data,
+    geom_point(data = edata |> filter(rep.id == {{ well }}) |> ungroup(),
                aes(x = time_days, y = RFU),
                size = 1, alpha = 0.6, color = "grey40") +
-    geom_line(data = well_data,
+    geom_line(data = edata |> filter(rep.id == {{ well }}) |> ungroup(),
               aes(x = time_days, y = RFU),
               alpha = 0.4, color = "grey40") +
     # model fits
-    geom_line(data = pred_both |> filter(rep.id == well) |> ungroup(),
+    geom_line(data = pred_both |> filter(rep.id == {{ well }}) |> ungroup(),
               aes(x = time_days, y = RFU_pred, color = model),
               linewidth = 0.9) +
     # inflection point marker
-    geom_vline(data = inflection_times |> filter(rep.id == well) |> ungroup(),
+    geom_vline(data = inflection_times |> filter(rep.id == {{ well }}) |> ungroup(),
                aes(xintercept = t_inflection),
                linetype = "dashed", color = "grey60", linewidth = 0.5) +
     scale_color_manual(values = c("Logistic" = "#2166ac",
