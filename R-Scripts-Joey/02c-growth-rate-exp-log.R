@@ -130,11 +130,14 @@ inflection_model <- growth_logistic |>
   mutate(t_inflection_model = log((K - N0) / N0) / r) |>
   select(rep.id, t_inflection_model)
 
-# --- Combine: prefer model-based, fall back to numerical ---
+# --- Combine: prefer model-based (if valid), fall back to numerical ---
 inflection_times <- inflection_numerical |>
   left_join(inflection_model, by = "rep.id") |>
   mutate(
-    t_inflection = coalesce(t_inflection_model, t_inflection_numerical)
+    # Use model-based inflection only if it's positive; otherwise use numerical
+    t_inflection = if_else(is.na(t_inflection_model) | t_inflection_model < 0,
+                           t_inflection_numerical,
+                           t_inflection_model)
   )
 
 # Trim each well to its exponential phase (time points up to inflection)
@@ -168,7 +171,6 @@ fit_exponential <- function(df) {
     error = function(e) {
       tibble(rep.id = unique(df$rep.id), converged = FALSE,
              term = NA, estimate = NA, std.error = NA,
-             conf.low = NA, conf.high = NA,
              n_points = nrow(df))
     }
   )
@@ -184,6 +186,9 @@ edata |>
   facet_wrap(~ rep.id, scales = "free_y") +
   labs(title = "Detected inflection points (dashed = end of exponential phase)",
        x = "Time (days)", y = "RFU")
+
+length(unique(edata_exp_phase$rep.id))
+
 
 growth_exponential <- edata_exp_phase |>
   group_by(rep.id) |>
@@ -313,3 +318,12 @@ ggsave("figures/comparison-logistic-exp5.png")
 # Save results
 write_csv(growth_rates_logistic,    "data-processed/growth-rates-logistic.csv")
 write_csv(growth_rates_exponential, "data-processed/growth-rates-exponential.csv")
+
+
+growth_logistic |> 
+  filter(term == "r") |> 
+  View()
+
+growth_exponential |> 
+  filter(term == "r") |> 
+  View()
