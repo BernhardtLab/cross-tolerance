@@ -327,3 +327,136 @@ growth_logistic |>
 growth_exponential |> 
   filter(term == "r") |> 
   View()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# APPROACH 3: Pure exponential for 41°C and 42°C, time < 0.25 days
+# ══════════════════════════════════════════════════════════════════════════════
+# Focus on early exponential phase (before saturation effects) for the
+# highest temperature experiments
+
+edata_early_exp <- edata |>
+  filter(test_temperature %in% c(41, 42)) |>
+  filter(time_days < 0.25)
+
+# Fit pure exponential to one well
+fit_exponential_early <- function(df) {
+  if (nrow(df) < 2) {
+    return(tibble(rep.id = unique(df$rep.id), converged = FALSE,
+                  term = NA, estimate = NA, std.error = NA,
+                  n_points = nrow(df)))
+  }
+  
+  start <- list(
+    N0 = min(df$RFU[df$time_days == min(df$time_days)], na.rm = TRUE),
+    r  = 1.0  # expect higher growth rates at extreme temperatures
+  )
+  
+  tryCatch(
+    {
+      fit <- nlsLM(
+        RFU ~ N0 * exp(r * time_days),
+        data  = df,
+        start = start,
+        lower = c(N0 = 0, r = 0),
+        control = nls.lm.control(maxiter = 200)
+      )
+      tidy(fit) |>
+        mutate(rep.id = unique(df$rep.id),
+               converged = TRUE,
+               n_points  = nrow(df),
+               AIC = AIC(fit))
+    },
+    error = function(e) {
+      tibble(rep.id = unique(df$rep.id), converged = FALSE,
+             term = NA, estimate = NA, std.error = NA,
+             n_points = nrow(df))
+    }
+  )
+}
+
+# Fit to every well in the early phase
+growth_exponential_early <- edata_early_exp |>
+  group_by(rep.id) |>
+  group_modify(~ fit_exponential_early(.x)) |>
+  ungroup()
+
+growth_rates_exponential_early <- growth_exponential_early |>
+  filter(term == "r") |>
+  select(rep.id, r = estimate, r_se = std.error,
+         converged, n_points)
+
+print("Growth rates for 41-42°C early exponential phase (t < 0.25 days):")
+print(growth_rates_exponential_early)
+
+# --- Generate predictions for early exponential fits ---
+pred_exponential_early <- growth_exponential_early |>
+  filter(converged, !is.na(term)) |>
+  select(rep.id, term, estimate) |>
+  pivot_wider(names_from = term, values_from = estimate) |>
+  left_join(
+    edata_early_exp |> group_by(rep.id) |> 
+      summarise(t_min = min(time_days), t_max = max(time_days), .groups = "drop"),
+    by = "rep.id"
+  ) |>
+  rowwise() |>
+  mutate(time_days = list(seq(t_min, t_max, length.out = 100))) |>
+  unnest(time_days) |>
+  mutate(
+    RFU_pred = N0 * exp(r * time_days),
+    model = "Exponential (t < 0.25d)"
+  ) |>
+  select(rep.id, time_days, RFU_pred, model)
+
+# --- Plot early exponential fits on raw data ---
+dir.create("figures/exponential-early", showWarnings = FALSE, recursive = TRUE)
+
+unique_early_wells <- as.vector(unique(edata_early_exp$rep.id), mode = "character")
+
+for (well in unique_early_wells) {
+  
+  well_data <- edata |> filter(rep.id == {{ well }})
+  well_preds <- pred_exponential_early |> filter(rep.id == {{ well }})
+  
+  # only plot if we have successful predictions
+  if (nrow(well_preds) > 0) {
+    p <- ggplot() +
+      # full raw data trajectory for context
+      geom_point(data = well_data,
+                 aes(x = time_days, y = RFU),
+                 size = 1.5, alpha = 0.5, color = "grey50") +
+      geom_line(data = well_data,
+                aes(x = time_days, y = RFU),
+                alpha = 0.3, color = "grey50") +
+      # early data points (t < 0.25d) highlighted
+      geom_point(data = well_data |> filter(time_days < 0.25),
+                 aes(x = time_days, y = RFU),
+                 size = 2, alpha = 0.8, color = "#d6604d") +
+      geom_line(data = well_data |> filter(time_days < 0.25),
+                aes(x = time_days, y = RFU),
+                alpha = 0.6, color = "#d6604d", linewidth = 0.8) +
+      # exponential fit
+      geom_line(data = well_preds,
+                aes(x = time_days, y = RFU_pred, color = model),
+                linewidth = 1) +
+      scale_color_manual(values = c("Exponential (t < 0.25d)" = "#2166ac")) +
+      labs(
+        title = paste("Early exponential fit -", well),
+        subtitle = "Red = time points used for fitting (t < 0.25d), Blue line = model prediction",
+        x = "Time (days)", y = "RFU", color = NULL
+      ) +
+      theme(
+        legend.position = "bottom"
+      )
+    
+    ggsave(glue::glue("figures/exponential-early/well-{well}.png"), 
+           plot = p, width = 8, height = 6)
+  }
+}
+
+rm(well, p, well_data, well_preds, unique_early_wells)
+
+# Save results
+write_csv(growth_rates_exponential_early, 
+          "data-processed/growth-rates-exponential-early-41-42C.csv")
+
