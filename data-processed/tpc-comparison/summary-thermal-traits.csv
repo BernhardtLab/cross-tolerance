@@ -1,0 +1,7 @@
+method,evolution_history,n,mean_topt,sd_topt,mean_ctmax,sd_ctmax
+growthTools,35 evolved,18,37.07,1,44.03,0.97
+logistic,35 evolved,18,38.79,0.68,42.04,0.19
+growthTools,40 evolved,18,38.68,1.01,43.57,0.98
+logistic,40 evolved,18,39.77,0.46,42.35,0.42
+growthTools,fRS585,1,37.53,NA,43.82,NA
+logistic,fRS585,1,39.24,NA,42.02,NA
