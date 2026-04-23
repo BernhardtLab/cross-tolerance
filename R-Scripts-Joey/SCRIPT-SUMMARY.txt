@@ -1,0 +1,152 @@
+================================================================================
+GROWTH RATE ESTIMATION SCRIPTS - SUMMARY
+================================================================================
+
+Repository: cross-tolerance-experiment
+Last Updated: April 22, 2026
+
+================================================================================
+SCRIPTS IN THIS DIRECTORY
+================================================================================
+
+CORE ANALYSIS SCRIPTS:
+  02-growth-rates-growth-tools.R
+    - Growthtools method for exponential growth rate estimation
+    - Uses get.growth.rate() from growthTools package
+    - Methods: sat, flr, lagsat
+    - Output: growth-rates-growth-tools.csv
+
+  09-growth-rates-no-lag.R
+    - Growthtools approach without explicit lag-phase separation
+    - Includes all time points in exponential fit
+    - Output: all-blocks-growth-no-lag.csv
+
+  10-growth-rates-logistic-tpc.R
+    - 3-parameter logistic model fits
+    - Characterizes full growth trajectory including saturation
+    - Produces temperature-performance curves (TPCs)
+    - Output: growth-rates-logistic.csv
+
+  03-growth-rates-logistic.R
+    - Earlier version of logistic fitting script
+    - (Check version numbering for your actual workflow)
+
+COMPARISON & VALIDATION:
+  12-comparison-logistic-vs-growthtools-CORRECTED.R
+    - Compares logistic vs. growthtools estimates
+    - CORRECTED: Growthtools line limited to exponential phase only
+    - Automatic exponential phase detection
+    - Shows why each method is appropriate for different questions
+
+================================================================================
+DOCUMENTATION
+================================================================================
+
+  README-GROWTH-RATE-METHODS.md
+    - Complete guide to method selection
+    - When to use each approach
+    - Quality control recommendations
+    - Example workflows
+
+  CORRECTION-LOG.md
+    - Details of April 22, 2026 correction
+    - Explains the growthtools visualization issue
+    - Technical implementation of exponential phase detection
+
+  METHOD-SELECTION-GUIDE.md (if present)
+    - Decision tree for choosing analysis approaches
+
+  METHOD-SELECTION-GUIDE-REVISED.md (if present)
+    - Updated guidance document
+
+================================================================================
+KEY CORRECTION (April 22, 2026)
+================================================================================
+
+ISSUE:
+  Previous comparison plots extended the growthtools exponential line across
+  the entire time course, including the saturation phase where the exponential
+  model is invalid. This was misleading about method validity.
+
+SOLUTION:
+  Script 12-comparison-logistic-vs-growthtools-CORRECTED.R:
+  - Automatically detects exponential phase boundary
+  - Truncates growthtools predictions to exponential phase only
+  - Clearly shows domain of validity for each method
+  - Provides transparent visualization for reproducibility
+
+OUTPUT:
+  figures/comparison_logistic_vs_growthtools_42C_CORRECTED.pdf
+  figures/comparison_logistic_vs_growthtools_42C_CORRECTED.png
+
+================================================================================
+REPRODUCIBILITY NOTES
+================================================================================
+
+All scripts are self-contained and documented:
+  1. Load data from data-processed/ or data-raw/
+  2. Define helper functions
+  3. Perform analysis
+  4. Save results to data-processed/ and figures/
+
+To reproduce:
+  1. Ensure input data files exist
+  2. Run scripts in sequence (02, 03/09/10, 12)
+  3. Check console output and figures for validation
+  4. Compare against saved results
+
+Version Control:
+  - Each script includes last updated date
+  - CORRECTION-LOG.md documents changes
+  - Previous versions (if archived) are noted in comments
+
+================================================================================
+DATA FLOW
+================================================================================
+
+Input:
+  data-raw/Growth-Curves/*.xlsx (Biotek plate reader output)
+  data-processed/all-blocks-tpc-experiment.csv (cleaned data)
+
+Processing:
+  Script 02/09 → growth-rates-growth-tools.csv
+  Script 10    → growth-rates-logistic.csv
+  Script 12    → Visualization & comparison
+
+Output:
+  data-processed/
+    ├── growth-rates-growth-tools.csv
+    ├── all-blocks-growth-no-lag.csv
+    └── growth-rates-logistic.csv
+
+  figures/
+    ├── growth-tools-figures/ (per-well fits)
+    ├── block1/, block2/, block3/ (organized by experimental block)
+    ├── comparison_logistic_vs_growthtools_42C_CORRECTED.pdf
+    └── comparison_logistic_vs_growthtools_42C_CORRECTED.png
+
+================================================================================
+QUICK REFERENCE: WHICH METHOD?
+================================================================================
+
+Temperature-Performance Curves (TPC):
+  → Use script 10 (logistic growth model)
+  → Captures saturation changes across temperature
+
+Competitive Fitness Analysis:
+  → Use script 02 (growthtools)
+  → Focus on early exponential growth differences
+
+Cross-Tolerance Characterization:
+  → Primary: script 10 (full trajectory)
+  → Secondary: script 02 (early growth strategy)
+
+Visualization/Validation:
+  → Use script 12 (comparison plots)
+  → Ensures methods are being applied correctly
+
+================================================================================
+
+For detailed guidance, see: README-GROWTH-RATE-METHODS.md
+For technical details, see: CORRECTION-LOG.md
+
