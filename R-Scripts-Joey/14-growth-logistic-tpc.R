@@ -36,7 +36,7 @@ dir.create(OUT, showWarnings = FALSE)
 
 # Logistic fitting
 R2_FLAG   <- 0.95     # Wells below this R² are flagged (not removed)
-R_MAX_DAY <- 25       # Biological upper bound on r (day⁻¹); ~40 min doubling
+R_MAX_DAY <- 40       # Upper bound on r (day⁻¹); ~25 min doubling — wells hitting this are flagged
 
 # SSH model constants
 K_B    <- 8.617333e-5   # Boltzmann constant (eV K⁻¹)
@@ -65,28 +65,33 @@ set.seed(42)
 # 2. Logistic fit function
 # =============================================================================
 
-# Fits a 3-parameter logistic model to a single well's OD time series:
+# Fits a 4-parameter logistic model to a single well's OD time series:
 #
-#   OD(t) = K / (1 + exp(-r * (t - t_mid)))
+#   OD(t) = A + (K - A) / (1 + exp(-r * (t - t_mid)))
 #
 # Parameters:
-#   K     = carrying capacity (max OD)
-#   r     = intrinsic growth rate (day⁻¹); specific growth rate at low density
+#   A     = lower asymptote (baseline OD at t = -∞)
+#   K     = upper asymptote (carrying capacity)
+#   r     = intrinsic growth rate (day⁻¹)
 #   t_mid = inflection point (days); time of fastest growth
 #
+# Using 4 parameters (vs 3) allows the curve to start at a non-zero baseline,
+# which avoids inflated r estimates when cultures don't begin near OD = 0.
+#
 # Returns a named vector with:
-#   r       = logistic rate parameter (day⁻¹)
-#   rk4     = r * K / 4 (max absolute rate of OD increase, OD·day⁻¹)
-#   K       = carrying capacity
-#   t_mid   = inflection point (days)
-#   r2      = R² of the fit
+#   r     = logistic rate parameter (day⁻¹)
+#   rk4   = r * (K - A) / 4  (max absolute rate of OD increase, OD·day⁻¹)
+#   K     = upper asymptote
+#   A     = lower asymptote
+#   t_mid = inflection point (days)
+#   r2    = R² of the fit
 #
 # Returns NAs if fit fails (no fallback method).
 
 fit_logistic <- function(days, od, min_points = 6) {
 
   na_result <- c(r = NA_real_, rk4 = NA_real_, K = NA_real_,
-                 t_mid = NA_real_, r2 = NA_real_)
+                 A = NA_real_, t_mid = NA_real_, r2 = NA_real_)
 
   if (length(days) < min_points || sum(!is.na(od)) < min_points) return(na_result)
 
@@ -97,27 +102,29 @@ fit_logistic <- function(days, od, min_points = 6) {
   OD_min  <- min(od, na.rm = TRUE)
   t_range <- diff(range(days))
 
-  # Initial guesses from numerical gradient
+  # Initial guesses
+  A0     <- OD_min                          # baseline = observed minimum OD
+  K0     <- OD_max * 1.05
   grad   <- diff(od) / diff(days)
   grad_t <- (head(days, -1) + tail(days, -1)) / 2
-  K0     <- OD_max * 1.05
   t_mid0 <- grad_t[which.max(grad)]
-  r0     <- max(4 * max(grad) / K0, 0.05)
+  r0     <- max(4 * max(grad) / (K0 - A0), 0.05)
 
   fit_result <- tryCatch({
-    fit <- nlsLM(
-      od ~ K / (1 + exp(-r * (days - t_mid))),
-      start   = list(K = K0, r = r0, t_mid = t_mid0),
-      lower   = c(K = OD_min,       r = 1e-3,     t_mid = days[1] - t_range),
-      upper   = c(K = OD_max * 3,   r = R_MAX_DAY, t_mid = tail(days, 1) + t_range),
-      control = nls.lm.control(maxiter = 200, maxfev = 10000)
-    )
+    fit <- suppressWarnings(nlsLM(
+      od ~ A + (K - A) / (1 + exp(-r * (days - t_mid))),
+      start   = list(A = A0, K = K0, r = r0, t_mid = t_mid0),
+      lower   = c(A = 0,       K = OD_min, r = 1e-3,      t_mid = days[1] - t_range),
+      upper   = c(A = OD_min * 2, K = OD_max * 3, r = R_MAX_DAY, t_mid = tail(days, 1) + t_range),
+      control = nls.lm.control(maxiter = 5000, maxfev = 20000)
+    ))
 
+    A_fit     <- coef(fit)[["A"]]
     K_fit     <- coef(fit)[["K"]]
     r_fit     <- coef(fit)[["r"]]
     t_mid_fit <- coef(fit)[["t_mid"]]
 
-    if (K_fit < OD_min || r_fit <= 0) stop("Implausible parameters")
+    if (K_fit <= A_fit || r_fit <= 0) stop("Implausible parameters")
 
     pred   <- predict(fit)
     ss_res <- sum((od - pred)^2)
@@ -125,8 +132,9 @@ fit_logistic <- function(days, od, min_points = 6) {
     r2     <- if (ss_tot > 0) 1 - ss_res / ss_tot else NA_real_
 
     c(r     = r_fit,
-      rk4   = r_fit * K_fit / 4,
+      rk4   = r_fit * (K_fit - A_fit) / 4,
       K     = K_fit,
+      A     = A_fit,
       t_mid = t_mid_fit,
       r2    = r2)
 
@@ -238,26 +246,31 @@ growth_rates <- edata |>
     r     = map_dbl(fit, "r"),
     rk4   = map_dbl(fit, "rk4"),
     K     = map_dbl(fit, "K"),
+    A     = map_dbl(fit, "A"),
     t_mid = map_dbl(fit, "t_mid"),
     r2    = map_dbl(fit, "r2")
   ) |>
   select(-fit) |>
   mutate(low_r2       = !is.na(r2) & r2 < R2_FLAG,
          fit_fail     = is.na(r),
-         neg_t_mid    = !is.na(t_mid) & t_mid < 0)  # inflection before experiment start; r is extrapolated
+         neg_t_mid    = !is.na(t_mid) & t_mid < 0,          # inflection before experiment start; r is extrapolated
+         r_at_bound   = !is.na(r) & r >= R_MAX_DAY * 0.99)  # r hit the upper bound; estimate is not trustworthy
 
 # Summary
 n_total  <- nrow(growth_rates)
 n_fail   <- sum(growth_rates$fit_fail)
 n_low_r2 <- sum(growth_rates$low_r2, na.rm = TRUE)
 
-n_neg_tmid <- sum(growth_rates$neg_t_mid, na.rm = TRUE)
+n_neg_tmid  <- sum(growth_rates$neg_t_mid,  na.rm = TRUE)
+n_at_bound  <- sum(growth_rates$r_at_bound, na.rm = TRUE)
 
 cat(sprintf("  Wells total:        %d\n", n_total))
-cat(sprintf("  Fit failures:       %d (%.1f%%)\n", n_fail,    100 * n_fail    / n_total))
+cat(sprintf("  Fit failures:       %d (%.1f%%)\n", n_fail,     100 * n_fail     / n_total))
 cat(sprintf("  Flagged (R²<%.2f):  %d (%.1f%%)\n", R2_FLAG,
-            n_low_r2,  100 * n_low_r2  / n_total))
-cat(sprintf("  Negative t_mid:     %d (%.1f%%)\n", n_neg_tmid, 100 * n_neg_tmid / n_total))
+            n_low_r2,   100 * n_low_r2   / n_total))
+cat(sprintf("  Negative t_mid:     %d (%.1f%%)\n", n_neg_tmid,  100 * n_neg_tmid  / n_total))
+cat(sprintf("  r at bound (≥%.0f):  %d (%.1f%%)\n", R_MAX_DAY,
+            n_at_bound,  100 * n_at_bound  / n_total))
 
 cat("\nGrowth rate summary by temperature:\n")
 growth_rates |>
@@ -292,7 +305,7 @@ plot_data <- edata |>
 
 wells <- growth_rates |>
   distinct(well, block, test_temperature, strain, evolution_history,
-           r, K, t_mid, r2, low_r2, fit_fail, neg_t_mid)
+           r, K, A, t_mid, r2, low_r2, fit_fail, neg_t_mid, r_at_bound)
 
 for (i in seq_len(nrow(wells))) {
   w <- wells[i, ]
@@ -307,7 +320,7 @@ for (i in seq_len(nrow(wells))) {
   # Build fitted curve if parameters exist
   if (!w$fit_fail) {
     t_seq   <- seq(min(raw$days), max(raw$days), length.out = 200)
-    od_pred <- w$K / (1 + exp(-w$r * (t_seq - w$t_mid)))
+    od_pred <- w$A + (w$K - w$A) / (1 + exp(-w$r * (t_seq - w$t_mid)))
     curve   <- tibble(days = t_seq, od = od_pred)
   }
 
@@ -316,13 +329,16 @@ for (i in seq_len(nrow(wells))) {
   plot_title <- sprintf("%s | block %s | %s°C | %s",
                         w$strain, w$block, w$test_temperature, w$well)
   subtitle   <- if (!w$fit_fail) {
-    tmid_flag <- if (w$neg_t_mid) "  [t_mid<0: r extrapolated]" else ""
+    flags <- paste0(
+      if (w$neg_t_mid)  "  [t_mid<0: r extrapolated]" else "",
+      if (w$r_at_bound) "  [r at bound: unreliable]"  else ""
+    )
     sprintf("r=%.2f day⁻¹  K=%.3f  t_mid=%.2f  %s%s",
-            w$r, w$K, w$t_mid, r2_label, tmid_flag)
+            w$r, w$K, w$t_mid, r2_label, flags)
   } else {
     "fit failed"
   }
-  border_col <- if (w$low_r2 || w$fit_fail) "red" else if (w$neg_t_mid) "orange" else "grey80"
+  border_col <- if (w$low_r2 || w$fit_fail) "red" else if (w$r_at_bound) "purple" else if (w$neg_t_mid) "orange" else "grey80"
 
   p <- ggplot(raw, aes(x = days, y = od)) +
     geom_point(size = 1.5, alpha = 0.7) +
