@@ -35,7 +35,7 @@ OUT       <- "data-processed/14-logistic-tpc"
 dir.create(OUT, showWarnings = FALSE)
 
 # Logistic fitting
-R2_FLAG   <- 0.95     # Wells below this R² are flagged (not removed)
+R2_FLAG   <- 0.90     # Wells below this R² are flagged (not removed)
 R_MAX_DAY <- 40       # Upper bound on r (day⁻¹); ~25 min doubling — wells hitting this are flagged
 
 # SSH model constants
@@ -423,8 +423,12 @@ fit_tpcs <- function(growth_rates, rate_col) {
   cat(sprintf("\nFitting SSH TPCs using '%s'...\n", rate_col))
 
   d_all <- growth_rates |>
-    filter(!fit_fail, !is.na(.data[[rate_col]])) |>
+    filter(!fit_fail, !low_r2, !r_at_bound, !is.na(.data[[rate_col]])) |>
     select(strain, evolution_history, test_temperature, all_of(rate_col))
+
+  n_excluded <- sum(growth_rates$fit_fail | growth_rates$low_r2 | growth_rates$r_at_bound, na.rm = TRUE)
+  cat(sprintf("  Wells excluded (fit_fail | low_r2 | r_at_bound): %d of %d\n",
+              n_excluded, nrow(growth_rates)))
 
   strains <- d_all |>
     group_by(strain, evolution_history) |>
