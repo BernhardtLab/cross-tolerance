@@ -19,11 +19,9 @@
 #   2. SSH model functions
 #   3. Load data
 #   4. Estimate growth metrics per well with gcplyr
-#   5. Fit SSH TPC per strain — mu_max
-#   6. Fit SSH TPC per strain — AUC
-#   7. Compare mu_max vs AUC TPC estimates
-#   8. Plots
-#   9. Export
+#   5. Fit SSH TPC per strain — AUC
+#   6. Plots
+#   7. Export
 # =============================================================================
 
 # =============================================================================
@@ -227,79 +225,7 @@ gcplyr_metrics |>
   print()
 
 # =============================================================================
-# 5. Fit SSH TPC per strain — mu_max
-# =============================================================================
-
-cat("\nFitting SSH TPCs using mu_max...\n")
-
-# mu_max bounds: per-capita rates in per-day units
-# Typical doubling times 30–120 min → mu_max ~ 8–33 /day
-BOUNDS_MU <- list(
-  lo    = c(r_tref = 1e-4, e = 0.01, eh =  0.5, th = 303.0),
-  hi    = c(r_tref = 60.0, e =  3.0, eh = 50.0, th = 335.0),
-  s_lo  = c(r_tref = 0.1,  e =  0.1, eh =  0.5, th = 305.0),
-  s_hi  = c(r_tref = 30.0, e =  2.0, eh = 20.0, th = 325.0)
-)
-
-d_mu <- gcplyr_metrics |>
-  filter(!is.na(mu_max), is.finite(mu_max)) |>
-  select(strain, evolution_history, test_temperature, mu_max)
-
-strains_mu <- d_mu |>
-  group_by(strain, evolution_history) |>
-  summarise(n_temps = n_distinct(test_temperature), .groups = "drop") |>
-  filter(n_temps >= 3)
-
-cat(sprintf("  Strains with ≥3 temperatures: %d\n", nrow(strains_mu)))
-
-params_mu_list <- vector("list", nrow(strains_mu))
-preds_mu_list  <- vector("list", nrow(strains_mu))
-
-for (i in seq_len(nrow(strains_mu))) {
-  sid <- strains_mu$strain[i]
-  evo <- strains_mu$evolution_history[i]
-  d   <- d_mu |> filter(strain == sid)
-
-  res <- fit_ssh_multistart(
-    d$test_temperature, d$mu_max,
-    BOUNDS_MU$lo, BOUNDS_MU$hi, BOUNDS_MU$s_lo, BOUNDS_MU$s_hi
-  )
-
-  if (is.null(res)) { cat(sprintf("  FAILED: %s\n", sid)); next }
-
-  p <- res$params
-  params_mu_list[[i]] <- tibble(
-    strain = sid, evolution_history = evo,
-    r_tref = p["r_tref"], e = p["e"], eh = p["eh"], th = p["th"],
-    topt = res$topt, ctmax = res$ctmax, rmax = res$rmax, b80 = res$b80,
-    r2 = res$r2, n_obs = nrow(d)
-  )
-  preds_mu_list[[i]] <- tibble(
-    strain = sid, evolution_history = evo,
-    temp = T_PRED,
-    pred = sharpeschoolhigh(T_PRED, p["r_tref"], p["e"], p["eh"], p["th"])
-  )
-  if (i %% 10 == 0) cat(sprintf("  %d / %d\n", i, nrow(strains_mu)))
-}
-
-tpc_params_mu <- bind_rows(params_mu_list)
-tpc_preds_mu  <- bind_rows(preds_mu_list)
-
-cat("\n=== Topt, CTmax, B80 by evolution history (mu_max) ===\n")
-tpc_params_mu |>
-  group_by(evolution_history) |>
-  summarise(
-    n          = n(),
-    mean_topt  = round(mean(topt,  na.rm = TRUE), 2),
-    se_topt    = round(sd(topt,    na.rm = TRUE) / sqrt(n()), 2),
-    mean_ctmax = round(mean(ctmax, na.rm = TRUE), 2),
-    se_ctmax   = round(sd(ctmax,   na.rm = TRUE) / sqrt(n()), 2),
-    .groups    = "drop"
-  ) |>
-  print()
-
-# =============================================================================
-# 6. Fit SSH TPC per strain — AUC
+# 5. Fit SSH TPC per strain — AUC
 # =============================================================================
 
 cat("\nFitting SSH TPCs using AUC (gcplyr)...\n")
@@ -367,36 +293,12 @@ tpc_params_auc |>
   print()
 
 # =============================================================================
-# 7. Compare mu_max vs AUC TPC estimates
+# 6. Plots
 # =============================================================================
 
-cat("\nComparing Topt and CTmax across metrics...\n")
+# ── TPC curves — AUC ─────────────────────────────────────────────────────────
 
-both_metrics <- tpc_params_mu |>
-  select(strain, evolution_history, topt_mu = topt, ctmax_mu = ctmax) |>
-  inner_join(
-    tpc_params_auc |> select(strain, topt_auc = topt, ctmax_auc = ctmax),
-    by = "strain"
-  )
-
-cat(sprintf(
-  "  Topt  — r = %.3f, mean diff = %.3f°C\n",
-  cor(both_metrics$topt_mu,  both_metrics$topt_auc,  use = "complete"),
-  mean(both_metrics$topt_mu  - both_metrics$topt_auc,  na.rm = TRUE)
-))
-cat(sprintf(
-  "  CTmax — r = %.3f, mean diff = %.3f°C\n",
-  cor(both_metrics$ctmax_mu, both_metrics$ctmax_auc, use = "complete"),
-  mean(both_metrics$ctmax_mu - both_metrics$ctmax_auc, na.rm = TRUE)
-))
-
-# =============================================================================
-# 8. Plots
-# =============================================================================
-
-# ── TPC curves — mu_max ──────────────────────────────────────────────────────
-
-mean_curves_mu <- tpc_params_mu |>
+mean_curves_auc <- tpc_params_auc |>
   group_by(evolution_history) |>
   summarise(across(c(r_tref, e, eh, th), \(x) mean(x, na.rm = TRUE)),
             .groups = "drop") |>
@@ -407,40 +309,40 @@ mean_curves_mu <- tpc_params_mu |>
   ))) |>
   unnest(curve)
 
-obs_means_mu <- gcplyr_metrics |>
-  filter(!is.na(mu_max)) |>
+obs_means_auc <- gcplyr_metrics |>
+  filter(!is.na(auc_gc)) |>
   group_by(strain, evolution_history, test_temperature) |>
-  summarise(mu_max = mean(mu_max, na.rm = TRUE), .groups = "drop")
+  summarise(auc_gc = mean(auc_gc, na.rm = TRUE), .groups = "drop")
 
-p_tpc_mu <- ggplot() +
+p_tpc_auc <- ggplot() +
   geom_line(
-    data = tpc_preds_mu |> mutate(pred = ifelse(pred < 0, NA, pred)),
+    data = tpc_preds_auc |> mutate(pred = ifelse(pred < 0, NA, pred)),
     aes(x = temp, y = pred, group = strain, color = evolution_history),
     alpha = 0.2, linewidth = 0.8
   ) +
   geom_line(
-    data = mean_curves_mu,
+    data = mean_curves_auc,
     aes(x = temp, y = pred, color = evolution_history),
     linewidth = 2.0
   ) +
   geom_point(
-    data = obs_means_mu,
-    aes(x = test_temperature, y = mu_max, color = evolution_history),
+    data = obs_means_auc,
+    aes(x = test_temperature, y = auc_gc, color = evolution_history),
     size = 1.8, alpha = 0.6
   ) +
   scale_color_manual(values = EVO_COLORS, name = NULL) +
   coord_cartesian(xlim = c(23, 48)) +
-  labs(x = "Temperature (°C)", y = expression(mu[max]~(day^-1)),
-       title = expression("Thermal Performance Curves —"~mu[max])) +
+  labs(x = "Temperature (°C)", y = "AUC (empirical)",
+       title = "Thermal Performance Curves — AUC (gcplyr)") +
   theme(legend.position = c(0.02, 0.98), legend.justification = c(0, 1),
         legend.background = element_blank())
 
-ggsave(file.path(FIGS, "tpc-mu_max.png"), p_tpc_mu, width = 9, height = 6, dpi = 300)
-cat("\nSaved: tpc-mu_max.png\n")
+ggsave(file.path(FIGS, "tpc-auc-gcplyr.png"), p_tpc_auc, width = 9, height = 6, dpi = 300)
+cat("\nSaved: tpc-auc-gcplyr.png\n")
 
-# ── Thermal traits — mu_max ──────────────────────────────────────────────────
+# ── Thermal traits — AUC ─────────────────────────────────────────────────────
 
-p_traits_mu <- tpc_params_mu |>
+p_traits_auc <- tpc_params_auc |>
   pivot_longer(c(topt, ctmax, b80), names_to = "trait", values_to = "value") |>
   mutate(trait = factor(trait,
                         levels = c("topt", "ctmax", "b80"),
@@ -452,50 +354,22 @@ p_traits_mu <- tpc_params_mu |>
   scale_color_manual(values = EVO_COLORS, guide = "none") +
   facet_wrap(~ trait, scales = "free_y") +
   labs(x = NULL, y = NULL,
-       title = expression("Thermal traits by evolution history ("~mu[max]~")"),
+       title = "Thermal traits by evolution history (AUC, gcplyr)",
        subtitle = "Crossbar = mean") +
   theme(strip.background = element_blank(),
         strip.text = element_text(face = "bold", size = 11))
 
-ggsave(file.path(FIGS, "thermal-traits-mu_max.png"), p_traits_mu,
+ggsave(file.path(FIGS, "thermal-traits-auc-gcplyr.png"), p_traits_auc,
        width = 11, height = 5, dpi = 300)
-cat("Saved: thermal-traits-mu_max.png\n")
-
-# ── mu_max vs AUC TPC comparison ─────────────────────────────────────────────
-
-p_compare_topt <- ggplot(both_metrics,
-                         aes(x = topt_auc, y = topt_mu, color = evolution_history)) +
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
-  geom_point(size = 2.5, alpha = 0.8) +
-  scale_color_manual(values = EVO_COLORS, name = NULL) +
-  labs(x = "Topt — AUC (°C)", y = expression("Topt —"~mu[max]~"(°C)"),
-       title = "Topt") +
-  theme(legend.position = "none")
-
-p_compare_ctmax <- ggplot(both_metrics,
-                          aes(x = ctmax_auc, y = ctmax_mu, color = evolution_history)) +
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
-  geom_point(size = 2.5, alpha = 0.8) +
-  scale_color_manual(values = EVO_COLORS, name = NULL) +
-  labs(x = "CTmax — AUC (°C)", y = expression("CTmax —"~mu[max]~"(°C)"),
-       title = "CTmax") +
-  theme(legend.position = "bottom")
-
-p_compare <- plot_grid(p_compare_topt, p_compare_ctmax, ncol = 2,
-                       labels = c("A", "B"), label_size = 13)
-ggsave(file.path(FIGS, "tpc-metric-comparison-gcplyr.png"), p_compare,
-       width = 8, height = 5, dpi = 300)
-cat("Saved: tpc-metric-comparison-gcplyr.png\n")
+cat("Saved: thermal-traits-auc-gcplyr.png\n")
 
 # =============================================================================
-# 9. Export
+# 7. Export
 # =============================================================================
 
-write_csv(gcplyr_metrics,  file.path(OUT, "gcplyr-metrics-per-well.csv"))
-write_csv(tpc_params_mu,   file.path(OUT, "tpc-params-mu_max.csv"))
-write_csv(tpc_preds_mu,    file.path(OUT, "tpc-predictions-mu_max.csv"))
-write_csv(tpc_params_auc,  file.path(OUT, "tpc-params-auc-gcplyr.csv"))
-write_csv(tpc_preds_auc,   file.path(OUT, "tpc-predictions-auc-gcplyr.csv"))
+write_csv(gcplyr_metrics, file.path(OUT, "gcplyr-metrics-per-well.csv"))
+write_csv(tpc_params_auc, file.path(OUT, "tpc-params-auc-gcplyr.csv"))
+write_csv(tpc_preds_auc,  file.path(OUT, "tpc-predictions-auc-gcplyr.csv"))
 
 cat("\nAll outputs saved to", OUT, "and", FIGS, "\n")
 cat("Done.\n")
