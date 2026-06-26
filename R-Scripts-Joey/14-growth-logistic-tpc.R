@@ -36,7 +36,7 @@ dir.create(OUT, showWarnings = FALSE)
 
 # Logistic fitting
 R2_FLAG   <- 0.90     # Wells below this R² are flagged (not removed)
-R_MAX_DAY <- 40       # Upper bound on r (day⁻¹); ~25 min doubling — wells hitting this are flagged
+R_MAX_DAY <- 60       # Upper bound on r (day⁻¹); ~25 min doubling — wells hitting this are flagged
 
 # SSH model constants
 K_B    <- 8.617333e-5   # Boltzmann constant (eV K⁻¹)
