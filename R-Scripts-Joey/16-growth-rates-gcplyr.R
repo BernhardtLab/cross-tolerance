@@ -52,16 +52,16 @@ EVO_COLORS <- c(
   "fRS585"     = "#000000"
 )
 
-# SSH model constants
+# Sharpeschoolfield High model constants
 K_B    <- 8.617333e-5   # Boltzmann constant (eV K⁻¹)
 TREF_K <- 288.15        # Reference temperature: 15°C in Kelvin
 
 # SSH fitting
 N_STARTS  <- 500
-CTMAX_CAP <- 50.0
+TMAX_CAP <- 50.0
 
 # gcplyr smoothing: moving-average window (number of time points)
-# Data resolution is ~15 min; window of 5 = 75-min smoothing
+# Data resolution is ~15 min; window of 5 = 75-min smoothing; I tried windows of 3, 5 and 11... 5 seems to do best, but I can do a formal check of this by comparing within strain CV and finding which smoothing window minimizes this.
 SMOOTH_N <- 5
 
 # TPC prediction range
@@ -81,36 +81,35 @@ sharpeschoolhigh <- function(T_c, r_tref, e, eh, th) {
     (1 + exp((eh / K_B) * (1 / th - 1 / T_k)))
 }
 
-# Extract Topt, CTmax, Rmax, B80 from SSH parameters
+# Extract Topt, Tmax, Rmax, B80 from SSH parameters
 calc_tpc_traits <- function(r_tref, e, eh, th,
                              T_range = seq(0, 55, length.out = 10000)) {
-  na_result <- c(topt = NA_real_, ctmax = NA_real_, rmax = NA_real_, b80 = NA_real_)
+  na_result <- c(topt = NA_real_, tmax = NA_real_, rmax = NA_real_, b80 = NA_real_)
   preds <- sharpeschoolhigh(T_range, r_tref, e, eh, th)
   valid <- is.finite(preds)
   if (!any(valid)) return(na_result)
 
-  topt_idx <- which.max(preds[valid])
-  topt     <- T_range[valid][topt_idx]
-  rmax     <- preds[valid][topt_idx]
+  # Numerical optimisation for Topt 
+  opt <- optim(
+    par    = T_range[which.max(preds)],   # grid max as starting point
+    fn     = function(T) -sharpeschoolhigh(T, r_tref, e, eh, th),
+    method = "Brent",
+    lower  = min(T_range),
+    upper  = max(T_range)
+  )
+  topt <- opt$par
+  rmax <- -opt$value
 
-  preds_right              <- preds
-  preds_right[T_range <= topt] <- rmax
-  sign_changes             <- which(diff(sign(preds_right)) != 0)
-
-  if (length(sign_changes) > 0) {
-    i     <- sign_changes[1]
-    t1    <- T_range[i];     t2 <- T_range[i + 1]
-    p1    <- preds_right[i]; p2 <- preds_right[i + 1]
-    ctmax <- if (p2 != p1) t1 - p1 * (t2 - t1) / (p2 - p1) else t1
-  } else {
-    below <- which(T_range > topt & preds < 0.05 * rmax)
-    ctmax <- if (length(below) > 0) T_range[below[1]] else CTMAX_CAP
-  }
+  # Tmax: temperature above Topt where SSH rate drops to 5% of rmax
+  thresh_fn <- function(T) sharpeschoolhigh(T, r_tref, e, eh, th) - 0.05 * rmax
+  tmax <- tryCatch({
+    uniroot(thresh_fn, lower = topt, upper = max(T_range), tol = 1e-8)$root
+  }, error = function(e) TMAX_CAP)
 
   above_80 <- T_range[preds >= 0.8 * rmax]
   b80      <- if (length(above_80) >= 2) max(above_80) - min(above_80) else NA_real_
 
-  c(topt = topt, ctmax = ctmax, rmax = rmax, b80 = b80)
+  c(topt = topt, tmax = tmax, rmax = rmax, b80 = b80)
 }
 
 # Multistart SSH fitter — bounds tuned per metric (see calls below)
@@ -150,7 +149,7 @@ fit_ssh_multistart <- function(temps, rates, bounds_lo, bounds_hi,
                              best_popt["eh"],     best_popt["th"])
 
   list(params = best_popt, r2 = r2,
-       topt  = traits["topt"],  ctmax = traits["ctmax"],
+       topt  = traits["topt"],  tmax = traits["tmax"],
        rmax  = traits["rmax"],  b80   = traits["b80"])
 }
 
@@ -158,26 +157,18 @@ fit_ssh_multistart <- function(temps, rates, bounds_lo, bounds_hi,
 # 3. Load data
 # =============================================================================
 
-cat("Loading data...\n")
 
 od_data <- read_csv(DATA_PATH, show_col_types = FALSE) |>
   filter(evolution_history %in% TARGET_EVO)
 
-cat(sprintf("  %d rows | %d strains | %d temperatures | %d blocks\n",
-            nrow(od_data),
-            n_distinct(od_data$strain),
-            n_distinct(od_data$test_temperature),
-            n_distinct(od_data$block)))
-
 # Instrument blank: minimum OD across all wells (media + noise floor)
 BLANK_OD <- min(od_data$od, na.rm = TRUE)
-cat(sprintf("  Blank OD: %.4f\n", BLANK_OD))
+
 
 # =============================================================================
 # 4. Estimate growth metrics per well with gcplyr
 # =============================================================================
 
-cat("\nEstimating growth metrics with gcplyr...\n")
 
 gcplyr_metrics <- od_data |>
   group_by(well, block, test_temperature, strain, evolution_history) |>
@@ -214,26 +205,11 @@ gcplyr_metrics <- od_data |>
     .groups   = "drop"
   )
 
-cat(sprintf("  Wells processed: %d\n", nrow(gcplyr_metrics)))
-
-cat("\nMean metrics by temperature:\n")
-gcplyr_metrics |>
-  group_by(test_temperature) |>
-  summarise(
-    n          = n(),
-    mean_mu    = round(mean(mu_max,    na.rm = TRUE), 2),
-    mean_doub  = round(mean(doub_time, na.rm = TRUE), 2),
-    mean_lag   = round(mean(lag,       na.rm = TRUE), 3),
-    mean_auc   = round(mean(auc_gc,    na.rm = TRUE), 4),
-    .groups    = "drop"
-  ) |>
-  print()
 
 # =============================================================================
 # 5. Fit SSH TPC per strain — AUC
 # =============================================================================
 
-cat("\nFitting SSH TPCs using AUC (gcplyr)...\n")
 
 BOUNDS_AUC <- list(
   lo   = c(r_tref = 1e-6, e = 0.01, eh =  0.5, th = 303.0),
@@ -270,7 +246,7 @@ for (i in seq_len(nrow(strains_auc))) {
   params_auc_list[[i]] <- tibble(
     strain = sid, evolution_history = evo,
     r_tref = p["r_tref"], e = p["e"], eh = p["eh"], th = p["th"],
-    topt = res$topt, ctmax = res$ctmax, rmax = res$rmax, b80 = res$b80,
+    topt = res$topt, tmax = res$tmax, rmax = res$rmax, b80 = res$b80,
     r2 = res$r2, n_obs = nrow(d)
   )
   preds_auc_list[[i]] <- tibble(
@@ -284,15 +260,15 @@ for (i in seq_len(nrow(strains_auc))) {
 tpc_params_auc <- bind_rows(params_auc_list)
 tpc_preds_auc  <- bind_rows(preds_auc_list)
 
-cat("\n=== Topt, CTmax, B80 by evolution history (AUC) ===\n")
+cat("\n=== Topt, Tmax, B80 by evolution history (AUC) ===\n")
 tpc_params_auc |>
   group_by(evolution_history) |>
   summarise(
     n          = n(),
     mean_topt  = round(mean(topt,  na.rm = TRUE), 2),
     se_topt    = round(sd(topt,    na.rm = TRUE) / sqrt(n()), 2),
-    mean_ctmax = round(mean(ctmax, na.rm = TRUE), 2),
-    se_ctmax   = round(sd(ctmax,   na.rm = TRUE) / sqrt(n()), 2),
+    mean_tmax = round(mean(tmax, na.rm = TRUE), 2),
+    se_tmax   = round(sd(tmax,   na.rm = TRUE) / sqrt(n()), 2),
     .groups    = "drop"
   ) |>
   print()
@@ -303,16 +279,9 @@ tpc_params_auc |>
 
 # ── TPC curves — AUC ─────────────────────────────────────────────────────────
 
-mean_curves_auc <- tpc_params_auc |>
-  group_by(evolution_history) |>
-  summarise(across(c(r_tref, e, eh, th), \(x) mean(x, na.rm = TRUE)),
-            .groups = "drop") |>
-  rowwise() |>
-  mutate(curve = list(tibble(
-    temp = T_PRED,
-    pred = sharpeschoolhigh(T_PRED, r_tref, e, eh, th)
-  ))) |>
-  unnest(curve)
+mean_curves_auc <- tpc_preds_auc |>
+  group_by(evolution_history, temp) |>
+  summarise(pred = mean(pred, na.rm = TRUE), .groups = "drop")
 
 obs_means_auc <- gcplyr_metrics |>
   filter(!is.na(auc_gc)) |>
@@ -343,15 +312,50 @@ p_tpc_auc <- ggplot() +
         legend.background = element_blank())
 
 ggsave(file.path(FIGS, "tpc-auc-gcplyr.png"), p_tpc_auc, width = 9, height = 6, dpi = 300)
-cat("\nSaved: tpc-auc-gcplyr.png\n")
+
+
+# ── TPC curves — AUC, faceted by evolution history ───────────────────────────
+
+p_tpc_auc_facet <- ggplot() +
+  geom_line(
+    data = tpc_preds_auc |> mutate(pred = ifelse(pred < 0, NA, pred)),
+    aes(x = temp, y = pred, group = strain),
+    color = "grey70", alpha = 0.6, linewidth = 0.5
+  ) +
+  geom_line(
+    data = mean_curves_auc,
+    aes(x = temp, y = pred, color = evolution_history),
+    linewidth = 2.0
+  ) +
+  geom_point(
+    data = obs_means_auc,
+    aes(x = test_temperature, y = auc_gc, color = evolution_history),
+    size = 1.8, alpha = 0.7
+  ) +
+  scale_color_manual(values = EVO_COLORS, guide = "none") +
+  coord_cartesian(xlim = c(23, 48)) +
+  facet_wrap(~ evolution_history) +
+  labs(
+    x = "Temperature (°C)", y = "AUC (empirical)",
+    title = "Thermal Performance Curves — AUC (gcplyr)",
+    subtitle = "Grey = individual strains  |  Bold = mean prediction across strains"
+  ) +
+  theme(
+    strip.background = element_blank(),
+    strip.text       = element_text(face = "bold", size = 12)
+  )
+
+ggsave(file.path(FIGS, "tpc-auc-gcplyr-faceted.png"), p_tpc_auc_facet,
+       width = 12, height = 5, dpi = 300)
+
 
 # ── Thermal traits — AUC ─────────────────────────────────────────────────────
 
 p_traits_auc <- tpc_params_auc |>
-  pivot_longer(c(topt, ctmax, b80), names_to = "trait", values_to = "value") |>
+  pivot_longer(c(topt, tmax, b80), names_to = "trait", values_to = "value") |>
   mutate(trait = factor(trait,
-                        levels = c("topt", "ctmax", "b80"),
-                        labels = c("Topt (°C)", "CTmax (°C)", "B80 — niche breadth (°C)"))) |>
+                        levels = c("topt", "tmax", "b80"),
+                        labels = c("Topt (°C)", "Tmax (°C)", "B80 — niche breadth (°C)"))) |>
   ggplot(aes(x = evolution_history, y = value, color = evolution_history)) +
   geom_jitter(width = 0.12, size = 2.5, alpha = 0.8) +
   stat_summary(fun = mean, geom = "crossbar",
@@ -366,7 +370,246 @@ p_traits_auc <- tpc_params_auc |>
 
 ggsave(file.path(FIGS, "thermal-traits-auc-gcplyr.png"), p_traits_auc,
        width = 11, height = 5, dpi = 300)
-cat("Saved: thermal-traits-auc-gcplyr.png\n")
+
+
+# ── Thermal traits dot plot with ancestor reference line ─────────────────────
+
+anc_topt <- tpc_params_auc |> filter(evolution_history == "fRS585") |> pull(topt)
+anc_tmax <- tpc_params_auc |> filter(evolution_history == "fRS585") |> pull(tmax)
+
+plot_data_dotplot <- tpc_params_auc |>
+  filter(evolution_history != "fRS585") |>
+  select(strain, evolution_history, topt, tmax) |>
+  pivot_longer(c(topt, tmax), names_to = "trait", values_to = "value") |>
+  mutate(trait = factor(trait, levels = c("topt", "tmax")))
+
+anc_ref_dotplot <- tibble(
+  trait   = factor(c("topt", "tmax"), levels = c("topt", "tmax")),
+  anc_val = c(anc_topt, anc_tmax)
+)
+
+group_means_dotplot <- plot_data_dotplot |>
+  summarise(mean_val = mean(value), se = sd(value) / sqrt(n()),
+            .by = c(evolution_history, trait))
+
+trait_labels_dotplot <- c(topt = "Topt (\u00b0C)", tmax = "Tmax (\u00b0C)")
+
+p_traits_dotplot <- ggplot(plot_data_dotplot,
+                           aes(x = evolution_history, y = value,
+                               color = evolution_history)) +
+  geom_hline(data = anc_ref_dotplot, aes(yintercept = anc_val),
+             linetype = "dashed", color = "#000000", linewidth = 0.6) +
+  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_pointrange(
+    data = group_means_dotplot,
+    aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
+    size = 0.7, linewidth = 1.1
+  ) +
+  facet_wrap(~ trait, scales = "free_y", labeller = as_labeller(trait_labels_dotplot)) +
+  scale_color_manual(values = EVO_COLORS) +
+  labs(x = NULL, y = "Temperature (\u00b0C)",
+       caption = paste("Points: individual strains  |",
+                       "Large point \u00b1 bar: mean \u00b1 SE  |",
+                       "Dashed line: ancestor (fRS585)")) +
+  theme_bw(base_size = 13) +
+  theme(legend.position = "none",
+        strip.text = element_text(size = 13),
+        plot.caption = element_text(size = 9, color = "grey40"))
+
+ggsave(file.path(FIGS, "thermal-traits-dotplot-auc-gcplyr.png"), p_traits_dotplot,
+       width = 8, height = 5, dpi = 300)
+
+
+# ── Statistical tests: evolved groups vs each other and vs ancestor ──────────
+
+# Normality check (Shapiro-Wilk) on evolved groups
+sw <- tibble(
+  group  = rep(c("35 evolved", "40 evolved"), 2),
+  trait  = c(rep("topt", 2), rep("tmax", 2)),
+  W      = c(
+    shapiro.test(g35$topt)$statistic, shapiro.test(g40$topt)$statistic,
+    shapiro.test(g35$tmax)$statistic, shapiro.test(g40$tmax)$statistic
+  ),
+  p_sw   = c(
+    shapiro.test(g35$topt)$p.value, shapiro.test(g40$topt)$p.value,
+    shapiro.test(g35$tmax)$p.value, shapiro.test(g40$tmax)$p.value
+  )
+)
+
+# Helper: run Welch two-sample or one-sample t-test + Wilcoxon, return tidy row
+run_tests2 <- function(x, y = NULL, mu = NULL, label_x, label_y = "ancestor", trait) {
+  if (!is.null(y)) {
+    t_res <- t.test(x, y); w_res <- wilcox.test(x, y); ref <- mean(y)
+  } else {
+    t_res <- t.test(x, mu = mu); w_res <- wilcox.test(x, mu = mu); ref <- mu
+  }
+  tibble(
+    trait      = trait,
+    comparison = paste(label_x, "vs", label_y),
+    mean_x     = mean(x),
+    ref        = ref,
+    diff       = mean(x) - ref,
+    ci_lo      = if (!is.null(y)) t_res$conf.int[1] else t_res$conf.int[1] - mu,
+    ci_hi      = if (!is.null(y)) t_res$conf.int[2] else t_res$conf.int[2] - mu,
+    p_welch    = t_res$p.value,
+    p_wilcox   = w_res$p.value
+  )
+}
+
+g35 <- tpc_params_auc |> filter(evolution_history == "35 evolved")
+g40 <- tpc_params_auc |> filter(evolution_history == "40 evolved")
+
+results2 <- bind_rows(
+  run_tests2(g35$topt, g40$topt,      label_x = "35 evolved", label_y = "40 evolved", trait = "topt"),
+  run_tests2(g35$topt, mu = anc_topt, label_x = "35 evolved", trait = "topt"),
+  run_tests2(g40$topt, mu = anc_topt, label_x = "40 evolved", trait = "topt"),
+  run_tests2(g35$tmax, g40$tmax,      label_x = "35 evolved", label_y = "40 evolved", trait = "tmax"),
+  run_tests2(g35$tmax, mu = anc_tmax, label_x = "35 evolved", trait = "tmax"),
+  run_tests2(g40$tmax, mu = anc_tmax, label_x = "40 evolved", trait = "tmax")
+) |>
+  group_by(trait) |>
+  mutate(
+    p_welch_holm  = p.adjust(p_welch,  method = "holm"),
+    p_wilcox_holm = p.adjust(p_wilcox, method = "holm")
+  ) |>
+  ungroup()
+
+
+# ── Dot plot with significance annotations ───────────────────────────────────
+
+p_stars <- function(p) dplyr::case_when(
+  p < 0.001 ~ "***",
+  p < 0.01  ~ "**",
+  p < 0.05  ~ "*",
+  TRUE      ~ "ns"
+)
+
+# y-range per trait for annotation placement
+y_range <- plot_data_dotplot |>
+  summarise(y_max = max(value), y_span = diff(range(value)), .by = trait)
+
+# Between-group bracket (35 evolved vs 40 evolved)
+bracket_df <- results2 |>
+  filter(comparison == "35 evolved vs 40 evolved") |>
+  mutate(
+    trait       = factor(trait, levels = c("topt", "tmax")),
+    xmin        = "35 evolved",
+    xmax        = "40 evolved",
+    annotations = p_stars(p_welch_holm)
+  ) |>
+  left_join(y_range, by = "trait") |>
+  mutate(y_position = y_max + y_span * 0.06)
+
+# vs-ancestor stars placed to the right of each group's mean ± SE bar
+anc_star_df <- results2 |>
+  filter(stringr::str_detect(comparison, "vs ancestor")) |>
+  mutate(
+    trait             = factor(trait, levels = c("topt", "tmax")),
+    evolution_history = stringr::str_remove(comparison, " vs ancestor"),
+    label             = p_stars(p_welch_holm)
+  ) |>
+  left_join(group_means_dotplot, by = c("trait", "evolution_history")) |>
+  left_join(y_range, by = "trait") |>
+  mutate(y_pos = mean_val + se + y_span * 0.04)
+
+p_traits_dotplot_sig <- ggplot(plot_data_dotplot,
+                               aes(x = evolution_history, y = value,
+                                   color = evolution_history)) +
+  geom_hline(data = anc_ref_dotplot, aes(yintercept = anc_val),
+             linetype = "dashed", color = "#000000", linewidth = 0.6) +
+  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_pointrange(
+    data = group_means_dotplot,
+    aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
+    size = 0.7, linewidth = 1.1
+  ) +
+  ggsignif::geom_signif(
+    data       = bracket_df,
+    aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
+    manual     = TRUE,
+    tip_length = 0.02,
+    textsize   = 4.5,
+    color      = "black"
+  ) +
+  geom_text(
+    data     = anc_star_df,
+    aes(x = evolution_history, y = y_pos, label = label),
+    color    = "black",
+    size     = 4,
+    fontface = "bold",
+    nudge_x  = 0.3
+  ) +
+  facet_wrap(~ trait, scales = "free_y", labeller = as_labeller(trait_labels_dotplot)) +
+  scale_color_manual(values = EVO_COLORS) +
+  labs(x = NULL, y = "Temperature (\u00b0C)",
+       caption = paste(
+         "Points: individual strains  |  Large point \u00b1 bar: mean \u00b1 SE  |",
+         "Dashed line: ancestor (fRS585)\n",
+         "Brackets: Welch t-test (Holm-corrected)  |  Stars to right of mean: vs. ancestor (one-sample t-test)"
+       )) +
+  theme_bw(base_size = 13) +
+  theme(legend.position = "none",
+        strip.text       = element_text(size = 13),
+        plot.caption     = element_text(size = 8, color = "grey40"))
+
+ggsave(file.path(FIGS, "thermal-traits-dotplot-sig-auc-gcplyr.png"), p_traits_dotplot_sig,
+       width = 8, height = 5, dpi = 300)
+
+
+# ── Per-strain TPCs with raw data, PDF ───────────────────────────────────────
+
+# Strip labels include R² for quick fit assessment
+strain_labels <- tpc_params_auc |>
+  arrange(evolution_history, strain) |>
+  mutate(label = sprintf("%s  (R²=%.2f)", strain, r2))
+
+tpc_preds_labeled <- tpc_preds_auc |>
+  left_join(select(strain_labels, strain, label), by = "strain") |>
+  mutate(
+    pred  = ifelse(pred < 0, NA, pred),
+    label = factor(label, levels = strain_labels$label)
+  )
+
+data_labeled <- d_auc |>
+  left_join(select(strain_labels, strain, label), by = "strain") |>
+  mutate(label = factor(label, levels = strain_labels$label))
+
+vlines <- strain_labels |>
+  pivot_longer(c(topt, tmax), names_to = "trait", values_to = "temp_val") |>
+  mutate(label = factor(label, levels = strain_labels$label))
+
+p_per_strain <- ggplot() +
+  geom_line(
+    data = tpc_preds_labeled,
+    aes(x = temp, y = pred, color = evolution_history),
+    linewidth = 0.7
+  ) +
+  geom_point(
+    data = data_labeled,
+    aes(x = test_temperature, y = auc_gc, color = evolution_history),
+    size = 1.5, alpha = 0.7
+  ) +
+  geom_vline(
+    data = vlines,
+    aes(xintercept = temp_val, linetype = trait),
+    color = "grey40", linewidth = 0.4
+  ) +
+  scale_color_manual(values = EVO_COLORS, name = NULL) +
+  scale_linetype_manual(values = c(topt = "dashed", tmax = "dotted"),
+                        labels = c(topt = "Topt", tmax = "Tmax")) +
+  coord_cartesian(xlim = c(23, 45)) +
+  facet_wrap(~ label, ncol = 6) +
+  labs(x = "Temperature (°C)", y = "AUC", linetype = NULL) +
+  theme(
+    legend.position  = "bottom",
+    strip.background = element_blank(),
+    strip.text       = element_text(size = 7),
+    axis.text        = element_text(size = 6)
+  )
+
+ggsave(file.path(FIGS, "tpc-per-strain-gcplyr.pdf"), p_per_strain,
+       width = 16, height = 18)
+
 
 # =============================================================================
 # 7. Export
@@ -376,5 +619,4 @@ write_csv(gcplyr_metrics, file.path(OUT, "gcplyr-metrics-per-well.csv"))
 write_csv(tpc_params_auc, file.path(OUT, "tpc-params-auc-gcplyr.csv"))
 write_csv(tpc_preds_auc,  file.path(OUT, "tpc-predictions-auc-gcplyr.csv"))
 
-cat("\nAll outputs saved to", OUT, "and", FIGS, "\n")
-cat("Done.\n")
+
