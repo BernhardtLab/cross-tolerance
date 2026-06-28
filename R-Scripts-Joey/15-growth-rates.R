@@ -42,7 +42,7 @@ theme_set(theme_cowplot())
 DATA_PATH <- "data-processed/all-blocks-tpc-experiment.csv"
 OUT       <- "data-processed/growthcurver"
 FIGS      <- "figures"
-dir.create(OUT, showWarnings = FALSE)
+
 
 TARGET_EVO <- c("35 evolved", "40 evolved", "fRS585")
 
@@ -152,12 +152,12 @@ fit_ssh_multistart <- function(temps, rates, bounds_lo, bounds_hi,
 
   ss_tot <- sum((rates - mean(rates))^2)
   r2     <- if (ss_tot > 0) 1 - best_rss / ss_tot else NA_real_
-  traits <- calc_tpc_traits(best_popt["r_tref"], best_popt["e"],
-                             best_popt["eh"],     best_popt["th"])
+  traits <- calc_tpc_traits(best_popt[["r_tref"]], best_popt[["e"]],
+                             best_popt[["eh"]],    best_popt[["th"]])
 
   list(params = best_popt, r2 = r2,
-       topt  = traits["topt"],  tmax = traits["tmax"],
-       rmax  = traits["rmax"],  b80  = traits["b80"])
+       topt  = traits[["topt"]],  tmax = traits[["tmax"]],
+       rmax  = traits[["rmax"]],  b80  = traits[["b80"]])
 }
 
 
@@ -210,8 +210,6 @@ gc_fits <- od_data |>
     r     = map_dbl(fit, safe_val, "r"),
     t_mid = map_dbl(fit, safe_val, "t_mid"),
     t_gen = map_dbl(fit, safe_val, "t_gen"),
-    auc_l = map_dbl(fit, safe_val, "auc_l"),
-    auc_e = map_dbl(fit, safe_val, "auc_e"),
     sigma = map_dbl(fit, safe_val, "sigma"),
     note  = map_chr(fit, safe_note),
     # Maximum absolute growth rate from logistic model: dN/dt at N = K/2
@@ -313,7 +311,7 @@ tpc_params_r |>
     .groups   = "drop"
   ) |>
   print()
-
+### noting here that some of the tmaxes for r are artificially high because the TPC fitting function can't find a place on the interval of 0-55C where the function drops below 5% of its max, so it falls back to 50C. We should remove these if we are going to use the TPC for r for anything.
 
 # =============================================================================
 # 6. Fit SSH TPC per strain — mu (r × K / 4)
