@@ -531,9 +531,13 @@ sw <- tibble(
 # Helper: run Welch two-sample or one-sample t-test + Wilcoxon, return tidy row
 run_tests2 <- function(x, y = NULL, mu = NULL, label_x, label_y = "ancestor", trait) {
   if (!is.null(y)) {
-    t_res <- t.test(x, y); w_res <- wilcox.test(x, y); ref <- mean(y)
+    t_res <- tryCatch(t.test(x, y),                        error = function(e) NULL)
+    w_res <- tryCatch(wilcox.test(x, y, exact = FALSE),    error = function(e) NULL)
+    ref   <- mean(y)
   } else {
-    t_res <- t.test(x, mu = mu); w_res <- wilcox.test(x, mu = mu); ref <- mu
+    t_res <- tryCatch(t.test(x, mu = mu),                  error = function(e) NULL)
+    w_res <- tryCatch(wilcox.test(x, mu = mu, exact = FALSE), error = function(e) NULL)
+    ref   <- mu
   }
   tibble(
     trait      = trait,
@@ -541,10 +545,10 @@ run_tests2 <- function(x, y = NULL, mu = NULL, label_x, label_y = "ancestor", tr
     mean_x     = mean(x),
     ref        = ref,
     diff       = mean(x) - ref,
-    ci_lo      = if (!is.null(y)) t_res$conf.int[1] else t_res$conf.int[1] - mu,
-    ci_hi      = if (!is.null(y)) t_res$conf.int[2] else t_res$conf.int[2] - mu,
-    p_welch    = t_res$p.value,
-    p_wilcox   = w_res$p.value
+    ci_lo      = if (!is.null(t_res)) { if (!is.null(y)) t_res$conf.int[1] else t_res$conf.int[1] - mu } else NA_real_,
+    ci_hi      = if (!is.null(t_res)) { if (!is.null(y)) t_res$conf.int[2] else t_res$conf.int[2] - mu } else NA_real_,
+    p_welch    = if (!is.null(t_res)) t_res$p.value else NA_real_,
+    p_wilcox   = if (!is.null(w_res)) w_res$p.value else NA_real_
   )
 }
 
@@ -612,14 +616,14 @@ p_traits_dotplot_sig <- ggplot(plot_data_dotplot,
     aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
     size = 0.7, linewidth = 1.1
   ) +
-  ggsignif::geom_signif(
+  suppressWarnings(ggsignif::geom_signif(
     data       = bracket_df,
     aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
     manual     = TRUE,
     tip_length = 0.02,
     textsize   = 4.5,
     color      = "black"
-  ) +
+  )) +
   geom_text(
     data     = anc_star_df,
     aes(x = evolution_history, y = y_pos, label = label),
@@ -786,11 +790,11 @@ p_traits_mumax_sig <- ggplot(plot_data_mumax,
     aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
     size = 0.7, linewidth = 1.1
   ) +
-  ggsignif::geom_signif(
+  suppressWarnings(ggsignif::geom_signif(
     data       = bracket_mumax,
     aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
     manual     = TRUE, tip_length = 0.02, textsize = 4.5, color = "black"
-  ) +
+  )) +
   geom_text(
     data     = anc_star_mumax,
     aes(x = evolution_history, y = y_pos, label = label),
@@ -917,11 +921,11 @@ make_auc_dotplot <- function(auc_data, results_df, anc_vals, method_label) {
       aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
       size = 0.7, linewidth = 1.1
     ) +
-    ggsignif::geom_signif(
+    suppressWarnings(ggsignif::geom_signif(
       data       = bdf,
       aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
       manual     = TRUE, tip_length = 0.02, textsize = 4.5, color = "black"
-    ) +
+    )) +
     geom_text(
       data    = sdf,
       aes(x = evolution_history, y = y_pos, label = label),
