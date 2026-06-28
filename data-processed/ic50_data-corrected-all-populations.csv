@@ -1,0 +1,121 @@
+strain,batch,date,set,drug,evolution_history,ic50
+35_F2,Mar 6_Set3,Mar 6,Set3,amphotericin,35 evolved,0.1505888632910383
+35_F2,Mar 6_Set3,Mar 6,Set3,caspofungin,35 evolved,0.01697199476777957
+35_F2,Mar 6_Set3,Mar 6,Set3,fluconazole,35 evolved,18.58377918540436
+35_F4,Mar 6_Set3,Mar 6,Set3,amphotericin,35 evolved,0.1499206005418086
+35_F4,Mar 6_Set3,Mar 6,Set3,caspofungin,35 evolved,0.015269367070229968
+35_F4,Mar 6_Set3,Mar 6,Set3,fluconazole,35 evolved,15.730592251395565
+35_F6,Mar 6_Set3,Mar 6,Set3,amphotericin,35 evolved,0.13455112514941855
+35_F6,Mar 6_Set3,Mar 6,Set3,caspofungin,35 evolved,0.013737633757664574
+35_F6,Mar 6_Set3,Mar 6,Set3,fluconazole,35 evolved,13.639024718583014
+35_G5,Mar 6_Set3,Mar 6,Set3,amphotericin,35 evolved,0.15166503038527704
+35_G5,Mar 6_Set3,Mar 6,Set3,caspofungin,35 evolved,0.015042731539136498
+35_G5,Mar 6_Set3,Mar 6,Set3,fluconazole,35 evolved,20.274351325901037
+35_G9,Mar 6_Set3,Mar 6,Set3,amphotericin,35 evolved,0.13201312973208654
+35_G9,Mar 6_Set3,Mar 6,Set3,caspofungin,35 evolved,0.015090514672536557
+35_G9,Mar 6_Set3,Mar 6,Set3,fluconazole,35 evolved,16.142270864376414
+35_G11,Mar 6_Set3,Mar 6,Set3,amphotericin,35 evolved,0.10509439310527065
+35_G11,Mar 6_Set3,Mar 6,Set3,caspofungin,35 evolved,0.014151602453080215
+35_G11,Mar 6_Set3,Mar 6,Set3,fluconazole,35 evolved,12.728362222112594
+35_D2,Mar 6_Set2,Mar 6,Set2,amphotericin,35 evolved,0.3134312621398747
+35_D2,Mar 6_Set2,Mar 6,Set2,caspofungin,35 evolved,0.012772989909705205
+35_D2,Mar 6_Set2,Mar 6,Set2,fluconazole,35 evolved,14.757583398282605
+35_D4,Mar 6_Set2,Mar 6,Set2,amphotericin,35 evolved,0.1443071676968447
+35_D4,Mar 6_Set2,Mar 6,Set2,caspofungin,35 evolved,0.0349031290759588
+35_D4,Mar 6_Set2,Mar 6,Set2,fluconazole,35 evolved,1.935974389801789
+35_D8,Mar 6_Set2,Mar 6,Set2,amphotericin,35 evolved,0.27985298557895194
+35_D8,Mar 6_Set2,Mar 6,Set2,caspofungin,35 evolved,0.01131851989772529
+35_D8,Mar 6_Set2,Mar 6,Set2,fluconazole,35 evolved,13.917233774539833
+35_E7,Mar 6_Set2,Mar 6,Set2,amphotericin,35 evolved,0.2791428707104579
+35_E7,Mar 6_Set2,Mar 6,Set2,caspofungin,35 evolved,0.010453566562460437
+35_E7,Mar 6_Set2,Mar 6,Set2,fluconazole,35 evolved,13.757882121005409
+35_E9,Mar 6_Set2,Mar 6,Set2,amphotericin,35 evolved,0.3050326286823363
+35_E9,Mar 6_Set2,Mar 6,Set2,caspofungin,35 evolved,0.012755680942794619
+35_E9,Mar 6_Set2,Mar 6,Set2,fluconazole,35 evolved,14.703511280418125
+35_E11,Mar 6_Set2,Mar 6,Set2,amphotericin,35 evolved,0.2892752035444406
+35_E11,Mar 6_Set2,Mar 6,Set2,caspofungin,35 evolved,0.013942765863827531
+35_E11,Mar 6_Set2,Mar 6,Set2,fluconazole,35 evolved,13.597170072760555
+35_B2,Mar 6_Set1,Mar 6,Set1,amphotericin,35 evolved,0.30000391435041585
+35_B2,Mar 6_Set1,Mar 6,Set1,caspofungin,35 evolved,0.01682489394768539
+35_B2,Mar 6_Set1,Mar 6,Set1,fluconazole,35 evolved,15.538547315933691
+35_B6,Mar 6_Set1,Mar 6,Set1,amphotericin,35 evolved,0.2683855836897832
+35_B6,Mar 6_Set1,Mar 6,Set1,caspofungin,35 evolved,0.011252600150944021
+35_B6,Mar 6_Set1,Mar 6,Set1,fluconazole,35 evolved,12.71080607899629
+35_B8,Mar 6_Set1,Mar 6,Set1,amphotericin,35 evolved,0.3198530486488531
+35_B8,Mar 6_Set1,Mar 6,Set1,caspofungin,35 evolved,0.013696344858766411
+35_B8,Mar 6_Set1,Mar 6,Set1,fluconazole,35 evolved,12.36385354304055
+35_C5,Mar 6_Set1,Mar 6,Set1,amphotericin,35 evolved,0.28578014697993476
+35_C5,Mar 6_Set1,Mar 6,Set1,caspofungin,35 evolved,0.014235765259033369
+35_C5,Mar 6_Set1,Mar 6,Set1,fluconazole,35 evolved,14.682189096948875
+35_C7,Mar 6_Set1,Mar 6,Set1,amphotericin,35 evolved,0.33919377743135265
+35_C7,Mar 6_Set1,Mar 6,Set1,caspofungin,35 evolved,0.015421425766797475
+35_C7,Mar 6_Set1,Mar 6,Set1,fluconazole,35 evolved,13.944723966423275
+35_C9,Mar 6_Set1,Mar 6,Set1,amphotericin,35 evolved,0.32801692896541007
+35_C9,Mar 6_Set1,Mar 6,Set1,caspofungin,35 evolved,0.01475895702814077
+35_C9,Mar 6_Set1,Mar 6,Set1,fluconazole,35 evolved,14.715351244387403
+40_D2,Jan 31_Set2,Jan 31,Set2,amphotericin,40 evolved,0.9385434307441045
+40_D2,Jan 31_Set2,Jan 31,Set2,caspofungin,40 evolved,0.023963410658568836
+40_D4,Jan 31_Set2,Jan 31,Set2,amphotericin,40 evolved,1.1987006115481147
+40_D4,Jan 31_Set2,Jan 31,Set2,caspofungin,40 evolved,0.019059421704062142
+40_D8,Jan 31_Set2,Jan 31,Set2,amphotericin,40 evolved,0.970972130023881
+40_D8,Jan 31_Set2,Jan 31,Set2,caspofungin,40 evolved,0.01870765735280506
+40_E7,Jan 31_Set2,Jan 31,Set2,amphotericin,40 evolved,1.709945012832538
+40_E7,Jan 31_Set2,Jan 31,Set2,caspofungin,40 evolved,0.029481434212204047
+40_E7,Mar 6_Set4,Mar 6,Set4,amphotericin,40 evolved,0.44505925329040336
+40_E7,Mar 6_Set4,Mar 6,Set4,caspofungin,40 evolved,0.020812294605728383
+40_E7,Mar 6_Set4,Mar 6,Set4,fluconazole,40 evolved,19.447100724228143
+40_E9,Jan 31_Set2,Jan 31,Set2,amphotericin,40 evolved,1.4476833418598876
+40_E9,Jan 31_Set2,Jan 31,Set2,caspofungin,40 evolved,0.01878248813592631
+40_E11,Jan 31_Set2,Jan 31,Set2,amphotericin,40 evolved,1.7237876825067717
+40_E11,Jan 31_Set2,Jan 31,Set2,caspofungin,40 evolved,0.02339210740257039
+40_E11,Mar 6_Set4,Mar 6,Set4,amphotericin,40 evolved,0.4401812950386684
+40_E11,Mar 6_Set4,Mar 6,Set4,caspofungin,40 evolved,0.014179890629282045
+40_E11,Mar 6_Set4,Mar 6,Set4,fluconazole,40 evolved,19.456462385212884
+40_B2,Jan 31_Set1,Jan 31,Set1,amphotericin,40 evolved,1.817526145686075
+40_B2,Jan 31_Set1,Jan 31,Set1,caspofungin,40 evolved,0.028555336360593802
+40_B6,Jan 31_Set1,Jan 31,Set1,amphotericin,40 evolved,0.7727237000308915
+40_B6,Jan 31_Set1,Jan 31,Set1,caspofungin,40 evolved,0.019656995022826237
+40_B8,Jan 31_Set1,Jan 31,Set1,amphotericin,40 evolved,1.4517689193464776
+40_B8,Jan 31_Set1,Jan 31,Set1,caspofungin,40 evolved,0.018033430037891422
+40_C5,Jan 31_Set1,Jan 31,Set1,amphotericin,40 evolved,1.766134977126004
+40_C5,Jan 31_Set1,Jan 31,Set1,caspofungin,40 evolved,0.019629948511117736
+40_C7,Jan 31_Set1,Jan 31,Set1,amphotericin,40 evolved,0.7915306424311886
+40_C7,Jan 31_Set1,Jan 31,Set1,caspofungin,40 evolved,0.016682719320246408
+40_C9,Jan 31_Set1,Jan 31,Set1,amphotericin,40 evolved,1.7272686233327343
+40_C9,Jan 31_Set1,Jan 31,Set1,caspofungin,40 evolved,0.028910108124303915
+40_C9,Mar 6_Set4,Mar 6,Set4,amphotericin,40 evolved,0.40535788784771487
+40_C9,Mar 6_Set4,Mar 6,Set4,caspofungin,40 evolved,0.016529869944115868
+40_C9,Mar 6_Set4,Mar 6,Set4,fluconazole,40 evolved,27.878946814883715
+40_F2,Jan 31_Set3,Jan 31,Set3,amphotericin,40 evolved,1.1486054366329896
+40_F2,Jan 31_Set3,Jan 31,Set3,caspofungin,40 evolved,0.022569169636405317
+40_F4,Jan 31_Set3,Jan 31,Set3,amphotericin,40 evolved,2.014044472705001
+40_F4,Jan 31_Set3,Jan 31,Set3,caspofungin,40 evolved,0.01700404110808214
+40_F6,Jan 31_Set3,Jan 31,Set3,amphotericin,40 evolved,1.2738476144179105
+40_F6,Jan 31_Set3,Jan 31,Set3,caspofungin,40 evolved,0.025313580824191686
+40_F6,Mar 6_Set4,Mar 6,Set4,amphotericin,40 evolved,0.3287873513799152
+40_F6,Mar 6_Set4,Mar 6,Set4,caspofungin,40 evolved,0.014229088740691264
+40_F6,Mar 6_Set4,Mar 6,Set4,fluconazole,40 evolved,16.86913178162557
+40_G5,Jan 31_Set3,Jan 31,Set3,amphotericin,40 evolved,1.3240228704898147
+40_G5,Jan 31_Set3,Jan 31,Set3,caspofungin,40 evolved,0.020475600108280728
+40_G9,Jan 31_Set3,Jan 31,Set3,amphotericin,40 evolved,1.9657753382070056
+40_G9,Jan 31_Set3,Jan 31,Set3,caspofungin,40 evolved,0.02868115602595597
+40_G9,Mar 6_Set4,Mar 6,Set4,amphotericin,40 evolved,0.4872260941111791
+40_G9,Mar 6_Set4,Mar 6,Set4,caspofungin,40 evolved,0.022165832438714155
+40_G9,Mar 6_Set4,Mar 6,Set4,fluconazole,40 evolved,267.6005644675084
+40_G11,Jan 31_Set3,Jan 31,Set3,amphotericin,40 evolved,1.7784460044302126
+40_G11,Jan 31_Set3,Jan 31,Set3,caspofungin,40 evolved,0.026063878528572167
+40_G11,Mar 6_Set4,Mar 6,Set4,amphotericin,40 evolved,0.4852585248563286
+40_G11,Mar 6_Set4,Mar 6,Set4,caspofungin,40 evolved,0.01873435339602273
+40_G11,Mar 6_Set4,Mar 6,Set4,fluconazole,40 evolved,138.60877793602458
+fRS585,Mar 6_Set3,Mar 6,Set3,amphotericin,fRS585,0.1282660110652978
+fRS585,Mar 6_Set3,Mar 6,Set3,caspofungin,fRS585,0.014343142416513171
+fRS585,Mar 6_Set3,Mar 6,Set3,fluconazole,fRS585,14.181940106306305
+fRS585,Mar 6_Set2,Mar 6,Set2,amphotericin,fRS585,0.2944053117960384
+fRS585,Mar 6_Set2,Mar 6,Set2,caspofungin,fRS585,0.013561673759573314
+fRS585,Mar 6_Set2,Mar 6,Set2,fluconazole,fRS585,6.63321353936651
+fRS585,Mar 6_Set1,Mar 6,Set1,amphotericin,fRS585,0.3006777059049782
+fRS585,Mar 6_Set1,Mar 6,Set1,caspofungin,fRS585,0.014402830134587066
+fRS585,Mar 6_Set1,Mar 6,Set1,fluconazole,fRS585,13.673147643881817
+fRS585,Mar 6_Set4,Mar 6,Set4,amphotericin,fRS585,0.30637162897077647
+fRS585,Mar 6_Set4,Mar 6,Set4,caspofungin,fRS585,0.013809380265606344
+fRS585,Mar 6_Set4,Mar 6,Set4,fluconazole,fRS585,15.527399154470679
