@@ -138,12 +138,12 @@ fit_ssh_multistart <- function(temps, rates, bounds_lo, bounds_hi,
 
   ss_tot <- sum((rates - mean(rates))^2)
   r2     <- if (ss_tot > 0) 1 - best_rss / ss_tot else NA_real_
-  traits <- calc_tpc_traits(best_popt["r_tref"], best_popt["e"],
-                             best_popt["eh"],     best_popt["th"])
+  traits <- calc_tpc_traits(best_popt[["r_tref"]], best_popt[["e"]],
+                             best_popt[["eh"]],    best_popt[["th"]])
 
   list(params = best_popt, r2 = r2,
-       topt  = traits["topt"],  tmax = traits["tmax"],
-       rmax  = traits["rmax"],  b80  = traits["b80"])
+       topt  = traits[["topt"]],  tmax = traits[["tmax"]],
+       rmax  = traits[["rmax"]],  b80  = traits[["b80"]])
 }
 
 
@@ -151,8 +151,21 @@ fit_ssh_multistart <- function(temps, rates, bounds_lo, bounds_hi,
 # 3. Load data
 # =============================================================================
 
-od_data <- read_csv(DATA_PATH, show_col_types = FALSE) |>
-  filter(evolution_history %in% TARGET_EVO)
+od_raw <- read_csv(DATA_PATH, show_col_types = FALSE)
+
+# Per-plate, per-timepoint blank: median OD of blank wells at each time point.
+# Blank wells are the plate perimeter (row A, row H, cols 1 & 12 for rows B-G),
+# consistent across all blocks. Using median for robustness against edge effects.
+plate_blank <- od_raw |>
+  filter(strain == "blank") |>
+  group_by(block, test_temperature, days) |>
+  summarise(blank_od = median(od, na.rm = TRUE), .groups = "drop")
+
+# Filter to focal evolution groups, join blank, and subtract
+od_data <- od_raw |>
+  filter(evolution_history %in% TARGET_EVO) |>
+  left_join(plate_blank, by = c("block", "test_temperature", "days")) |>
+  mutate(od_corrected = pmax(od - blank_od, 0))
 
 
 # =============================================================================
@@ -166,13 +179,14 @@ gcplyr_metrics <- od_data |>
   mutate(
     od_smooth = smooth_data(
       x              = days,
-      y              = od,
+      y              = od_corrected,
       sm_method      = "moving-average",
       window_width_n = SMOOTH_N
     )
   ) |>
   summarise(
-    auc_gc = auc(x = days, y = od_smooth, blank = min(od, na.rm = TRUE)),
+    # OD is already blank-corrected; blank = 0 so AUC integrates from zero
+    auc_gc = auc(x = days, y = od_smooth, blank = 0),
     n_obs  = n(),
     .groups = "drop"
   )
@@ -194,9 +208,7 @@ d_auc <- gcplyr_metrics |>
   select(strain, evolution_history, test_temperature, auc_gc)
 
 strains_auc <- d_auc |>
-  group_by(strain, evolution_history) |>
-  summarise(n_temps = n_distinct(test_temperature), .groups = "drop") |>
-  filter(n_temps >= 3)
+  distinct(strain, evolution_history)
 
 cat(sprintf("Fitting SSH TPCs for AUC (%d strains)...\n", nrow(strains_auc)))
 
@@ -731,13 +743,10 @@ auc_plot_data <- od_data |>
   group_by(well, block, test_temperature, strain, evolution_history) |>
   arrange(days, .by_group = TRUE) |>
   mutate(
-    blank_od       = min(od, na.rm = TRUE),
-    od_corr        = od - blank_od,
-    od_smooth      = smooth_data(
-      x = days, y = od,
+    od_smooth_corr = smooth_data(
+      x = days, y = od_corrected,
       sm_method = "moving-average", window_width_n = SMOOTH_N
-    ),
-    od_smooth_corr = pmax(od_smooth - blank_od, 0)
+    )
   ) |>
   ungroup() |>
   left_join(
@@ -774,7 +783,7 @@ for (pg in seq_len(auc_n_pages)) {
     mutate(strip_lab = factor(strip_lab, levels = labs))
 
   p_pg <- ggplot(df_pg, aes(x = days)) +
-    geom_point(aes(y = od_corr), size = 0.3, alpha = 0.2, color = "grey50") +
+    geom_point(aes(y = od_corrected), size = 0.3, alpha = 0.2, color = "grey50") +
     geom_ribbon(
       aes(ymin = 0, ymax = od_smooth_corr, fill = evolution_history, group = well_id),
       alpha = 0.3

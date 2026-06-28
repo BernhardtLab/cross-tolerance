@@ -77,7 +77,7 @@ all_blocks_raw <- pmap(manifest, read_in_ods)
 # combine, filter controls, and tag evolution history -----------------------
 
 all_blocks <- bind_rows(all_blocks_raw) |>
-  filter(!grepl("LIG|blank|YPD|588|FLZ_3", strain)) |>
+  filter(!grepl("LIG|YPD|588|FLZ_3", strain)) |>
   mutate(evolution_history = case_when(
     grepl("WT_FLZ",  strain) ~ "Fluconazole evolved",
     grepl("WT_CASP", strain) ~ "Caspofungin evolved",

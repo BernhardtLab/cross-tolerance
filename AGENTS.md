@@ -12,16 +12,18 @@ Three evolution history groups: `35 evolved`, `40 evolved`, `fRS585` (ancestor, 
 **`data-processed/all-blocks-tpc-experiment.csv`**
 
 One row per OD measurement (~97 time points per well, ~15-min intervals over 1 day).
+**Now includes blank wells** (`strain == "blank"`) — 36 perimeter wells per block
+(row A, row H, columns 1 & 12 for rows B–G), consistent across all blocks.
 
 | Column | Description |
 |---|---|
 | `days` | Time in days (numeric) |
 | `od` | OD600 measurement |
 | `well` | Well ID (e.g. `b3`) |
-| `strain` | Strain name (e.g. `40_B8`, `fRS585`) |
+| `strain` | Strain name (e.g. `40_B8`, `fRS585`, `blank`) |
 | `test_temperature` | Assay temperature (25, 35, 38, 41, 42) |
 | `block` | Experimental block (1, 2, 3) |
-| `evolution_history` | Group: `35 evolved`, `40 evolved`, `fRS585` |
+| `evolution_history` | Group: `35 evolved`, `40 evolved`, `fRS585`, or `blank` |
 
 Filter to focal groups: `filter(evolution_history %in% c("35 evolved", "40 evolved", "fRS585"))`
 
@@ -58,8 +60,10 @@ fit Sharpe-Schoolfield High (SSH) TPCs per strain using empirical AUC (`auc_e`).
 **Purpose:** Model-free growth metric estimation via gcplyr smoothing + derivatives →
 fit SSH TPCs per strain using AUC only.
 
-**Key constants:** `SMOOTH_N = 5` (moving-average window, ~75 min),
-`BLANK_OD = min(od)` (global instrument blank, ~0.067)
+**Key constants:** `SMOOTH_N = 5` (moving-average window, ~75 min)
+
+**Blank correction:** Per-well `min(od)` used as blank inside `auc()`. This conflates
+instrument background with inoculum OD — see Script 17 for the corrected approach.
 
 **Note:** Trait column is `tmax` (not `ctmax`) in `tpc_params_auc` and output CSVs.
 
@@ -99,6 +103,57 @@ the curve to decline slowly and extrapolate CTmax far beyond the data range.
 Tightening the `th` bound (to 320K) and `eh` lower bound (to 10) both reduced CTmax
 slightly but at a meaningful r² cost (~0.03–0.04 drop), confirming the data simply
 cannot constrain CTmax via µ_max for this experimental design.
+
+---
+
+## Script 17 — `R-Scripts-Joey/17-AUC.R`
+
+**Purpose:** Simplified AUC-only version of script 16 (no mu_max). Uses gcplyr
+moving-average smoothing → empirical AUC → SSH TPC fit per strain.
+Key improvement over script 16: **per-plate median blank correction** instead of
+per-well `min(od)`.
+
+**Key constants:** `SMOOTH_N = 5`, `N_STARTS = 500`, `TREF_K = 288.15`, `K_B = 8.617333e-5`
+
+**Blank correction approach:**
+1. Load full CSV (including `strain == "blank"` rows)
+2. Compute `plate_blank`: median OD of 36 blank wells, grouped by `block × test_temperature × days`
+3. Join to sample wells; `od_corrected = pmax(od - blank_od, 0)`
+4. Smooth `od_corrected`; integrate AUC with `blank = 0`
+
+**Blank validation (June 2026):**
+- Median blank OD: 0.057–0.070 across all 15 block × temperature plates; flat over time (no drift)
+- A few contaminated blank wells (Block 1/2 at 41°C, Block 3 at 38°C) have no influence on median
+- Sample well `min(od)` is consistently **0.011–0.017 OD higher** than the median blank — this is
+  the inoculum signal. Script 16's per-well `min(od)` was overcorrecting by subtracting inoculum
+  + instrument blank rather than instrument blank alone. Effect is largest at 41–42°C where
+  growth above baseline is modest and the inoculum offset is proportionally more significant.
+
+**Sections:**
+1. Setup
+2. SSH model functions
+3. Load data + compute per-plate blank
+4. Estimate AUC per well with gcplyr
+5. Fit SSH TPC per strain
+6. Plots (TPC curves, faceted TPC, thermal traits strip chart, dotplot with ancestor ref,
+   dotplot with sig brackets, AUC at 41/42°C predicted + observed)
+7. Statistical tests (Welch + one-sample t-tests, Holm-corrected, Shapiro-Wilk check)
+8. Export
+
+**Outputs — `data-processed/gcplyr/` (all suffixed `-17`):**
+- `gcplyr-metrics-per-well-17.csv`
+- `tpc-params-auc-gcplyr-17.csv`
+- `tpc-predictions-auc-gcplyr-17.csv`
+- `stats-results-auc-gcplyr-17.csv`
+- `stats-results-auc-41-42-predicted-17.csv`
+- `stats-results-auc-41-42-observed-17.csv`
+
+**Outputs — `figures/` (all suffixed `-17`):**
+- `tpc-auc-gcplyr-17.png`, `tpc-auc-gcplyr-faceted-17.png`
+- `thermal-traits-auc-gcplyr-17.png`, `thermal-traits-dotplot-auc-gcplyr-17.png`
+- `thermal-traits-dotplot-sig-auc-gcplyr-17.png`
+- `auc-dotplot-predicted-gcplyr-17.png`, `auc-dotplot-observed-gcplyr-17.png`
+- `tpc-per-strain-gcplyr-17.pdf`, `auc-per-well-gcplyr-17.pdf`
 
 ---
 
