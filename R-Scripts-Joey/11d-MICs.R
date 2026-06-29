@@ -76,56 +76,13 @@ write_csv(all_mic_data, "data-processed/all_mic_data-new.csv")
 
 
 # =============================================================================
-# 1b. Diagnostic: raw blank OD by month, before correction
+# 2. IC50 fitting
 # =============================================================================
 
-a1 <- all_mic_data |>
-  filter(drug == "amphotericin") |>
-  filter(population == "Blank")
-a1 |>
-  ggplot(aes(x = concentration, y = OD, color = month)) + geom_point() +
-  ylab("OD of blank")
-
-
-# =============================================================================
-# 2. Blank correction — per plate (sheet), per concentration, per month
-# =============================================================================
-# Each plate's "Blank" row has its own OD at every one of the 12 concentration
-# columns (media + drug, no cells). Background is therefore subtracted per
-# sheet AND per concentration, rather than with one scalar per plate. Blank
-# rows are dropped afterwards since they aren't populations to fit a curve to.
-#
-# IMPORTANT: sheet_name alone is NOT a unique plate identifier — the same
-# name (e.g. "Set1_Rep1_CASP") is reused across different monthly files
-# (January and March both have a "Set1_Rep1_CASP" sheet). Joining on
-# sheet_name + concentration alone therefore matches each row to the blank
-# from BOTH months (a many-to-many join), corrupting the row count. month
-# must be part of the join key to disambiguate.
-
-blank_lookup <- all_mic_data |>
-  filter(population == "Blank") |>
-  select(sheet_name, month, concentration, blank_OD = OD)
-
+# Prepare data: add evolution_history, drop Blank, replace zero concentration
+# with min_conc / 10 per strain × drug (more sensible than a hardcoded tiny value)
 mic_data <- all_mic_data |>
   filter(population != "Blank") |>
-  left_join(blank_lookup, by = c("sheet_name", "month", "concentration"), relationship = "many-to-one") |>
-  mutate(
-    OD_raw = OD,
-    OD     = pmax(OD - blank_OD, 0)   # clip any negative noise at/near zero
-  )
-
-# Every well should have found a matching blank reading on its own plate
-stopifnot(all(!is.na(mic_data$blank_OD)))
-
-
-# =============================================================================
-# 3. IC50 fitting
-# =============================================================================
-
-# Prepare data: add evolution_history, replace zero concentration with
-# min_conc / 10 per strain × drug (more sensible than a hardcoded tiny value).
-# Built on top of the blank-corrected OD from section 2.
-mic_data <- mic_data |>
   mutate(
     evolution_history = case_when(
       str_detect(population, "^35_") ~ "35 evolved",
@@ -142,6 +99,7 @@ mic_data <- mic_data |>
   select(-min_conc)
 
 
+
 a2 <- mic_data %>%
   # separate(sheet_name, into = c("set", "rep", "drug_type"), sep = "_", remove = FALSE) %>% 
   unite("pop_rep", population, rep, set, drug, month, sep = "_", remove = FALSE)
@@ -154,7 +112,7 @@ a2 <- mic_data %>%
 
 
 
-fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 5000, seed = 123) {
+fit_bootstrap_ic50 <- function(data, group_var = "pop_rep", R = 1000, seed = 123) {
   set.seed(seed)
   
   warning_log <- list()  # NEW: capture warnings
@@ -302,33 +260,7 @@ View(results$warning_log)
 
 
 boot_params1 <- results$boot_params %>% 
-  filter(b < 50) |>  ### filtering out the bound hitting ones
-  group_by(pop_rep) |> 
-  slice_sample(n = 1000)
-
-e2 <- boot_params1 %>%
-  mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericin",
-                          grepl("fluc", pop_rep) ~ "fluconazole",
-                          grepl("casp", pop_rep) ~ "caspofungin")) %>% 
-  group_by(pop_rep, drug) %>% 
-  summarise(mean_e = mean(e),
-            upper_e = quantile(e, 0.975),
-            lower_e = quantile(e, 0.025)) %>% 
-  mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
-                                       grepl(35, pop_rep) ~ "evolved 35",
-                                       grepl("fR", pop_rep) ~ "fRS585")) |> 
-  mutate(month = case_when(grepl("February", pop_rep) ~ "February",
-                           grepl("March", pop_rep) ~ "March",
-                           grepl("January", pop_rep) ~ "January")) 
-
-
-a4 <- a2 |> 
-  select(pop_rep, population, rep) |> 
-  distinct()
-e3 <- e2 |> 
-  left_join(a4)
-
-write_csv(e3, "data-processed/ic50-june-results-bootstrapping.csv")
+  filter(b < 50) ### filtering out the bound hitting ones
 
 
 
@@ -353,7 +285,20 @@ ggplot() +
 ggsave("figures/mics-pointrange-all-drugs.png", width = 12, height = 5)
 
 
-
+e2 <- boot_params1 %>%
+  mutate(drug = case_when(grepl("amph", pop_rep) ~ "amphotericin",
+                          grepl("fluc", pop_rep) ~ "fluconazole",
+                          grepl("casp", pop_rep) ~ "caspofungin")) %>% 
+  group_by(pop_rep, drug) %>% 
+  summarise(mean_e = mean(e),
+            upper_e = quantile(e, 0.975),
+            lower_e = quantile(e, 0.025)) %>% 
+  mutate(evolution_history = case_when(grepl(40, pop_rep) ~ "evolved 40",
+                                       grepl(35, pop_rep) ~ "evolved 35",
+                                       grepl("fR", pop_rep) ~ "fRS585")) |> 
+  mutate(month = case_when(grepl("February", pop_rep) ~ "February",
+                           grepl("March", pop_rep) ~ "March",
+                           grepl("January", pop_rep) ~ "January")) 
   
 
 
@@ -363,21 +308,31 @@ ggplot() +
 ggsave("figures/mics-pointrange-e-all-drugs.png", width = 12, height = 5)
 
 
+
+# Check for errors and fits hitting the upper bound on b (slope)
+cat("Errors:\n");   print(results$errors)
+cat("\nFits hitting b upper bound (b ≥ 49):\n")
+results$ic50_table |> filter(b_hit_upper) |> select(population, drug, b, IC50)
+
 write_csv(results$ic50_table,  "data-processed/ic50-table-june.csv")
 # write_csv(results$pred_curves, "data-processed/ic50-pred-curves-june.csv")
 
 
+a4 <- a2 |> 
+  select(pop_rep, population) |> 
+  distinct()
+e3 <- e2 |> 
+  left_join(a4)
+
 
 amph <- e3 |> 
-  filter(drug == "amphotericin") |> 
-  group_by(population, month, evolution_history) |> 
-  summarise(mean_e = mean(mean_e))
+  filter(drug == "amphotericin") 
 
 
 amph |> 
   ggplot(aes( x = evolution_history, y = mean_e, color = month)) + geom_point()
 
-mod1 <- lm(log(mean_e) ~ evolution_history + month, data = amph)
+mod1 <- lm(mean_e ~ evolution_history + month, data = amph)
 summary(mod1)
 library(visreg)
 visreg(mod1)
@@ -385,30 +340,7 @@ visreg(mod1)
 
 
 library(nlme)
-model1 <- lme(log(mean_e) ~  evolution_history + month,
-              random = ~ 1 | population,
+model1 <- lme(mean_e ~  evolution_history,
+              random = ~ 1 | month,
               data = amph)
 summary(model1)
-
-
-casp <- e3 |> 
-  filter(drug == "caspofungin") |> 
-  group_by(population, month, evolution_history) |> 
-  summarise(mean_e = mean(mean_e)) |> 
-  filter(mean_e < .03) ### there is one big outlier that's driving this pattern, let's see if there's a reason to why its's so high
-
-mod_casp <- lm(log(mean_e) ~ evolution_history + month, data = casp)
-summary(mod_casp)
-
-visreg(mod_casp)
-
-
-fluc <- e3 |> 
-  filter(drug == "fluconazole") |> 
-  group_by(population, month, evolution_history) |> 
-  summarise(mean_e = mean(mean_e)) 
-
-mod_fluc <- lm(log(mean_e) ~ evolution_history + month, data = fluc)
-summary(mod_fluc)
-
-visreg(mod_fluc)
