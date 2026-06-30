@@ -417,20 +417,23 @@ ggsave(file.path(FIGS, "thermal-traits-dotplot-auc-gcplyr-17.png"), width = 12, 
 
 g35 <- tpc_params_auc |> filter(evolution_history == "35 evolved")
 g40 <- tpc_params_auc |> filter(evolution_history == "40 evolved")
+anc_eh_stats <- tpc_params_auc |> filter(evolution_history == "fRS585") |> pull(eh)
 
 # Normality check (Shapiro-Wilk)
 sw <- tibble(
-  group = rep(c("35 evolved", "40 evolved"), 3),
-  trait = c(rep("topt", 2), rep("tmax", 2), rep("th_c", 2)),
+  group = rep(c("35 evolved", "40 evolved"), 4),
+  trait = c(rep("topt", 2), rep("tmax", 2), rep("th_c", 2), rep("eh", 2)),
   W = c(
     shapiro.test(g35$topt)$statistic, shapiro.test(g40$topt)$statistic,
     shapiro.test(g35$tmax)$statistic, shapiro.test(g40$tmax)$statistic,
-    shapiro.test(g35$th_c)$statistic, shapiro.test(g40$th_c)$statistic
+    shapiro.test(g35$th_c)$statistic, shapiro.test(g40$th_c)$statistic,
+    shapiro.test(g35$eh)$statistic,   shapiro.test(g40$eh)$statistic
   ),
   p_sw = c(
     shapiro.test(g35$topt)$p.value, shapiro.test(g40$topt)$p.value,
     shapiro.test(g35$tmax)$p.value, shapiro.test(g40$tmax)$p.value,
-    shapiro.test(g35$th_c)$p.value, shapiro.test(g40$th_c)$p.value
+    shapiro.test(g35$th_c)$p.value, shapiro.test(g40$th_c)$p.value,
+    shapiro.test(g35$eh)$p.value,   shapiro.test(g40$eh)$p.value
   )
 )
 cat("\n=== Shapiro-Wilk normality ===\n"); print(sw)
@@ -468,7 +471,10 @@ results <- bind_rows(
   run_tests(g40$tmax, mu = anc_tmax, label_x = "40 evolved",                         trait = "tmax"),
   run_tests(g35$th_c, g40$th_c,      label_x = "35 evolved", label_y = "40 evolved", trait = "th_c"),
   run_tests(g35$th_c, mu = anc_th_c, label_x = "35 evolved",                         trait = "th_c"),
-  run_tests(g40$th_c, mu = anc_th_c, label_x = "40 evolved",                         trait = "th_c")
+  run_tests(g40$th_c, mu = anc_th_c, label_x = "40 evolved",                         trait = "th_c"),
+  run_tests(g35$eh,   g40$eh,        label_x = "35 evolved", label_y = "40 evolved", trait = "eh"),
+  run_tests(g35$eh,   mu = anc_eh_stats, label_x = "35 evolved",                    trait = "eh"),
+  run_tests(g40$eh,   mu = anc_eh_stats, label_x = "40 evolved",                    trait = "eh")
 ) |>
   group_by(trait) |>
   mutate(
@@ -500,6 +506,7 @@ bracket_df <- results |>
     xmax        = "40 evolved",
     annotations = p_stars(p_welch_holm)
   ) |>
+  filter(!is.na(trait)) |>
   left_join(y_range, by = "trait") |>
   mutate(y_position = y_max + y_span * 0.06)
 
@@ -510,6 +517,7 @@ anc_star_df <- results |>
     evolution_history = stringr::str_remove(comparison, " vs ancestor"),
     label             = p_stars(p_welch_holm)
   ) |>
+  filter(!is.na(trait)) |>
   left_join(group_means_dotplot, by = c("trait", "evolution_history")) |>
   left_join(y_range, by = "trait") |>
   mutate(y_pos = mean_val + se + y_span * 0.04)
@@ -547,6 +555,76 @@ ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolutio
         plot.caption = element_text(size = 8, color = "grey40"))
 
 ggsave(file.path(FIGS, "thermal-traits-dotplot-sig-auc-gcplyr-17.png"), width = 12, height = 5, dpi = 300)
+
+
+# ── Deactivation energy (eh) dot plot with significance annotations ───────────
+
+anc_eh <- tpc_params_auc |> filter(evolution_history == "fRS585") |> pull(eh)
+
+eh_plot_data <- tpc_params_auc |>
+  filter(evolution_history != "fRS585") |>
+  select(strain, evolution_history, eh)
+
+eh_group_means <- eh_plot_data |>
+  summarise(mean_val = mean(eh), se = sd(eh) / sqrt(n()),
+            .by = evolution_history)
+
+eh_y_max  <- max(eh_plot_data$eh, na.rm = TRUE)
+eh_y_span <- diff(range(eh_plot_data$eh, na.rm = TRUE))
+
+eh_bracket <- results |>
+  filter(trait == "eh", comparison == "35 evolved vs 40 evolved") |>
+  mutate(
+    xmin        = "35 evolved",
+    xmax        = "40 evolved",
+    annotations = p_stars(p_welch_holm),
+    y_position  = eh_y_max + eh_y_span * 0.06
+  )
+
+eh_stars <- results |>
+  filter(trait == "eh", stringr::str_detect(comparison, "vs ancestor")) |>
+  mutate(
+    evolution_history = stringr::str_remove(comparison, " vs ancestor"),
+    label             = p_stars(p_welch_holm)
+  ) |>
+  left_join(eh_group_means, by = "evolution_history") |>
+  mutate(y_pos = mean_val + se + eh_y_span * 0.04)
+
+ggplot(eh_plot_data, aes(x = evolution_history, y = eh, color = evolution_history)) +
+  geom_hline(yintercept = anc_eh, linetype = "dashed", color = "#000000", linewidth = 0.6) +
+  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_pointrange(
+    data = eh_group_means,
+    aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
+    size = 0.7, linewidth = 1.1
+  ) +
+  suppressWarnings(ggsignif::geom_signif(
+    data       = eh_bracket,
+    aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
+    manual     = TRUE, tip_length = 0.02, textsize = 4.5, color = "black"
+  )) +
+  geom_text(
+    data     = eh_stars,
+    aes(x = evolution_history, y = y_pos, label = label),
+    color    = "black", size = 4, fontface = "bold", nudge_x = 0.3
+  ) +
+  scale_color_manual(values = EVO_COLORS) +
+  labs(
+    x       = NULL,
+    y       = "Deactivation energy, eh (eV)",
+    caption = paste(
+      "Points: individual strains  |  Large point \u00b1 bar: mean \u00b1 SE  |",
+      "Dashed line: ancestor (fRS585)\n",
+      "Bracket: Welch t-test (Holm-corrected)  |  Stars to right of mean: vs. ancestor (one-sample t-test)"
+    )
+  ) +
+  theme_bw(base_size = 13) +
+  theme(
+    legend.position = "none",
+    plot.caption    = element_text(size = 8, color = "grey40")
+  )
+
+ggsave(file.path(FIGS, "eh-dotplot-auc-gcplyr-17.png"), width = 5, height = 5, dpi = 300)
 
 
 # ── AUC at 41°C and 42°C: predicted and observed ─────────────────────────────
