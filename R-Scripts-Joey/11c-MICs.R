@@ -331,6 +331,16 @@ e3 <- e2 |>
 write_csv(e3, "data-processed/ic50-june-results-bootstrapping.csv")
 
 
+e3 |> 
+  ggplot(aes(x = evolution_history, y = mean_e, color = month)) + geom_point() +
+  facet_wrap( ~ drug, scales = "free")
+
+
+e3 |> 
+  filter(evolution_history == "fRS585") |> 
+  group_by(month, drug)
+
+
 
 b2 <- boot_params1 %>%
   group_by(pop_rep) %>% 
@@ -383,6 +393,9 @@ library(visreg)
 visreg(mod1)
 
 
+# caspofungin model testing -----------------------------------------------
+
+
 
 library(nlme)
 model1 <- lme(log(mean_e) ~  evolution_history + month,
@@ -402,13 +415,474 @@ summary(mod_casp)
 
 visreg(mod_casp)
 
+model2 <- lme(log(mean_e) ~  evolution_history + month,
+              random = ~ 1 | population,
+              data = casp)
+summary(model2)
+
+
+# fluconazole model testing -----------------------------------------------
+
 
 fluc <- e3 |> 
   filter(drug == "fluconazole") |> 
   group_by(population, month, evolution_history) |> 
-  summarise(mean_e = mean(mean_e)) 
+  summarise(mean_e = mean(mean_e)) |> 
+  ungroup() |> 
+  mutate(evolution_history = factor(evolution_history,
+                                    levels = c("fRS585", "evolved 35", "evolved 40"))) |> 
+  filter(evolution_history %in% c("evolved 35", "evolved 40"))
+
+
+fluc |> 
+  ggplot(aes(x = evolution_history, y = mean_e, color = month)) + geom_point()
+
 
 mod_fluc <- lm(log(mean_e) ~ evolution_history + month, data = fluc)
+mod_fluc2 <- lm(log(mean_e) ~ evolution_history, data = fluc)
+
 summary(mod_fluc)
+AIC(mod_fluc, mod_fluc2)
 
 visreg(mod_fluc)
+
+model3 <- lme(log(mean_e) ~  evolution_history + month,
+              random = ~ 1 | population,
+              data = fluc)
+summary(model3)
+
+
+# =============================================================================
+# Fluconazole IC50 — statistical analysis (ignoring month)
+# Mirrors script 17 Section 7 approach: Welch t-test (35 vs 40),
+# one-sample t-test (each group vs ancestor), Holm correction.
+# =============================================================================
+
+library(tidyverse)
+library(ggsignif)
+
+EVO_COLORS <- c("40 evolved" = "#FA3208", "35 evolved" = "#0E63FF", "fRS585" = "#000000")
+
+# ── 1. Per-strain IC50, averaged across months ────────────────────────────────
+# e3 labels are "evolved 35" / "evolved 40"; recode to match EVO_COLORS
+
+fluc_strain <- e3 |>
+  filter(drug == "fluconazole") |>
+  mutate(evolution_history = case_when(
+    evolution_history == "evolved 35" ~ "35 evolved",
+    evolution_history == "evolved 40" ~ "40 evolved",
+    TRUE ~ evolution_history               # fRS585 unchanged
+  )) |>
+  group_by(population, evolution_history) |>
+  summarise(ic50 = mean(mean_e), .groups = "drop")
+
+anc_ic50 <- fluc_strain |> filter(evolution_history == "fRS585") |> pull(ic50)
+g35_mic  <- fluc_strain |> filter(evolution_history == "35 evolved") |> pull(ic50)
+g40_mic  <- fluc_strain |> filter(evolution_history == "40 evolved") |> pull(ic50)
+
+# ── 2. Normality check (Shapiro-Wilk on log scale) ───────────────────────────
+# IC50 is typically log-normally distributed; tests run on log(ic50).
+
+sw_mic <- tibble(
+  group = c("35 evolved", "40 evolved"),
+  W     = c(shapiro.test(log(g35_mic))$statistic, shapiro.test(log(g40_mic))$statistic),
+  p_sw  = c(shapiro.test(log(g35_mic))$p.value,   shapiro.test(log(g40_mic))$p.value)
+)
+cat("\n=== Shapiro-Wilk normality (log fluconazole IC50) ===\n"); print(sw_mic)
+
+# ── 3. Test helper (same as script 17) ───────────────────────────────────────
+
+run_tests_mic <- function(x, y = NULL, mu = NULL, label_x, label_y = "ancestor", trait) {
+  if (!is.null(y)) {
+    t_res <- tryCatch(t.test(x, y),                           error = function(e) NULL)
+    w_res <- tryCatch(wilcox.test(x, y, exact = FALSE),       error = function(e) NULL)
+    ref   <- mean(y)
+  } else {
+    t_res <- tryCatch(t.test(x, mu = mu),                     error = function(e) NULL)
+    w_res <- tryCatch(wilcox.test(x, mu = mu, exact = FALSE), error = function(e) NULL)
+    ref   <- mu
+  }
+  tibble(
+    trait      = trait,
+    comparison = paste(label_x, "vs", label_y),
+    mean_x     = mean(x),
+    ref        = ref,
+    diff       = mean(x) - ref,
+    ci_lo      = if (!is.null(t_res)) t_res$conf.int[1] else NA_real_,
+    ci_hi      = if (!is.null(t_res)) t_res$conf.int[2] else NA_real_,
+    p_welch    = if (!is.null(t_res)) t_res$p.value     else NA_real_,
+    p_wilcox   = if (!is.null(w_res)) w_res$p.value     else NA_real_
+  )
+}
+
+# ── 4. Run tests + Holm correction ───────────────────────────────────────────
+# All tests on log(IC50); mean_x, ref, diff, ci_lo/hi are log-scale (log-ratios).
+
+results_mic <- bind_rows(
+  run_tests_mic(log(g35_mic), log(g40_mic),       label_x = "35 evolved", label_y = "40 evolved", trait = "Fluconazole IC50"),
+  run_tests_mic(log(g35_mic), mu = log(anc_ic50), label_x = "35 evolved",                         trait = "Fluconazole IC50"),
+  run_tests_mic(log(g40_mic), mu = log(anc_ic50), label_x = "40 evolved",                         trait = "Fluconazole IC50")
+) |>
+  mutate(
+    p_welch_holm  = p.adjust(p_welch,  method = "holm"),
+    p_wilcox_holm = p.adjust(p_wilcox, method = "holm")
+  )
+
+cat("\n=== Fluconazole IC50 — statistical results on log scale (Holm-corrected) ===\n")
+print(results_mic)
+View(results_mic)
+
+# ── 5. Dot plot with significance annotations ─────────────────────────────────
+
+p_stars <- function(p) case_when(
+  p < 0.001 ~ "***",
+  p < 0.01  ~ "**",
+  p < 0.05  ~ "*",
+  TRUE      ~ "ns"
+)
+
+plot_df_mic <- fluc_strain |>
+  filter(evolution_history != "fRS585") |>
+  mutate(evolution_history = factor(evolution_history, levels = c("35 evolved", "40 evolved")))
+
+# Geometric mean ± SE on log scale, back-transformed for plotting
+gmeans_mic <- plot_df_mic |>
+  group_by(evolution_history) |>
+  summarise(
+    mean_log = mean(log(ic50)),
+    se_log   = sd(log(ic50)) / sqrt(n()),
+    mean_val = exp(mean_log),
+    ymin     = exp(mean_log - se_log),
+    ymax     = exp(mean_log + se_log),
+    .groups  = "drop"
+  )
+
+y_max_mic   <- max(plot_df_mic$ic50)
+bracket_y   <- y_max_mic * 1.12   # horizontal bar position
+tip_bottom  <- y_max_mic * 1.04   # where vertical tips meet the data
+
+bracket_ann <- results_mic |>
+  filter(comparison == "35 evolved vs 40 evolved") |>
+  mutate(label = p_stars(p_welch_holm))
+
+anc_star_df_mic <- results_mic |>
+  filter(str_detect(comparison, "vs ancestor")) |>
+  mutate(
+    evolution_history = factor(str_remove(comparison, " vs ancestor"),
+                               levels = c("35 evolved", "40 evolved")),
+    label = p_stars(p_welch_holm)
+  ) |>
+  left_join(gmeans_mic, by = "evolution_history") |>
+  mutate(y_pos = ymax * 1.06)
+
+ggplot(plot_df_mic, aes(x = evolution_history, y = ic50, color = evolution_history)) +
+  geom_hline(yintercept = anc_ic50, linetype = "dashed", color = "#000000", linewidth = 0.6) +
+  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_pointrange(
+    data = gmeans_mic,
+    aes(y = mean_val, ymin = ymin, ymax = ymax),
+    size = 0.7, linewidth = 1.1
+  ) +
+  # Manual bracket (ggsignif unreliable on log axes)
+  annotate("segment", x = 1, xend = 1, y = tip_bottom, yend = bracket_y, color = "black") +
+  annotate("segment", x = 2, xend = 2, y = tip_bottom, yend = bracket_y, color = "black") +
+  annotate("segment", x = 1, xend = 2, y = bracket_y,  yend = bracket_y,  color = "black") +
+  annotate("text", x = 1.5, y = bracket_y * 1.06,
+           label = bracket_ann$label, size = 4.5, color = "black") +
+  geom_text(
+    data    = anc_star_df_mic,
+    aes(x = evolution_history, y = y_pos, label = label),
+    color   = "black", size = 4, fontface = "bold", nudge_x = 0.3
+  ) +
+  scale_y_log10(limits = c(min(plot_df_mic$ic50) * 0.7, y_max_mic * 1.35)) +
+  scale_color_manual(values = EVO_COLORS) +
+  labs(
+    x       = NULL,
+    y       = "Fluconazole IC50 (\u03bcg/mL, log scale)",
+    caption = paste(
+      "Points: individual strains  |  Large point \u00b1 bar: mean \u00b1 SE  |",
+      "Dashed line: ancestor (fRS585)\n",
+      "Bracket: Welch t-test (Holm-corrected)  |",
+      "Stars to right of mean: vs. ancestor (one-sample t-test)"
+    )
+  ) +
+  theme_bw(base_size = 13) +
+  theme(legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40"))
+
+ggsave("figures/fluconazole-ic50-dotplot-sig.png", width = 5, height = 5, dpi = 300)
+
+# ── 6. Export ─────────────────────────────────────────────────────────────────
+
+write_csv(fluc_strain,  "data-processed/fluconazole-ic50-per-strain.csv")
+write_csv(results_mic,  "data-processed/stats-results-fluconazole-ic50.csv")
+
+
+# =============================================================================
+# Caspofungin IC50 — statistical analysis (ignoring month)
+# Same approach as fluconazole section above. Outlier retained (mean_e >= .03
+# excluded from the exploratory `casp` df above is included here).
+# =============================================================================
+
+# ── 1. Per-strain IC50, averaged across months ────────────────────────────────
+
+casp_strain <- e3 |>
+  filter(drug == "caspofungin") |>
+  mutate(evolution_history = case_when(
+    evolution_history == "evolved 35" ~ "35 evolved",
+    evolution_history == "evolved 40" ~ "40 evolved",
+    TRUE ~ evolution_history
+  )) |>
+  group_by(population, evolution_history) |>
+  summarise(ic50 = mean(mean_e), .groups = "drop")
+
+anc_casp  <- casp_strain |> filter(evolution_history == "fRS585")  |> pull(ic50)
+g35_casp  <- casp_strain |> filter(evolution_history == "35 evolved") |> pull(ic50)
+g40_casp  <- casp_strain |> filter(evolution_history == "40 evolved") |> pull(ic50)
+
+# ── 2. Normality check (Shapiro-Wilk on log scale) ───────────────────────────
+
+sw_casp <- tibble(
+  group = c("35 evolved", "40 evolved"),
+  W     = c(shapiro.test(log(g35_casp))$statistic, shapiro.test(log(g40_casp))$statistic),
+  p_sw  = c(shapiro.test(log(g35_casp))$p.value,   shapiro.test(log(g40_casp))$p.value)
+)
+cat("\n=== Shapiro-Wilk normality (log caspofungin IC50) ===\n"); print(sw_casp)
+
+# ── 3. Run tests + Holm correction ───────────────────────────────────────────
+# All tests on log(IC50); mean_x, ref, diff, ci_lo/hi are log-scale (log-ratios).
+
+results_casp <- bind_rows(
+  run_tests_mic(log(g35_casp), log(g40_casp),      label_x = "35 evolved", label_y = "40 evolved", trait = "Caspofungin IC50"),
+  run_tests_mic(log(g35_casp), mu = log(anc_casp), label_x = "35 evolved",                         trait = "Caspofungin IC50"),
+  run_tests_mic(log(g40_casp), mu = log(anc_casp), label_x = "40 evolved",                         trait = "Caspofungin IC50")
+) |>
+  mutate(
+    p_welch_holm  = p.adjust(p_welch,  method = "holm"),
+    p_wilcox_holm = p.adjust(p_wilcox, method = "holm")
+  )
+
+cat("\n=== Caspofungin IC50 — statistical results on log scale (Holm-corrected) ===\n")
+print(results_casp)
+
+# ── 4. Dot plot with significance annotations ─────────────────────────────────
+
+plot_df_casp <- casp_strain |>
+  filter(evolution_history != "fRS585") |>
+  mutate(evolution_history = factor(evolution_history, levels = c("35 evolved", "40 evolved")))
+
+gmeans_casp <- plot_df_casp |>
+  group_by(evolution_history) |>
+  summarise(
+    mean_log = mean(log(ic50)),
+    se_log   = sd(log(ic50)) / sqrt(n()),
+    mean_val = exp(mean_log),
+    ymin     = exp(mean_log - se_log),
+    ymax     = exp(mean_log + se_log),
+    .groups  = "drop"
+  )
+
+y_max_casp  <- max(plot_df_casp$ic50)
+bracket_y_c  <- y_max_casp * 1.12
+tip_bottom_c <- y_max_casp * 1.04
+
+bracket_ann_casp <- results_casp |>
+  filter(comparison == "35 evolved vs 40 evolved") |>
+  mutate(label = p_stars(p_welch_holm))
+
+anc_star_casp <- results_casp |>
+  filter(str_detect(comparison, "vs ancestor")) |>
+  mutate(
+    evolution_history = factor(str_remove(comparison, " vs ancestor"),
+                               levels = c("35 evolved", "40 evolved")),
+    label = p_stars(p_welch_holm)
+  ) |>
+  left_join(gmeans_casp, by = "evolution_history") |>
+  mutate(y_pos = ymax * 1.06)
+
+ggplot(plot_df_casp, aes(x = evolution_history, y = ic50, color = evolution_history)) +
+  geom_hline(yintercept = anc_casp, linetype = "dashed", color = "#000000", linewidth = 0.6) +
+  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_pointrange(
+    data = gmeans_casp,
+    aes(y = mean_val, ymin = ymin, ymax = ymax),
+    size = 0.7, linewidth = 1.1
+  ) +
+  annotate("segment", x = 1, xend = 1, y = tip_bottom_c, yend = bracket_y_c, color = "black") +
+  annotate("segment", x = 2, xend = 2, y = tip_bottom_c, yend = bracket_y_c, color = "black") +
+  annotate("segment", x = 1, xend = 2, y = bracket_y_c,  yend = bracket_y_c,  color = "black") +
+  annotate("text", x = 1.5, y = bracket_y_c * 1.06,
+           label = bracket_ann_casp$label, size = 4.5, color = "black") +
+  geom_text(
+    data    = anc_star_casp,
+    aes(x = evolution_history, y = y_pos, label = label),
+    color   = "black", size = 4, fontface = "bold", nudge_x = 0.3
+  ) +
+  scale_y_log10(limits = c(min(plot_df_casp$ic50) * 0.7, y_max_casp * 1.35)) +
+  scale_color_manual(values = EVO_COLORS) +
+  labs(
+    x       = NULL,
+    y       = "Caspofungin IC50 (\u03bcg/mL, log scale)",
+    caption = paste(
+      "Points: individual strains  |  Large point \u00b1 bar: mean \u00b1 SE  |",
+      "Dashed line: ancestor (fRS585)\n",
+      "Bracket: Welch t-test (Holm-corrected)  |",
+      "Stars to right of mean: vs. ancestor (one-sample t-test)"
+    )
+  ) +
+  theme_bw(base_size = 13) +
+  theme(legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40"))
+
+ggsave("figures/caspofungin-ic50-dotplot-sig.png", width = 5, height = 5, dpi = 300)
+
+# ── 5. Export ─────────────────────────────────────────────────────────────────
+
+write_csv(casp_strain,   "data-processed/caspofungin-ic50-per-strain.csv")
+write_csv(results_casp,  "data-processed/stats-results-caspofungin-ic50.csv")
+
+
+# =============================================================================
+# Amphotericin IC50 — statistical analysis (month as fixed covariate)
+#
+# 35-evolved is only measured in March; its batch correction relies on the
+# month effect estimated from 40-evolved and fRS585 (which span both months).
+# Model: lm(log(ic50) ~ evolution_history + month), contrasts via emmeans.
+# =============================================================================
+
+library(emmeans)
+
+# ── 1. Data: one row per population × month (averaging reps within month) ────
+# Month-level data is needed so month can enter as a covariate.
+
+amph_lm <- e3 |>
+  filter(drug == "amphotericin") |>
+  mutate(evolution_history = case_when(
+    evolution_history == "evolved 35" ~ "35 evolved",
+    evolution_history == "evolved 40" ~ "40 evolved",
+    TRUE ~ evolution_history
+  )) |>
+  group_by(population, evolution_history, month) |>
+  summarise(ic50 = mean(mean_e), .groups = "drop")
+
+# Per-strain mean across months — used for plotting jittered points only
+amph_strain <- amph_lm |>
+  group_by(population, evolution_history) |>
+  summarise(ic50 = mean(ic50), .groups = "drop")
+
+# ── 2. Normality check on model residuals ────────────────────────────────────
+
+mod_amph_lm <- lm(log(ic50) ~ evolution_history + month, data = amph_lm)
+
+sw_amph <- shapiro.test(residuals(mod_amph_lm))
+cat("\n=== Shapiro-Wilk on lm residuals (log amphotericin IC50) ===\n"); print(sw_amph)
+
+# ── 3. emmeans pairwise contrasts (Holm-corrected) ───────────────────────────
+
+emm_amph <- emmeans(mod_amph_lm, ~ evolution_history)
+
+results_amph <- pairs(emm_amph, adjust = "holm") |>
+  summary(infer = TRUE) |>
+  as_tibble() |>
+  rename(comparison = contrast, diff = estimate, ci_lo = lower.CL, ci_hi = upper.CL,
+         p_holm = p.value) |>
+  mutate(trait = "Amphotericin IC50")
+
+cat("\n=== Amphotericin IC50 — emmeans contrasts on log scale (Holm-corrected) ===\n")
+print(results_amph)
+
+# ── 4. Dot plot with significance annotations ─────────────────────────────────
+
+# Raw geometric mean ± SE on log scale (back-transformed) — dots sit in the
+# centre of the data. Emmeans estimates are used only for p-values above.
+anc_amph <- amph_strain |>
+  filter(evolution_history == "fRS585") |>
+  summarise(anc = exp(mean(log(ic50)))) |>
+  pull(anc)
+
+plot_df_amph <- amph_strain |>
+  filter(evolution_history != "fRS585") |>
+  mutate(evolution_history = factor(evolution_history, levels = c("35 evolved", "40 evolved")))
+
+gmeans_amph <- plot_df_amph |>
+  group_by(evolution_history) |>
+  summarise(
+    mean_log = mean(log(ic50)),
+    se_log   = sd(log(ic50)) / sqrt(n()),
+    mean_val = exp(mean_log),
+    ymin     = exp(mean_log - se_log),
+    ymax     = exp(mean_log + se_log),
+    .groups  = "drop"
+  )
+
+y_max_amph   <- max(plot_df_amph$ic50)
+bracket_y_a  <- y_max_amph * 1.12
+tip_bottom_a <- y_max_amph * 1.04
+
+bracket_ann_amph <- results_amph |>
+  filter(comparison == "35 evolved - 40 evolved") |>
+  mutate(label = p_stars(p_holm))
+
+anc_star_amph <- results_amph |>
+  filter(str_detect(comparison, "fRS585")) |>
+  mutate(
+    evolution_history = factor(str_remove(comparison, " - fRS585"),
+                               levels = c("35 evolved", "40 evolved")),
+    label = p_stars(p_holm)
+  ) |>
+  left_join(gmeans_amph, by = "evolution_history") |>
+  mutate(y_pos = ymax * 1.06)
+
+ggplot(plot_df_amph, aes(x = evolution_history, y = ic50, color = evolution_history)) +
+  geom_hline(yintercept = anc_amph, linetype = "dashed", color = "#000000", linewidth = 0.6) +
+  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_pointrange(
+    data = gmeans_amph,
+    aes(y = mean_val, ymin = ymin, ymax = ymax),
+    size = 0.7, linewidth = 1.1
+  ) +
+  annotate("segment", x = 1, xend = 1, y = tip_bottom_a, yend = bracket_y_a, color = "black") +
+  annotate("segment", x = 2, xend = 2, y = tip_bottom_a, yend = bracket_y_a, color = "black") +
+  annotate("segment", x = 1, xend = 2, y = bracket_y_a,  yend = bracket_y_a,  color = "black") +
+  annotate("text", x = 1.5, y = bracket_y_a * 1.06,
+           label = bracket_ann_amph$label, size = 4.5, color = "black") +
+  geom_text(
+    data    = anc_star_amph,
+    aes(x = evolution_history, y = y_pos, label = label),
+    color   = "black", size = 4, fontface = "bold", nudge_x = 0.3
+  ) +
+  scale_y_log10(limits = c(min(plot_df_amph$ic50) * 0.7, y_max_amph * 1.35)) +
+  scale_color_manual(values = EVO_COLORS) +
+  labs(
+    x       = NULL,
+    y       = "Amphotericin B IC50 (\u03bcg/mL, log scale)",
+    caption = paste(
+      "Points: per-strain means  |  Large point \u00b1 bar: geometric mean \u00b1 SE  |",
+      "Dashed line: ancestor (fRS585)\n",
+      "Bracket and stars: emmeans contrasts adjusted for month (Holm-corrected)"
+    )
+  ) +
+  theme_bw(base_size = 13) +
+  theme(legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40"))
+
+ggsave("figures/amphotericin-ic50-dotplot-sig.png", width = 5, height = 5, dpi = 300)
+
+# ── 5. Export ─────────────────────────────────────────────────────────────────
+
+write_csv(amph_strain,  "data-processed/amphotericin-ic50-per-strain.csv")
+write_csv(results_amph, "data-processed/stats-results-amphotericin-ic50.csv")
+
+
+amph_strain1 <- amph_strain |> 
+  mutate(drug = "amphotericin")
+
+casp_strain1 <- casp_strain |> 
+  mutate(drug = "caspofungin")
+
+fluc_strain1 <- fluc_strain |> 
+  mutate(drug = "fluconazole")
+
+all_ic50 <- bind_rows(amph_strain1, casp_strain1, fluc_strain1)
+
+write_csv(all_ic50, "data-processed/all-ic50-estimates.csv")
