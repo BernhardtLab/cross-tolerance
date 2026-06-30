@@ -242,10 +242,11 @@ for (i in seq_len(nrow(strains_auc))) {
   if (i %% 10 == 0) cat(sprintf("  %d / %d\n", i, nrow(strains_auc)))
 }
 
-tpc_params_auc <- bind_rows(params_auc_list)
+tpc_params_auc <- bind_rows(params_auc_list) |>
+  mutate(th_c = th - 273.15)   # deactivation half-sat temp in °C
 tpc_preds_auc  <- bind_rows(preds_auc_list)
 
-cat("\n=== Topt, Tmax, B80 by evolution history (AUC) ===\n")
+cat("\n=== Topt, Tmax, Th, B80 by evolution history (AUC) ===\n")
 tpc_params_auc |>
   group_by(evolution_history) |>
   summarise(
@@ -254,6 +255,8 @@ tpc_params_auc |>
     se_topt   = round(sd(topt,  na.rm = TRUE) / sqrt(n()), 2),
     mean_tmax = round(mean(tmax, na.rm = TRUE), 2),
     se_tmax   = round(sd(tmax,  na.rm = TRUE) / sqrt(n()), 2),
+    mean_th_c = round(mean(th_c, na.rm = TRUE), 2),
+    se_th_c   = round(sd(th_c,  na.rm = TRUE) / sqrt(n()), 2),
     .groups   = "drop"
   ) |>
   print()
@@ -338,10 +341,12 @@ ggsave(file.path(FIGS, "tpc-auc-gcplyr-faceted-17.png"), width = 12, height = 5,
 # ── Thermal traits strip chart (Topt, Tmax, B80) ─────────────────────────────
 
 tpc_params_auc |>
-  pivot_longer(c(topt, tmax, b80), names_to = "trait", values_to = "value") |>
+  pivot_longer(c(topt, tmax, th_c, b80), names_to = "trait", values_to = "value") |>
   mutate(trait = factor(trait,
-                        levels = c("topt", "tmax", "b80"),
-                        labels = c("Topt (\u00b0C)", "Tmax (\u00b0C)", "B80 \u2014 niche breadth (\u00b0C)"))) |>
+                        levels = c("topt", "tmax", "th_c", "b80"),
+                        labels = c("Topt (\u00b0C)", "Tmax (\u00b0C)",
+                                   "Th (\u00b0C) \u2014 deactivation half-sat",
+                                   "B80 \u2014 niche breadth (\u00b0C)"))) |>
   ggplot(aes(x = evolution_history, y = value, color = evolution_history)) +
   geom_jitter(width = 0.12, size = 2.5, alpha = 0.8) +
   stat_summary(fun = mean, geom = "crossbar",
@@ -354,30 +359,34 @@ tpc_params_auc |>
   theme(strip.background = element_blank(),
         strip.text       = element_text(face = "bold", size = 11))
 
-ggsave(file.path(FIGS, "thermal-traits-auc-gcplyr-17.png"), width = 11, height = 5, dpi = 300)
+ggsave(file.path(FIGS, "thermal-traits-auc-gcplyr-17.png"), width = 14, height = 5, dpi = 300)
 
 
 # ── Thermal traits dot plot with ancestor reference line ─────────────────────
 
 anc_topt <- tpc_params_auc |> filter(evolution_history == "fRS585") |> pull(topt)
 anc_tmax <- tpc_params_auc |> filter(evolution_history == "fRS585") |> pull(tmax)
+anc_th_c <- tpc_params_auc |> filter(evolution_history == "fRS585") |> pull(th_c)
+
+TRAIT_LEVELS_DOT <- c("topt", "tmax", "th_c")
 
 plot_data_dotplot <- tpc_params_auc |>
   filter(evolution_history != "fRS585") |>
-  select(strain, evolution_history, topt, tmax) |>
-  pivot_longer(c(topt, tmax), names_to = "trait", values_to = "value") |>
-  mutate(trait = factor(trait, levels = c("topt", "tmax")))
+  select(strain, evolution_history, topt, tmax, th_c) |>
+  pivot_longer(c(topt, tmax, th_c), names_to = "trait", values_to = "value") |>
+  mutate(trait = factor(trait, levels = TRAIT_LEVELS_DOT))
 
 anc_ref_dotplot <- tibble(
-  trait   = factor(c("topt", "tmax"), levels = c("topt", "tmax")),
-  anc_val = c(anc_topt, anc_tmax)
+  trait   = factor(TRAIT_LEVELS_DOT, levels = TRAIT_LEVELS_DOT),
+  anc_val = c(anc_topt, anc_tmax, anc_th_c)
 )
 
 group_means_dotplot <- plot_data_dotplot |>
   summarise(mean_val = mean(value), se = sd(value) / sqrt(n()),
             .by = c(evolution_history, trait))
 
-trait_labels_dotplot <- c(topt = "Topt (\u00b0C)", tmax = "Tmax (\u00b0C)")
+trait_labels_dotplot <- c(topt = "Topt (\u00b0C)", tmax = "Tmax (\u00b0C)",
+                           th_c = "Th (\u00b0C)")
 
 ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolution_history)) +
   geom_hline(data = anc_ref_dotplot, aes(yintercept = anc_val),
@@ -399,7 +408,7 @@ ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolutio
         strip.text   = element_text(size = 13),
         plot.caption = element_text(size = 9, color = "grey40"))
 
-ggsave(file.path(FIGS, "thermal-traits-dotplot-auc-gcplyr-17.png"), width = 8, height = 5, dpi = 300)
+ggsave(file.path(FIGS, "thermal-traits-dotplot-auc-gcplyr-17.png"), width = 12, height = 5, dpi = 300)
 
 
 # =============================================================================
@@ -411,15 +420,17 @@ g40 <- tpc_params_auc |> filter(evolution_history == "40 evolved")
 
 # Normality check (Shapiro-Wilk)
 sw <- tibble(
-  group = rep(c("35 evolved", "40 evolved"), 2),
-  trait = c(rep("topt", 2), rep("tmax", 2)),
+  group = rep(c("35 evolved", "40 evolved"), 3),
+  trait = c(rep("topt", 2), rep("tmax", 2), rep("th_c", 2)),
   W = c(
     shapiro.test(g35$topt)$statistic, shapiro.test(g40$topt)$statistic,
-    shapiro.test(g35$tmax)$statistic, shapiro.test(g40$tmax)$statistic
+    shapiro.test(g35$tmax)$statistic, shapiro.test(g40$tmax)$statistic,
+    shapiro.test(g35$th_c)$statistic, shapiro.test(g40$th_c)$statistic
   ),
   p_sw = c(
     shapiro.test(g35$topt)$p.value, shapiro.test(g40$topt)$p.value,
-    shapiro.test(g35$tmax)$p.value, shapiro.test(g40$tmax)$p.value
+    shapiro.test(g35$tmax)$p.value, shapiro.test(g40$tmax)$p.value,
+    shapiro.test(g35$th_c)$p.value, shapiro.test(g40$th_c)$p.value
   )
 )
 cat("\n=== Shapiro-Wilk normality ===\n"); print(sw)
@@ -454,7 +465,10 @@ results <- bind_rows(
   run_tests(g40$topt, mu = anc_topt, label_x = "40 evolved",                         trait = "topt"),
   run_tests(g35$tmax, g40$tmax,      label_x = "35 evolved", label_y = "40 evolved", trait = "tmax"),
   run_tests(g35$tmax, mu = anc_tmax, label_x = "35 evolved",                         trait = "tmax"),
-  run_tests(g40$tmax, mu = anc_tmax, label_x = "40 evolved",                         trait = "tmax")
+  run_tests(g40$tmax, mu = anc_tmax, label_x = "40 evolved",                         trait = "tmax"),
+  run_tests(g35$th_c, g40$th_c,      label_x = "35 evolved", label_y = "40 evolved", trait = "th_c"),
+  run_tests(g35$th_c, mu = anc_th_c, label_x = "35 evolved",                         trait = "th_c"),
+  run_tests(g40$th_c, mu = anc_th_c, label_x = "40 evolved",                         trait = "th_c")
 ) |>
   group_by(trait) |>
   mutate(
@@ -481,7 +495,7 @@ y_range <- plot_data_dotplot |>
 bracket_df <- results |>
   filter(comparison == "35 evolved vs 40 evolved") |>
   mutate(
-    trait       = factor(trait, levels = c("topt", "tmax")),
+    trait       = factor(trait, levels = TRAIT_LEVELS_DOT),
     xmin        = "35 evolved",
     xmax        = "40 evolved",
     annotations = p_stars(p_welch_holm)
@@ -492,7 +506,7 @@ bracket_df <- results |>
 anc_star_df <- results |>
   filter(stringr::str_detect(comparison, "vs ancestor")) |>
   mutate(
-    trait             = factor(trait, levels = c("topt", "tmax")),
+    trait             = factor(trait, levels = TRAIT_LEVELS_DOT),
     evolution_history = stringr::str_remove(comparison, " vs ancestor"),
     label             = p_stars(p_welch_holm)
   ) |>
@@ -532,7 +546,7 @@ ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolutio
         strip.text   = element_text(size = 13),
         plot.caption = element_text(size = 8, color = "grey40"))
 
-ggsave(file.path(FIGS, "thermal-traits-dotplot-sig-auc-gcplyr-17.png"), width = 8, height = 5, dpi = 300)
+ggsave(file.path(FIGS, "thermal-traits-dotplot-sig-auc-gcplyr-17.png"), width = 12, height = 5, dpi = 300)
 
 
 # ── AUC at 41°C and 42°C: predicted and observed ─────────────────────────────
