@@ -44,15 +44,50 @@ strains have higher ones.
 
 ---
 
-## 2. Between-group drug tolerance (suggestive, but confounded)
+## 2. Between-group drug tolerance
 
-Strains evolved at 40°C tend to have higher IC50s than strains evolved at 35°C
-across all three drugs, mirroring the direction of their Th shifts. However, this
-between-group comparison is **confounded by evolutionary history**: the two groups
-differ in many unmeasured ways as a consequence of selection at different
-temperatures, not only in their thermal traits. A positive between-group correlation
-between Th and IC50 could arise even if there were no within-group relationship —
-the same ecological fallacy that can inflate pooled correlations and PCA loadings.
+### 2a. IC50 differences between evolved groups
+
+The 40-evolved group has significantly higher IC50s than the 35-evolved group for
+all three drugs (Welch t-tests on log-IC50, Holm-corrected across drugs):
+
+| Drug | 35-evolved GM IC50 | 40-evolved GM IC50 | Fold difference | Δ log(IC50) [95% CI] | p (Holm) |
+|------|-------------------|-------------------|-----------------|----------------------|----------|
+| Amphotericin B | 0.221 µg/mL | 1.10 µg/mL | 5.0× | −1.61 [−1.86, −1.36] | < 0.001 |
+| Fluconazole    | 15.3 µg/mL  | 29.0 µg/mL | 1.9× | −0.64 [−0.94, −0.34] | < 0.001 |
+| Caspofungin    | 0.015 µg/mL | 0.020 µg/mL | 1.4× | −0.33 [−0.48, −0.18] | < 0.001 |
+
+*GM = geometric mean; fold difference = 40-evolved / 35-evolved; Δ is 35 minus 40 (negative = 35 lower).*
+
+The effect is largest for amphotericin (5-fold), moderate for fluconazole (1.9-fold),
+and smallest for caspofungin (1.4-fold).
+
+### 2b. Comparison to the ancestor (fRS585)
+
+Relative to the ancestor (IC50: AmB = 0.506 µg/mL, Flu = 20.4 µg/mL,
+Cas = 0.017 µg/mL), the two groups shifted in opposite directions — mirroring the
+divergent thermal trait trajectories described in section 1:
+
+| Drug | 35-evolved vs ancestor | 40-evolved vs ancestor |
+|------|------------------------|------------------------|
+| Amphotericin B | 2.3× lower, p < 0.001 | 2.2× higher, p < 0.001 |
+| Fluconazole    | 1.3× lower, p = 0.076 (ns) | 1.4× higher, p < 0.001 |
+| Caspofungin    | 1.1× lower, p = 0.076 (ns) | 1.2× higher, p < 0.001 |
+
+For amphotericin, both groups diverged significantly from the ancestor — 35-evolved
+became more sensitive and 40-evolved became more resistant. For fluconazole and
+caspofungin, only the 40-evolved group moved significantly, with 35-evolved remaining
+near the ancestral level.
+
+### 2c. Caveat: between-group comparisons are confounded
+
+These between-group IC50 differences are consistent with cross-tolerance but cannot
+establish it on their own. The two groups differ in many unmeasured ways as a
+consequence of selection at different temperatures, not only in their thermal traits.
+A positive between-group correlation between Th and IC50 could arise even if there
+were no within-group relationship — the same ecological fallacy that can inflate
+pooled correlations and PCA loadings. The within-group analyses in sections 3 and 4
+address this directly.
 
 ---
 

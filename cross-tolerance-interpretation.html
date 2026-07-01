@@ -432,18 +432,114 @@ strains have lower deactivation temperatures, 40-evolved strains have
 higher ones.</p>
 <hr />
 </div>
-<div id="between-group-drug-tolerance-suggestive-but-confounded" class="section level2">
-<h2>2. Between-group drug tolerance (suggestive, but confounded)</h2>
-<p>Strains evolved at 40°C tend to have higher IC50s than strains
-evolved at 35°C across all three drugs, mirroring the direction of their
-Th shifts. However, this between-group comparison is <strong>confounded
-by evolutionary history</strong>: the two groups differ in many
-unmeasured ways as a consequence of selection at different temperatures,
-not only in their thermal traits. A positive between-group correlation
-between Th and IC50 could arise even if there were no within-group
-relationship — the same ecological fallacy that can inflate pooled
-correlations and PCA loadings.</p>
+<div id="between-group-drug-tolerance" class="section level2">
+<h2>2. Between-group drug tolerance</h2>
+<div id="a.-ic50-differences-between-evolved-groups" class="section level3">
+<h3>2a. IC50 differences between evolved groups</h3>
+<p>The 40-evolved group has significantly higher IC50s than the
+35-evolved group for all three drugs (Welch t-tests on log-IC50,
+Holm-corrected across drugs):</p>
+<table>
+<colgroup>
+<col width="6%" />
+<col width="20%" />
+<col width="20%" />
+<col width="18%" />
+<col width="23%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Drug</th>
+<th>35-evolved GM IC50</th>
+<th>40-evolved GM IC50</th>
+<th>Fold difference</th>
+<th>Δ log(IC50) [95% CI]</th>
+<th>p (Holm)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Amphotericin B</td>
+<td>0.221 µg/mL</td>
+<td>1.10 µg/mL</td>
+<td>5.0×</td>
+<td>−1.61 [−1.86, −1.36]</td>
+<td>&lt; 0.001</td>
+</tr>
+<tr class="even">
+<td>Fluconazole</td>
+<td>15.3 µg/mL</td>
+<td>29.0 µg/mL</td>
+<td>1.9×</td>
+<td>−0.64 [−0.94, −0.34]</td>
+<td>&lt; 0.001</td>
+</tr>
+<tr class="odd">
+<td>Caspofungin</td>
+<td>0.015 µg/mL</td>
+<td>0.020 µg/mL</td>
+<td>1.4×</td>
+<td>−0.33 [−0.48, −0.18]</td>
+<td>&lt; 0.001</td>
+</tr>
+</tbody>
+</table>
+<p><em>GM = geometric mean; fold difference = 40-evolved / 35-evolved; Δ
+is 35 minus 40 (negative = 35 lower).</em></p>
+<p>The effect is largest for amphotericin (5-fold), moderate for
+fluconazole (1.9-fold), and smallest for caspofungin (1.4-fold).</p>
+</div>
+<div id="b.-comparison-to-the-ancestor-frs585" class="section level3">
+<h3>2b. Comparison to the ancestor (fRS585)</h3>
+<p>Relative to the ancestor (IC50: AmB = 0.506 µg/mL, Flu = 20.4 µg/mL,
+Cas = 0.017 µg/mL), the two groups shifted in opposite directions —
+mirroring the divergent thermal trait trajectories described in section
+1:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Drug</th>
+<th>35-evolved vs ancestor</th>
+<th>40-evolved vs ancestor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Amphotericin B</td>
+<td>2.3× lower, p &lt; 0.001</td>
+<td>2.2× higher, p &lt; 0.001</td>
+</tr>
+<tr class="even">
+<td>Fluconazole</td>
+<td>1.3× lower, p = 0.076 (ns)</td>
+<td>1.4× higher, p &lt; 0.001</td>
+</tr>
+<tr class="odd">
+<td>Caspofungin</td>
+<td>1.1× lower, p = 0.076 (ns)</td>
+<td>1.2× higher, p &lt; 0.001</td>
+</tr>
+</tbody>
+</table>
+<p>For amphotericin, both groups diverged significantly from the
+ancestor — 35-evolved became more sensitive and 40-evolved became more
+resistant. For fluconazole and caspofungin, only the 40-evolved group
+moved significantly, with 35-evolved remaining near the ancestral
+level.</p>
+</div>
+<div id="c.-caveat-between-group-comparisons-are-confounded" class="section level3">
+<h3>2c. Caveat: between-group comparisons are confounded</h3>
+<p>These between-group IC50 differences are consistent with
+cross-tolerance but cannot establish it on their own. The two groups
+differ in many unmeasured ways as a consequence of selection at
+different temperatures, not only in their thermal traits. A positive
+between-group correlation between Th and IC50 could arise even if there
+were no within-group relationship — the same ecological fallacy that can
+inflate pooled correlations and PCA loadings. The within-group analyses
+in sections 3 and 4 address this directly.</p>
 <hr />
+</div>
 </div>
 <div id="within-group-evidence-deming-regression-main-result" class="section level2">
 <h2>3. Within-group evidence: Deming regression (main result)</h2>
