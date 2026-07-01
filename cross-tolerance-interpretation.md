@@ -42,6 +42,8 @@ ancestral value but elevated Tmax and Th. Both groups shifted Th in opposite
 directions — 35-evolved strains have lower deactivation temperatures, 40-evolved
 strains have higher ones.
 
+![Thermal trait distributions per evolution history group. Small points ± bars: per-strain SSH estimate ± 1 bootstrap SE. Large points ± bars: group mean ± SE across strains. Dashed line: ancestor (fRS585). Brackets: Welch t-test; stars: vs. ancestor (one-sample t-test); all Holm-corrected.](figures/thermal-traits-dotplot-boot-19.png)
+
 ---
 
 ## 2. Between-group drug tolerance
@@ -61,6 +63,12 @@ all three drugs (Welch t-tests on log-IC50, Holm-corrected across drugs):
 
 The effect is largest for amphotericin (5-fold), moderate for fluconazole (1.9-fold),
 and smallest for caspofungin (1.4-fold).
+
+![Amphotericin B IC50 per strain by evolution history group. Small points ± bars: per-strain pooled IC50 ± 1 bootstrap SE (log-symmetric). Large points ± bars: geometric group mean ± SE. Dashed line: ancestor.](figures/amphotericin-ic50-dotplot-boot-19.png)
+
+![Fluconazole IC50 per strain by evolution history group.](figures/fluconazole-ic50-dotplot-boot-19.png)
+
+![Caspofungin IC50 per strain by evolution history group.](figures/caspofungin-ic50-dotplot-boot-19.png)
 
 ### 2b. Comparison to the ancestor (fRS585)
 
@@ -120,6 +128,12 @@ This relationship holds within groups, not just across them, providing direct
 evidence that individual strains with higher deactivation temperatures are also more
 drug tolerant — independent of their evolutionary background.
 
+![Within-group Deming regression of Th vs log(IC50) per drug. Both variables are group-mean centred within each evolution history before plotting and fitting, removing the between-group signal. Error bars: ±1 bootstrap SE on each axis. Black line: Deming fit (pooled across evolution histories per drug). Slope and 95% CI shown in each panel.](figures/th-ic50-deming-within-19.png)
+
+For reference, the pooled (uncentred) Deming regression is shown below. The steeper slopes reflect the additional between-group separation contributing to the apparent relationship.
+
+![Pooled Deming regression of Th vs log(IC50) per drug, without group-mean centring. Points coloured by evolution history. The separation of the two groups along both axes inflates the pooled slope relative to the within-group estimate.](figures/th-ic50-deming-19.png)
+
 ---
 
 ## 4. Within-group PCA (corroborating multivariate evidence)
@@ -148,6 +162,12 @@ In the centred biplot:
   finding that Th varies only ~0.3°C SD within groups — it does not drive any
   within-group PCA axis strongly, even though the Deming regression shows it is
   reliably associated with drug IC50.
+
+![Within-group PCA biplot. All 8 variables (3 log-IC50s + e, eh, Th, B80, Tmax) are group-mean centred within each evolution history before PCA. Solid arrows: drug IC50 loadings; dashed arrows: thermal trait loadings. Ellipses: 95% concentration regions per group. Between-group separation is removed; axes reflect within-group covariation only.](figures/PCA-biplot-within.png)
+
+For reference, the standard pooled biplot (without centring) is shown below. PC1 is dominated by the between-group shift.
+
+![Standard pooled PCA biplot (no centring). PC1 = 38.0%, PC2 = 26.3%. The group separation dominates the first axis, inflating apparent covariation between thermal and drug variables.](figures/PCA-biplot.png)
 
 ---
 

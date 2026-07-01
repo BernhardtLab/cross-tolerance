@@ -730,7 +730,6 @@ for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
   drug_data <- ic50_boot_se |>
     filter(drug == drg) |>
     mutate(
-      # Compute symmetric log-scale error bars
       ic50_lo_log = exp(log(ic50) - se_log_ic50),
       ic50_hi_log = exp(log(ic50) + se_log_ic50)
     )
@@ -760,28 +759,59 @@ for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
       .groups  = "drop"
     )
 
+  # Bracket: 35 vs 40 evolved.
+  # ggsignif with scale_y_log10 interprets y_position in log10 units
+  # (transformed space), so we pass log10(natural_scale_target).
+  p_bracket   <- ic50_stats |>
+    filter(drug == drg, comparison == "35 vs 40 evolved") |>
+    pull(p_holm)
+  bracket_y   <- log10(max(plot_df$ic50, na.rm = TRUE) * 2.5)
+  bracket_ann <- tibble(
+    xmin        = "35 evolved",
+    xmax        = "40 evolved",
+    annotations = p_stars(p_bracket),
+    y_position  = bracket_y
+  )
+
+  # Stars for each group vs ancestor — just above the group geometric mean SE bar.
+  # geom_text respects the scale transformation; y_pos is in natural scale.
+  star_ann <- ic50_stats |>
+    filter(drug == drg, str_detect(comparison, "vs ancestor")) |>
+    mutate(
+      evolution_history = factor(str_remove(comparison, " vs ancestor"),
+                                 levels = c("35 evolved", "40 evolved")),
+      label = p_stars(p_holm)
+    ) |>
+    left_join(gmeans, by = "evolution_history") |>
+    mutate(y_pos = ymax * 1.15)
+
   ggplot(plot_df,
          aes(x = evolution_history, y = ic50, color = evolution_history)) +
     geom_hline(
       yintercept = anc_val, linetype = "dashed",
       color = "#000000", linewidth = 0.6
     ) +
-    # Per-strain IC50 ± bootstrap SE (log-symmetric error bars)
     geom_pointrange(
       aes(ymin = ic50_lo_log, ymax = ic50_hi_log),
       position  = position_jitter(width = 0.15, seed = 42),
-      size      = 0.3,
-      linewidth = 0.5,
-      alpha     = 0.65
+      size      = 0.3, linewidth = 0.5, alpha = 0.65
     ) +
-    # Group geometric mean ± SE across strains
     geom_pointrange(
       data      = gmeans,
       aes(y = mean_val, ymin = ymin, ymax = ymax),
-      size      = 0.9,
-      linewidth = 1.3
+      size      = 0.9, linewidth = 1.3
     ) +
-    scale_y_log10() +
+    suppressWarnings(ggsignif::geom_signif(
+      data        = bracket_ann,
+      aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
+      manual      = TRUE, tip_length = 0.02, textsize = 4.5, color = "black"
+    )) +
+    geom_text(
+      data        = star_ann,
+      aes(x = evolution_history, y = y_pos, label = label),
+      color       = "black", size = 4, fontface = "bold", nudge_x = 0.3
+    ) +
+    scale_y_log10(expand = expansion(mult = c(0.05, 0.25))) +
     scale_color_manual(values = EVO_COLORS) +
     labs(
       x       = NULL,
@@ -789,7 +819,8 @@ for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
       caption = paste(
         "Small points \u00b1 bar: per-strain pooled IC50 \u00b1 1 bootstrap SE (log-symmetric)",
         " |  Large points \u00b1 bar: geometric mean \u00b1 SE (across strains)",
-        " |  Dashed: ancestor (fRS585)"
+        " |  Dashed: ancestor (fRS585)\n",
+        "Bracket: Welch t-test (Holm-corrected)  |  Stars right of mean: vs. ancestor (one-sample t-test)"
       )
     ) +
     theme_bw(base_size = 13) +
@@ -800,7 +831,7 @@ for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
 
   ggsave(
     file.path(FIGS, sprintf("%s-ic50-dotplot-boot-19.png", drg)),
-    width = 5, height = 5, dpi = 300
+    width = 5, height = 6, dpi = 300
   )
 }
 
