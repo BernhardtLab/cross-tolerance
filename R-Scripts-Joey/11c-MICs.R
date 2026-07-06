@@ -330,7 +330,7 @@ e3 <- e2 |>
 
 write_csv(e3, "data-processed/ic50-june-results-bootstrapping.csv")
 
-
+e3 <- read_csv("data-processed/ic50-june-results-bootstrapping.csv")
 e3 |> 
   ggplot(aes(x = evolution_history, y = mean_e, color = month)) + geom_point() +
   facet_wrap( ~ drug, scales = "free")
@@ -519,7 +519,7 @@ run_tests_mic <- function(x, y = NULL, mu = NULL, label_x, label_y = "ancestor",
 # All tests on log(IC50); mean_x, ref, diff, ci_lo/hi are log-scale (log-ratios).
 
 results_mic <- bind_rows(
-  run_tests_mic(log(g35_mic), log(g40_mic),       label_x = "35 evolved", label_y = "40 evolved", trait = "Fluconazole IC50"),
+  run_tests_mic(log(g40_mic), log(g35_mic),       label_x = "40 evolved", label_y = "35 evolved", trait = "Fluconazole IC50"),
   run_tests_mic(log(g35_mic), mu = log(anc_ic50), label_x = "35 evolved",                         trait = "Fluconazole IC50"),
   run_tests_mic(log(g40_mic), mu = log(anc_ic50), label_x = "40 evolved",                         trait = "Fluconazole IC50")
 ) |>
@@ -653,7 +653,7 @@ cat("\n=== Shapiro-Wilk normality (log caspofungin IC50) ===\n"); print(sw_casp)
 # All tests on log(IC50); mean_x, ref, diff, ci_lo/hi are log-scale (log-ratios).
 
 results_casp <- bind_rows(
-  run_tests_mic(log(g35_casp), log(g40_casp),      label_x = "35 evolved", label_y = "40 evolved", trait = "Caspofungin IC50"),
+  run_tests_mic(log(g40_casp), log(g35_casp),      label_x = "40 evolved", label_y = "35 evolved", trait = "Caspofungin IC50"),
   run_tests_mic(log(g35_casp), mu = log(anc_casp), label_x = "35 evolved",                         trait = "Caspofungin IC50"),
   run_tests_mic(log(g40_casp), mu = log(anc_casp), label_x = "40 evolved",                         trait = "Caspofungin IC50")
 ) |>
@@ -757,11 +757,15 @@ library(emmeans)
 
 amph_lm <- e3 |>
   filter(drug == "amphotericin") |>
-  mutate(evolution_history = case_when(
-    evolution_history == "evolved 35" ~ "35 evolved",
-    evolution_history == "evolved 40" ~ "40 evolved",
-    TRUE ~ evolution_history
-  )) |>
+  mutate(
+    evolution_history = case_when(
+      evolution_history == "evolved 35" ~ "35 evolved",
+      evolution_history == "evolved 40" ~ "40 evolved",
+      TRUE ~ evolution_history
+    ),
+    evolution_history = factor(evolution_history,
+                               levels = c("40 evolved", "35 evolved", "fRS585"))
+  ) |>
   group_by(population, evolution_history, month) |>
   summarise(ic50 = mean(mean_e), .groups = "drop")
 
@@ -820,7 +824,7 @@ bracket_y_a  <- y_max_amph * 1.12
 tip_bottom_a <- y_max_amph * 1.04
 
 bracket_ann_amph <- results_amph |>
-  filter(comparison == "35 evolved - 40 evolved") |>
+  filter(comparison == "40 evolved - 35 evolved") |>
   mutate(label = p_stars(p_holm))
 
 anc_star_amph <- results_amph |>
@@ -886,3 +890,14 @@ fluc_strain1 <- fluc_strain |>
 all_ic50 <- bind_rows(amph_strain1, casp_strain1, fluc_strain1)
 
 write_csv(all_ic50, "data-processed/all-ic50-estimates.csv")
+
+
+all_ic50 <- read_csv("data-processed/all-ic50-estimates.csv")
+group_means_ic50 <- all_ic50 |>
+  # mutate(ic50 = log(ic50)) |> 
+  group_by(evolution_history, drug) |>
+  summarise(
+    mean_val = mean(ic50, na.rm = TRUE),
+    se_mean  = sd(ic50,   na.rm = TRUE) / sqrt(sum(!is.na(ic50))),
+    .groups  = "drop"
+  )

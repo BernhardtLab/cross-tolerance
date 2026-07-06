@@ -722,6 +722,15 @@ group_means_tpc <- plot_tpc |>
     .groups  = "drop"
   )
 
+write_csv(group_means_tpc, "data-processed/group-means-tpc-traits.csv") ### these are the results in the paper
+
+
+group_means_tpc |> 
+  ggplot() + geom_pointrange(aes(x = evolution_history, y = mean_val, ymin = mean_val - se_mean, ymax = mean_val + se_mean)) +
+  facet_wrap( ~ trait, scales = "free")
+
+
+
 # ── Statistical tests ─────────────────────────────────────────────────────────
 # Welch two-sample t-test (35 vs 40) + one-sample t-test (each group vs ancestor)
 # Holm-corrected within each trait across the 3 comparisons.
