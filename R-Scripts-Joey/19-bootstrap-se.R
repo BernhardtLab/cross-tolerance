@@ -23,10 +23,14 @@
 #   figures/fluconazole-ic50-dotplot-boot-19.png
 #   figures/caspofungin-ic50-dotplot-boot-19.png
 #   figures/amphotericin-ic50-dotplot-boot-19.png
+#   figures/tpc-ci-ribbon-per-strain-19.png
+#   figures/fluconazole-ci-ribbon-per-strain-19.png
+#   figures/caspofungin-ci-ribbon-per-strain-19.png
+#   figures/amphotericin-ci-ribbon-per-strain-19.png
 #
 # Sections:
 #   1. Setup
-#   2. SSH model functions
+#   2. SSH model functions + bootstrap helpers (params_at_bound, boot_residual)
 #   3. TPC residual bootstrap
 #   4. IC50 data preparation (pool reps + months per strain × drug)
 #   5. IC50 residual bootstrap
@@ -45,6 +49,7 @@ library(car)
 library(readxl)
 library(cowplot)
 theme_set(theme_cowplot())
+library(conflicted)
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
 
@@ -192,6 +197,66 @@ fit_ssh_boot_refit <- function(temps, rates, init_params) {
 }
 
 
+# ── 2d. Bootstrap helpers ─────────────────────────────────────────────────────
+
+# Returns TRUE if any parameter falls within rel_tol of its bound
+# (relative to the bound range), indicating the optimizer hit a constraint.
+params_at_bound <- function(params, lo, hi, rel_tol = 1e-3) {
+  if (any(!is.finite(params))) return(TRUE)
+  range_w <- hi - lo
+  any(
+    (params - lo) / range_w < rel_tol |
+    (hi - params) / range_w < rel_tol
+  )
+}
+
+# Generic residual bootstrap.
+#
+# fitted_vals  numeric vector of fitted values from the point-estimate model
+# resids       numeric vector of residuals
+# refit_fn     function(boot_y) -> named numeric vector of statistics, or NULL
+#              if the refit failed or any parameter touched a bound
+# R            number of VALID samples to accumulate (default: N_BOOT)
+# max_iter     hard ceiling on total iterations (default: 10 × R)
+#
+# Returns a list:
+#   $samples      - R × n_stats matrix (NA rows if max_iter reached before R)
+#   $n_valid      - valid samples actually accumulated
+#   $n_total_iter - total resampling iterations run
+boot_residual <- function(fitted_vals, resids, refit_fn,
+                          R = N_BOOT, max_iter = 10L * R) {
+  first_result <- NULL
+  samples      <- vector("list", R)
+  n_valid      <- 0L
+  n_iter       <- 0L
+
+  while (n_valid < R && n_iter < max_iter) {
+    n_iter <- n_iter + 1L
+    boot_y <- fitted_vals + sample(resids, size = length(resids), replace = TRUE)
+    result <- refit_fn(boot_y)
+
+    if (!is.null(result) && all(is.finite(result))) {
+      n_valid            <- n_valid + 1L
+      samples[[n_valid]] <- result
+      if (is.null(first_result)) first_result <- result
+    }
+  }
+
+  n_stats <- if (!is.null(first_result)) length(first_result) else 0L
+  stat_nm <- if (!is.null(first_result)) names(first_result)  else character(0L)
+
+  mat <- matrix(NA_real_, nrow = R, ncol = n_stats,
+                dimnames = list(NULL, stat_nm))
+  if (n_valid > 0)
+    mat[seq_len(n_valid), ] <- matrix(
+      unlist(samples[seq_len(n_valid)]),
+      nrow = n_valid, ncol = n_stats, byrow = TRUE
+    )
+
+  list(samples = mat, n_valid = n_valid, n_total_iter = n_iter)
+}
+
+
 # =============================================================================
 # 3. TPC residual bootstrap
 # =============================================================================
@@ -210,7 +275,8 @@ cat(sprintf(
 
 # ── 3b-3c. Point estimate + residual bootstrap per strain ─────────────────────
 
-tpc_boot_list <- vector("list", nrow(strains))
+tpc_boot_list   <- vector("list", nrow(strains))
+tpc_ribbon_list <- vector("list", nrow(strains))
 
 for (i in seq_len(nrow(strains))) {
   sid <- strains$strain[i]
@@ -236,27 +302,66 @@ for (i in seq_len(nrow(strains))) {
   )
   resids <- d$auc_gc - fitted
 
-  # Residual bootstrap: resample all residuals independently
-  # th (Kelvin) is tracked as a raw model parameter alongside derived traits.
-  boot_traits <- matrix(
-    NA_real_, nrow = N_BOOT, ncol = 5,
-    dimnames = list(NULL, c("topt", "tmax", "rmax", "b80", "th"))
-  )
-
-  for (b in seq_len(N_BOOT)) {
-    boot_y      <- fitted + sample(resids, size = length(resids), replace = TRUE)
-    boot_params <- fit_ssh_boot_refit(d$test_temperature, boot_y, p)
-    if (!is.null(boot_params)) {
-      tr <- calc_tpc_traits(
-        boot_params["r_tref"], boot_params["e"],
-        boot_params["eh"],    boot_params["th"]
-      )
-      boot_traits[b, 1:4] <- tr
-      boot_traits[b, "th"] <- boot_params["th"]   # raw SSH parameter in Kelvin
+  # boot_residual(): accumulate exactly N_BOOT valid samples.
+  # Valid = converged AND no parameter within rel_tol of any bound.
+  # IIFE freezes per-iteration values to avoid for-loop late-binding.
+  # refit_fn also returns all 4 raw SSH params for CI ribbon computation.
+  tpc_refit_fn <- (function(temps_, p_, blo_, bhi_) {
+    function(boot_y) {
+      popt <- fit_ssh_boot_refit(temps_, boot_y, p_)
+      if (is.null(popt)) return(NULL)
+      if (params_at_bound(popt[names(blo_)], blo_, bhi_)) return(NULL)
+      tr <- calc_tpc_traits(popt["r_tref"], popt["e"], popt["eh"], popt["th"])
+      if (any(is.na(tr))) return(NULL)
+      c(tr,
+        r_tref = unname(popt["r_tref"]),
+        e      = unname(popt["e"]),
+        eh     = unname(popt["eh"]),
+        th     = unname(popt["th"]))
     }
-  }
+  })(d$test_temperature, p, BOUNDS_LO, BOUNDS_HI)
 
-  n_ok <- sum(complete.cases(boot_traits))
+  boot_res <- boot_residual(fitted, resids, tpc_refit_fn)
+  n_ok     <- boot_res$n_valid
+
+  if (boot_res$n_total_iter >= 10L * N_BOOT)
+    message(sprintf(
+      "  WARNING: %s hit max_iter before accumulating %d valid TPC bootstraps (got %d)",
+      sid, N_BOOT, n_ok
+    ))
+
+  # Always initialise boot_traits with the expected named column structure.
+  # Copy from boot_res$samples by column name — robust to NULL or mismatched
+  # colnames that can arise when names(first_result) is NULL in boot_residual.
+  tpc_cols    <- c("topt", "tmax", "rmax", "b80", "r_tref", "e", "eh", "th")
+  boot_traits <- matrix(NA_real_, nrow = N_BOOT, ncol = length(tpc_cols),
+                        dimnames = list(NULL, tpc_cols))
+  shared_cols <- intersect(tpc_cols, colnames(boot_res$samples))
+  if (n_ok > 0 && length(shared_cols) > 0)
+    boot_traits[seq_len(n_ok), shared_cols] <-
+      boot_res$samples[seq_len(n_ok), shared_cols, drop = FALSE]
+
+  # CI ribbon: evaluate SSH model over T range for each bootstrap param set
+  T_RIBBON   <- seq(15, 50, length.out = 200)
+  fitted_crv <- sharpeschoolhigh(T_RIBBON, p["r_tref"], p["e"], p["eh"], p["th"])
+  if (n_ok > 0) {
+    boot_ssh <- boot_traits[seq_len(n_ok), c("r_tref", "e", "eh", "th"), drop = FALSE]
+    crv_mat  <- vapply(
+      seq_len(n_ok),
+      function(j) sharpeschoolhigh(T_RIBBON,
+                                   boot_ssh[j, "r_tref"], boot_ssh[j, "e"],
+                                   boot_ssh[j, "eh"],     boot_ssh[j, "th"]),
+      numeric(length(T_RIBBON))
+    )  # length(T_RIBBON) × n_ok; columns = bootstrap replicates
+    tpc_ribbon_list[[i]] <- tibble(
+      strain            = sid,
+      evolution_history = evo,
+      temperature       = T_RIBBON,
+      fitted            = fitted_crv,
+      ci_lo = apply(crv_mat, 1, quantile, 0.025, na.rm = TRUE),
+      ci_hi = apply(crv_mat, 1, quantile, 0.975, na.rm = TRUE)
+    )
+  }
 
   tpc_boot_list[[i]] <- tibble(
     strain            = sid,
@@ -266,17 +371,18 @@ for (i in seq_len(nrow(strains))) {
     tmax  = res$tmax,
     rmax  = res$rmax,
     b80   = res$b80,
-    th    = p["th"],          # deactivation half-sat temperature, Kelvin
-    th_c  = p["th"] - 273.15, # same, °C
+    th    = p["th"],
+    th_c  = p["th"] - 273.15,
     r2    = res$r2,
     # Bootstrap SEs (SD of bootstrap distribution)
     se_topt = sd(boot_traits[, "topt"], na.rm = TRUE),
     se_tmax = sd(boot_traits[, "tmax"], na.rm = TRUE),
     se_rmax = sd(boot_traits[, "rmax"], na.rm = TRUE),
     se_b80  = sd(boot_traits[, "b80"],  na.rm = TRUE),
-    se_th   = sd(boot_traits[, "th"],   na.rm = TRUE), # in Kelvin (= same in °C)
-    n_obs      = nrow(d),
-    n_boot_ok  = n_ok
+    se_th   = sd(boot_traits[, "th"],   na.rm = TRUE),
+    n_obs        = nrow(d),
+    n_boot_ok    = n_ok,
+    n_total_iter = boot_res$n_total_iter
   )
 
   if (i %% 5 == 0 || i == nrow(strains))
@@ -404,8 +510,9 @@ cat(sprintf(
   nrow(strain_drug_combos), N_BOOT
 ))
 
-ic50_boot_list  <- vector("list", nrow(strain_drug_combos))
-ic50_error_log  <- list()
+ic50_boot_list   <- vector("list", nrow(strain_drug_combos))
+ic50_ribbon_list <- vector("list", nrow(strain_drug_combos))
+ic50_error_log   <- list()
 
 for (i in seq_len(nrow(strain_drug_combos))) {
   pop  <- strain_drug_combos$population[i]
@@ -450,40 +557,91 @@ for (i in seq_len(nrow(strain_drug_combos))) {
 
   if (is.null(fit)) next
 
-  # Manual residual bootstrap — avoids car::Boot's environment-capture issues
-  # with nlsLM. Resample residuals from point-estimate fit, refit per iteration.
   fit_vals   <- fitted(fit)
   fit_resids <- residuals(fit)
-  pt_params  <- coef(fit)   # d, hill, e
+  pt_params  <- coef(fit)   # d, hill, e (IC50)
 
-  ic50_boot_vals <- rep(NA_real_, N_BOOT)
+  ic50_lo <- c(d = 0,   hill = 0.01, e = min(sub$concentration))
+  ic50_hi <- c(d = 2,   hill = 50,   e = max(sub$concentration) * 5)
 
-  for (boot_i in seq_len(N_BOOT)) {
-    boot_OD  <- fit_vals + sample(fit_resids, replace = TRUE)
-    sub_boot <- sub
-    sub_boot$OD <- boot_OD
-
-    boot_fit <- tryCatch(
-      suppressWarnings(nlsLM(
-        OD ~ d / (1 + exp(hill * (log(concentration) - log(e)))),
-        data    = sub_boot,
-        start   = as.list(pt_params),
-        lower   = c(d = 0, hill = 0.01, e = min(sub$concentration)),
-        upper   = c(d = 2, hill = 50,   e = max(sub$concentration) * 5),
-        control = nls.lm.control(maxiter = 500)
-      )),
-      error = function(e) NULL
-    )
-
-    if (!is.null(boot_fit)) {
-      bp <- coef(boot_fit)
-      # Discard samples where hill hit the upper bound (unstable IC50)
-      if (bp["hill"] < 50) ic50_boot_vals[boot_i] <- bp["e"]
+  # boot_residual(): accumulate N_BOOT valid samples; valid = converged AND
+  # no parameter within rel_tol of any bound (d, hill, and e = IC50).
+  # IIFE freezes per-iteration values to avoid for-loop late-binding.
+  # refit_fn returns all 3 params so CI ribbons can be computed downstream.
+  ic50_refit_fn <- (function(sub_, pt_, lo_, hi_) {
+    function(boot_y) {
+      sub_b    <- sub_
+      sub_b$OD <- boot_y
+      fit_b <- tryCatch(
+        suppressWarnings(nlsLM(
+          OD ~ d / (1 + exp(hill * (log(concentration) - log(e)))),
+          data    = sub_b,
+          start   = as.list(pt_),
+          lower   = lo_,
+          upper   = hi_,
+          control = nls.lm.control(maxiter = 500)
+        )),
+        error = function(e) NULL
+      )
+      if (is.null(fit_b)) return(NULL)
+      bp <- coef(fit_b)
+      if (params_at_bound(bp, lo_, hi_)) return(NULL)
+      c(ic50 = unname(bp["e"]), d = unname(bp["d"]), hill = unname(bp["hill"]))
     }
-  }
+  })(sub, pt_params, ic50_lo, ic50_hi)
 
-  ic50_vals <- ic50_boot_vals[!is.na(ic50_boot_vals)]
+  boot_ic50 <- boot_residual(fit_vals, fit_resids, ic50_refit_fn)
+
+  if (boot_ic50$n_total_iter >= 10L * N_BOOT)
+    message(sprintf(
+      "  WARNING: %s / %s hit max_iter before accumulating %d valid IC50 bootstraps (got %d)",
+      pop, drg, N_BOOT, boot_ic50$n_valid
+    ))
+
+  # Always initialise with the expected named column structure; copy by name.
+  ic50_cols         <- c("ic50", "d", "hill")
+  boot_ic50_samples <- matrix(NA_real_, nrow = N_BOOT, ncol = length(ic50_cols),
+                              dimnames = list(NULL, ic50_cols))
+  shared_ic50 <- intersect(ic50_cols, colnames(boot_ic50$samples))
+  if (boot_ic50$n_valid > 0 && length(shared_ic50) > 0)
+    boot_ic50_samples[seq_len(boot_ic50$n_valid), shared_ic50] <-
+      boot_ic50$samples[seq_len(boot_ic50$n_valid), shared_ic50, drop = FALSE]
+
+  ic50_vals <- boot_ic50_samples[seq_len(boot_ic50$n_valid), "ic50"]
   ic50_pt   <- pt_params["e"]
+
+  # CI ribbon: evaluate logistic model over concentration range for each
+  # bootstrap param set
+  conc_range <- exp(seq(
+    log(min(sub$concentration) * 0.3),
+    log(max(sub$concentration) * 3),
+    length.out = 200
+  ))
+  fitted_crv_ic50 <- with(as.list(pt_params),
+    d / (1 + exp(hill * (log(conc_range) - log(e))))
+  )
+  n_ok_ic50 <- boot_ic50$n_valid
+  if (n_ok_ic50 > 0) {
+    boot_ic50_p  <- boot_ic50_samples[seq_len(n_ok_ic50), , drop = FALSE]
+    ic50_crv_mat <- vapply(
+      seq_len(n_ok_ic50),
+      function(j) {
+        boot_ic50_p[j, "d"] /
+          (1 + exp(boot_ic50_p[j, "hill"] *
+                     (log(conc_range) - log(boot_ic50_p[j, "ic50"]))))
+      },
+      numeric(length(conc_range))
+    )  # length(conc_range) × n_ok_ic50; columns = bootstrap replicates
+    ic50_ribbon_list[[i]] <- tibble(
+      population        = pop,
+      drug              = drg,
+      evolution_history = evo,
+      concentration     = conc_range,
+      fitted            = fitted_crv_ic50,
+      ci_lo = apply(ic50_crv_mat, 1, quantile, 0.025, na.rm = TRUE),
+      ci_hi = apply(ic50_crv_mat, 1, quantile, 0.975, na.rm = TRUE)
+    )
+  }
 
   ic50_boot_list[[i]] <- tibble(
     population        = pop,
@@ -492,10 +650,11 @@ for (i in seq_len(nrow(strain_drug_combos))) {
     ic50              = ic50_pt,
     se_ic50           = sd(ic50_vals, na.rm = TRUE),
     se_log_ic50       = sd(log(ic50_vals[ic50_vals > 0]), na.rm = TRUE),
-    ic50_lower        = quantile(ic50_vals, 0.025, na.rm = TRUE),
-    ic50_upper        = quantile(ic50_vals, 0.975, na.rm = TRUE),
+    ic50_lower        = suppressWarnings(quantile(ic50_vals, 0.025, na.rm = TRUE)),
+    ic50_upper        = suppressWarnings(quantile(ic50_vals, 0.975, na.rm = TRUE)),
     n_data            = nrow(sub),
-    n_boot_ok         = length(ic50_vals)
+    n_boot_ok         = boot_ic50$n_valid,
+    n_total_iter      = boot_ic50$n_total_iter
   )
 
   if (i %% 10 == 0 || i == nrow(strain_drug_combos))
@@ -726,6 +885,51 @@ y_labels <- c(
   amphotericin = "Amphotericin B IC50 (\u03bcg/mL, log scale)"
 )
 
+# ── IC50 statistical tests ─────────────────────────────────────────────────────
+# Two-sample Welch t-test (35 vs 40) + one-sample t-test (each vs ancestor),
+# both on log(IC50). Holm-corrected within each drug across the 3 comparisons.
+
+ic50_stats <- bind_rows(lapply(
+  c("fluconazole", "caspofungin", "amphotericin"),
+  function(drg) {
+    dat <- ic50_boot_se |> filter(drug == drg)
+    g35 <- log(dat |> filter(evolution_history == "35 evolved") |> pull(ic50))
+    g40 <- log(dat |> filter(evolution_history == "40 evolved") |> pull(ic50))
+    anc <- log(dat |> filter(evolution_history == "fRS585")    |> pull(ic50))
+    if (length(g35) < 2 || length(g40) < 2 || length(anc) == 0) return(tibble())
+
+    ttest <- function(x, y_or_mu) {
+      if (length(y_or_mu) == 1)
+        tryCatch(t.test(x, mu = y_or_mu), error = function(e) NULL)
+      else
+        tryCatch(t.test(x, y_or_mu),      error = function(e) NULL)
+    }
+    make_row <- function(comparison, x, y_or_mu) {
+      res <- ttest(x, y_or_mu)
+      ref <- if (length(y_or_mu) == 1) y_or_mu else mean(y_or_mu)
+      tibble(
+        drug       = drg,
+        comparison = comparison,
+        diff       = mean(x) - ref,
+        ci_lo      = if (!is.null(res)) res$conf.int[1] else NA_real_,
+        ci_hi      = if (!is.null(res)) res$conf.int[2] else NA_real_,
+        p_welch    = if (!is.null(res)) res$p.value     else NA_real_
+      )
+    }
+    bind_rows(
+      make_row("35 vs 40 evolved",       g35, g40),
+      make_row("35 evolved vs ancestor", g35, anc),
+      make_row("40 evolved vs ancestor", g40, anc)
+    )
+  }
+)) |>
+  group_by(drug) |>
+  mutate(p_holm = p.adjust(p_welch, method = "holm")) |>
+  ungroup()
+
+cat("\n=== IC50 statistical results (Holm-corrected, log scale) ===\n")
+print(ic50_stats |> select(drug, comparison, diff, ci_lo, ci_hi, p_holm))
+
 for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
   drug_data <- ic50_boot_se |>
     filter(drug == drg) |>
@@ -836,16 +1040,142 @@ for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
 }
 
 
+# ── 6c. TPC per-strain CI ribbon figure ───────────────────────────────────────
+
+tpc_ribbon_df <- bind_rows(tpc_ribbon_list)
+tpc_pt_data   <- auc_data |> filter(strain %in% tpc_ribbon_df$strain)
+
+# Order panels: ancestor first, then 35 evolved, then 40 evolved (alpha within)
+strain_order <- tpc_ribbon_df |>
+  distinct(strain, evolution_history) |>
+  arrange(
+    factor(evolution_history, levels = c("fRS585", "35 evolved", "40 evolved")),
+    strain
+  ) |>
+  pull(strain)
+
+tpc_ribbon_df <- tpc_ribbon_df |> mutate(strain = factor(strain, levels = strain_order))
+tpc_pt_data   <- tpc_pt_data   |> mutate(strain = factor(strain, levels = strain_order))
+
+ggplot() +
+  geom_ribbon(
+    data  = tpc_ribbon_df,
+    aes(x = temperature, ymin = ci_lo, ymax = ci_hi, fill = evolution_history),
+    alpha = 0.25
+  ) +
+  geom_line(
+    data      = tpc_ribbon_df,
+    aes(x = temperature, y = fitted, color = evolution_history),
+    linewidth = 0.7
+  ) +
+  geom_point(
+    data  = tpc_pt_data,
+    aes(x = test_temperature, y = auc_gc, color = evolution_history),
+    size  = 1.0, alpha = 0.7
+  ) +
+  facet_wrap(~ strain, scales = "free_y", ncol = 6) +
+  scale_color_manual(values = EVO_COLORS, name = NULL) +
+  scale_fill_manual(values  = EVO_COLORS, name = NULL) +
+  labs(
+    x       = "Temperature (\u00b0C)",
+    y       = "AUC (blank-corrected)",
+    caption = "Ribbon: 95% bootstrap CI (1,000 residual resamples)  |  Points: per-well AUC"
+  ) +
+  theme_bw(base_size = 9) +
+  theme(
+    legend.position = "none",
+    strip.text      = element_text(size = 7),
+    plot.caption    = element_text(size = 7, color = "grey40")
+  )
+
+ggsave(
+  file.path(FIGS, "tpc-ci-ribbon-per-strain-19.png"),
+  width = 18, height = 14, dpi = 200
+)
+
+
+# ── 6d. IC50 per-strain CI ribbon figures (one per drug) ──────────────────────
+
+ic50_ribbon_df <- bind_rows(ic50_ribbon_list)
+
+drug_xlabels <- c(
+  fluconazole  = "Fluconazole (\u03bcg/mL, log scale)",
+  caspofungin  = "Caspofungin (\u03bcg/mL, log scale)",
+  amphotericin = "Amphotericin B (\u03bcg/mL, log scale)"
+)
+
+for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
+  ribbon_drg <- ic50_ribbon_df |> filter(drug == drg)
+  if (nrow(ribbon_drg) == 0) next
+
+  # Order panels: ancestor, then 35 evolved, then 40 evolved (alpha within)
+  pop_order <- ribbon_drg |>
+    distinct(population, evolution_history) |>
+    arrange(
+      factor(evolution_history, levels = c("fRS585", "35 evolved", "40 evolved")),
+      population
+    ) |>
+    pull(population)
+
+  ribbon_drg <- ribbon_drg |>
+    mutate(population = factor(population, levels = pop_order))
+  data_drg <- mic_data |>
+    filter(drug == drg, population %in% pop_order) |>
+    mutate(population = factor(population, levels = pop_order))
+
+  ggplot() +
+    geom_ribbon(
+      data  = ribbon_drg,
+      aes(x = concentration, ymin = ci_lo, ymax = ci_hi, fill = evolution_history),
+      alpha = 0.25
+    ) +
+    geom_line(
+      data      = ribbon_drg,
+      aes(x = concentration, y = fitted, color = evolution_history),
+      linewidth = 0.7
+    ) +
+    geom_point(
+      data  = data_drg,
+      aes(x = concentration, y = OD, color = evolution_history),
+      size  = 0.9, alpha = 0.6
+    ) +
+    facet_wrap(~ population, scales = "free_y", ncol = 6) +
+    scale_x_log10() +
+    scale_color_manual(values = EVO_COLORS, name = NULL) +
+    scale_fill_manual(values  = EVO_COLORS, name = NULL) +
+    labs(
+      x       = drug_xlabels[[drg]],
+      y       = "OD (blank-corrected)",
+      caption = "Ribbon: 95% bootstrap CI (1,000 residual resamples)  |  Points: per-well OD (all reps pooled)"
+    ) +
+    theme_bw(base_size = 9) +
+    theme(
+      legend.position = "none",
+      strip.text      = element_text(size = 7),
+      plot.caption    = element_text(size = 7, color = "grey40")
+    )
+
+  ggsave(
+    file.path(FIGS, sprintf("%s-ci-ribbon-per-strain-19.png", drg)),
+    width = 18, height = 14, dpi = 200
+  )
+}
+
+
 # =============================================================================
 # 7. Export
 # =============================================================================
 
-write_csv(tpc_boot_se,  file.path(OUT_DIR, "tpc-boot-se-19.csv"))
-write_csv(ic50_boot_se, "data-processed/ic50-boot-pooled-19.csv")
+write_csv(tpc_boot_se,    file.path(OUT_DIR, "tpc-boot-se-19.csv"))
+write_csv(ic50_boot_se,   "data-processed/ic50-boot-pooled-19.csv")
+write_csv(tpc_ribbon_df,  file.path(OUT_DIR, "tpc-ci-ribbon-19.csv"))
+write_csv(ic50_ribbon_df, "data-processed/ic50-ci-ribbon-19.csv")
 
 cat("\nExported:\n",
-    file.path(OUT_DIR, "tpc-boot-se-19.csv"), "\n",
-    "data-processed/ic50-boot-pooled-19.csv",  "\n")
+    file.path(OUT_DIR, "tpc-boot-se-19.csv"),    "\n",
+    "data-processed/ic50-boot-pooled-19.csv",     "\n",
+    file.path(OUT_DIR, "tpc-ci-ribbon-19.csv"),   "\n",
+    "data-processed/ic50-ci-ribbon-19.csv",        "\n")
 
 
 # =============================================================================
@@ -972,8 +1302,8 @@ deming_lines <- deming_results |>
 y_data_range_pooled <- deming_dat |>
   group_by(drug) |>
   summarise(
-    ylo = min(log_ic50 - se_log_ic50),
-    yhi = max(log_ic50 + se_log_ic50),
+    ylo = min(log_ic50 - se_log_ic50, na.rm = TRUE),
+    yhi = max(log_ic50 + se_log_ic50, na.rm = TRUE),
     .groups = "drop"
   )
 
@@ -1101,8 +1431,8 @@ within_lines <- deming_within |>
 y_data_range <- deming_centered |>
   group_by(drug) |>
   summarise(
-    ylo = min(log_ic50_c - se_log_ic50),
-    yhi = max(log_ic50_c + se_log_ic50),
+    ylo = min(log_ic50_c - se_log_ic50, na.rm = TRUE),
+    yhi = max(log_ic50_c + se_log_ic50, na.rm = TRUE),
     .groups = "drop"
   )
 
