@@ -318,9 +318,60 @@ ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution
 ggsave("figures/normalised-ic50-dotplot-sig.png", width = 12, height = 5, dpi = 300)
 
 # =============================================================================
-# 8. Export
+# 8. Month-adjusted LM (all drugs)
+# =============================================================================
+# Fits log(IC50) ~ evolution_history + month per drug using per-strain
+# per-month means. emmeans gives marginal means adjusted for month batch
+# effect. Assumes additive (no interaction) month effect on log scale.
+# The 40-evolved group has measurements in both months for all drugs,
+# making the month effect estimable even though 35-evolved is March-only.
+
+library(emmeans)
+
+# Per-strain mean IC50 within each drug × month (includes fRS585)
+strain_by_month <- plate_ic50 |>
+  filter(converged,
+         evolution_history %in% c("35 evolved", "40 evolved", "fRS585")) |>
+  mutate(month = factor(month, levels = c("January", "February", "March"))) |>
+  group_by(population, evolution_history, drug, month) |>
+  summarise(mean_ic50 = mean(ic50), .groups = "drop")
+
+lm_results <- strain_by_month |>
+  mutate(
+    log_ic50 = log(mean_ic50),
+    evolution_history = factor(evolution_history,
+                               levels = c("40 evolved", "35 evolved", "fRS585"))
+  ) |>
+  group_by(drug) |>
+  group_modify(function(d, key) {
+    fit  <- lm(log_ic50 ~ evolution_history + month, data = d)
+    emm  <- emmeans(fit, ~ evolution_history)
+    contrast(emm, method = "pairwise", adjust = "holm") |>
+      as_tibble() |>
+      rename(diff = estimate, se = SE, p_holm = p.value) |>
+      mutate(
+        fold_change = exp(diff),
+        comparison  = str_replace(contrast, " - ", " vs ")
+      ) |>
+      select(comparison, diff, fold_change, se, df, p_holm)
+  }) |>
+  ungroup()
+
+cat("\n=== Month-adjusted LM results (Holm-corrected) ===\n")
+lm_results |>
+  mutate(
+    fold_change = round(fold_change, 2),
+    diff        = round(diff, 3),
+    p_holm      = ifelse(p_holm < 0.001, "<0.001", sprintf("%.3f", p_holm))
+  ) |>
+  as.data.frame() |>
+  print()
+
+# =============================================================================
+# 9. Export
 # =============================================================================
 
 write_csv(normalised_obs,   "data-processed/normalised-ic50-per-plate.csv")
 write_csv(strain_normalised, "data-processed/normalised-ic50-per-strain.csv")
 write_csv(results_norm,      "data-processed/stats-results-normalised-ic50.csv")
+write_csv(lm_results,        "data-processed/stats-results-month-adjusted-lm-ic50.csv")
