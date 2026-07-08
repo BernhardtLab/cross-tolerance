@@ -14,8 +14,8 @@
 #      vs 0 (log ratio = 0 ↔ strain equals ancestor); Holm-corrected
 #   7. Dotplots + export
 #
-# 31 of 357 evolved-strain plate observations (~9%) have no ancestor on the
-# same plate and are dropped. All 36 strains retain ≥1 matched observation.
+# Evolved-strain plate observations whose ancestor IC50 fit failed are dropped.
+# All 36 strains retain ≥1 matched observation. Counts printed at runtime.
 #
 # Outputs:
 #   data-processed/normalised-ic50-per-plate.csv   (per-plate IC50s + log ratio)
@@ -87,23 +87,43 @@ mic_data <- mic_data |>
   ungroup() |>
   select(-min_conc)
 
+# 4-parameter logistic: OD = bot + (top - bot) / (1 + exp(slope * (log(conc) - log(IC50))))
+# bot: lower asymptote (residual growth at high drug);  top: upper asymptote;
+# slope: Hill coefficient;  IC50: half-maximal inhibitory concentration.
+# Three starting values for IC50 improve convergence on steep or atypical curves.
 fit_ic50 <- function(df) {
   df <- filter(df, concentration > 0)
-  if (nrow(df) < 5) return(tibble(ic50 = NA_real_, converged = FALSE))
-  start <- list(d = max(df$OD), b = 10, e = median(df$concentration))
-  fit <- tryCatch(
-    nlsLM(
-      OD ~ d / (1 + exp(b * (log(concentration) - log(e)))),
-      data    = df,
-      start   = start,
-      lower   = c(d = 0,    b = 0.01, e = min(df$concentration)),
-      upper   = c(d = 2,    b = 50,   e = max(df$concentration) * 5),
-      control = nls.lm.control(maxiter = 500)
-    ),
-    error = function(e) NULL
-  )
-  if (is.null(fit)) return(tibble(ic50 = NA_real_, converged = FALSE))
-  tibble(ic50 = coef(fit)[["e"]], converged = TRUE)
+  if (nrow(df) < 5) {
+    return(tibble(ic50 = NA_real_, bot = NA_real_, top = NA_real_,
+                  slope = NA_real_, converged = FALSE))
+  }
+  e_starts <- c(median(df$concentration),
+                quantile(df$concentration, 0.25),
+                quantile(df$concentration, 0.75))
+  for (e0 in e_starts) {
+    start <- list(bot = 0, top = max(df$OD), slope = 10, e = e0)
+    fit <- tryCatch(
+      nlsLM(
+        OD ~ bot + (top - bot) / (1 + exp(slope * (log(concentration) - log(e)))),
+        data    = df,
+        start   = start,
+        lower   = c(bot = 0,   top = 0,   slope = 0.01, e = min(df$concentration)),
+        upper   = c(bot = 0.5, top = 2,   slope = 200,  e = max(df$concentration) * 5),
+        control = nls.lm.control(maxiter = 500)
+      ),
+      error = function(e) NULL
+    )
+    if (!is.null(fit)) {
+      co <- coef(fit)
+      return(tibble(ic50  = co[["e"]],
+                    bot   = co[["bot"]],
+                    top   = co[["top"]],
+                    slope = co[["slope"]],
+                    converged = TRUE))
+    }
+  }
+  tibble(ic50 = NA_real_, bot = NA_real_, top = NA_real_,
+         slope = NA_real_, converged = FALSE)
 }
 
 cat("Fitting IC50s per plate — this may take a minute...\n")
@@ -122,6 +142,133 @@ if (n_fail > 0) {
     select(population, rep, set, drug, month) |>
     print()
 }
+
+# =============================================================================
+# 3b. Diagnostic PDF — fitted 4PL curves + IC50 for all strains
+# =============================================================================
+
+make_4pl_curve <- function(ic50, bot, top, slope, min_c, max_c) {
+  conc <- exp(seq(log(min_c), log(max_c), length.out = 300))
+  od   <- bot + (top - bot) / (1 + exp(slope * (log(conc) - log(ic50))))
+  tibble(concentration = conc, od_pred = od)
+}
+
+# Concentration range per plate (used to span the prediction curve)
+conc_range <- mic_data |>
+  filter(concentration > 0) |>
+  group_by(population, drug, month, rep, set) |>
+  summarise(min_c = min(concentration), max_c = max(concentration), .groups = "drop")
+
+# Smooth predicted curves for all converged fits
+pred_curves <- plate_ic50 |>
+  filter(converged) |>
+  left_join(conc_range, by = c("population", "drug", "month", "rep", "set")) |>
+  mutate(plate_id = paste(month, set, rep)) |>
+  rowwise() |>
+  mutate(curve = list(make_4pl_curve(ic50, bot, top, slope, min_c, max_c))) |>
+  ungroup() |>
+  select(population, evolution_history, drug, plate_id, ic50, curve) |>
+  unnest(curve)
+
+raw_plot_data <- mic_data |>
+  filter(concentration > 0) |>
+  mutate(plate_id = paste(month, set, rep))
+
+ic50_lines <- plate_ic50 |>
+  filter(converged) |>
+  mutate(
+    plate_id   = paste(month, set, rep),
+    ic50_label = sprintf("IC50 = %.3g", ic50)
+  )
+
+# Ancestor IC50, raw OD, and fitted curves — used as reference on evolved-strain pages
+anc_ic50_ref <- plate_ic50 |>
+  filter(evolution_history == "fRS585", converged) |>
+  mutate(
+    plate_id       = paste(month, set, rep),
+    ic50_anc_label = sprintf("Anc = %.3g", ic50)
+  ) |>
+  select(drug, plate_id, ic50_anc = ic50, ic50_anc_label)
+
+anc_raw_data <- raw_plot_data |> filter(population == "fRS585")
+anc_curves   <- pred_curves   |> filter(population == "fRS585")
+
+all_pops  <- sort(unique(mic_data$population[mic_data$population != "Blank"]))
+all_drugs <- sort(unique(mic_data$drug))
+
+cat("Writing diagnostic PDF...\n")
+pdf("figures/ic50-curve-fits.pdf", width = 10, height = 6)
+
+for (pop in all_pops) {
+  for (drug_i in all_drugs) {
+    raw_sub   <- raw_plot_data |> filter(population == pop, drug == drug_i)
+    curve_sub <- pred_curves   |> filter(population == pop, drug == drug_i)
+    ic50_sub  <- ic50_lines    |> filter(population == pop, drug == drug_i)
+
+    if (nrow(raw_sub) == 0) next
+
+    # Ancestor overlays — only for evolved strains, matched to the same plates
+    if (pop != "fRS585") {
+      matched_plates <- ic50_sub$plate_id
+      anc_sub      <- anc_ic50_ref  |> filter(drug == drug_i, plate_id %in% matched_plates)
+      anc_raw_sub  <- anc_raw_data  |> filter(drug == drug_i, plate_id %in% matched_plates)
+      anc_curve_sub <- anc_curves   |> filter(drug == drug_i, plate_id %in% matched_plates)
+    } else {
+      anc_sub       <- tibble()
+      anc_raw_sub   <- tibble()
+      anc_curve_sub <- tibble()
+    }
+
+    # Ancestor layers drawn first so evolved-strain data renders on top
+    p <- ggplot(raw_sub, aes(x = concentration, y = OD)) +
+      scale_x_log10() +
+      facet_wrap(~ plate_id) +
+      labs(
+        title    = paste0(pop, "  |  ", drug_i),
+        subtitle = "Grey: ancestor (fRS585)  |  Black/blue: strain",
+        x        = "Concentration (log scale)",
+        y        = "OD (blank-corrected)"
+      ) +
+      theme_bw(base_size = 11)
+
+    if (nrow(anc_raw_sub) > 0)
+      p <- p + geom_point(data = anc_raw_sub, aes(y = OD),
+                          color = "grey65", size = 1.2, alpha = 0.7)
+
+    if (nrow(anc_curve_sub) > 0)
+      p <- p + geom_line(data = anc_curve_sub, aes(y = od_pred),
+                         color = "grey50", linewidth = 0.7)
+
+    p <- p + geom_point(size = 1.5, alpha = 0.8, color = "steelblue")
+
+    if (nrow(curve_sub) > 0)
+      p <- p + geom_line(data = curve_sub, aes(y = od_pred),
+                         color = "steelblue", linewidth = 0.8)
+
+    if (nrow(anc_sub) > 0)
+      p <- p +
+        geom_vline(data = anc_sub, aes(xintercept = ic50_anc),
+                   linetype = "dotted", color = "grey30", linewidth = 0.7) +
+        geom_text(data = anc_sub,
+                  aes(x = ic50_anc, y = Inf, label = ic50_anc_label),
+                  vjust = 2.8, hjust = -0.1, size = 2.8, color = "grey30",
+                  inherit.aes = FALSE)
+
+    if (nrow(ic50_sub) > 0)
+      p <- p +
+        geom_vline(data = ic50_sub, aes(xintercept = ic50),
+                   linetype = "dashed", color = "firebrick", linewidth = 0.6) +
+        geom_text(data = ic50_sub,
+                  aes(x = ic50, y = Inf, label = ic50_label),
+                  vjust = 1.4, hjust = -0.1, size = 2.8, color = "firebrick",
+                  inherit.aes = FALSE)
+
+    print(p)
+  }
+}
+
+dev.off()
+cat("Saved: figures/ic50-curve-fits.pdf\n")
 
 # =============================================================================
 # 4. Normalise to per-plate ancestor
