@@ -1,0 +1,7 @@
+drug,predictor,obs_slope,p_perm,n_perm_valid
+amphotericin,th_c_c,2.7235213931571334,0.7428,5000
+caspofungin,th_c_c,1.507363113237729,0.5558,5000
+fluconazole,th_c_c,1.7967497295942543,0.9952,5000
+amphotericin,tmax_c,13.448233195584965,0.0864,5000
+caspofungin,tmax_c,1.0939020847109073,0.7564,5000
+fluconazole,tmax_c,5.2238663592670465,0.7528,5000

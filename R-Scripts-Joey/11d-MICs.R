@@ -5,7 +5,7 @@
 # Approach:
 #   1. Read raw OD data (all_mic_data-new.csv)
 #   2. Blank-correct per plate × concentration (same as 11c)
-#   3. Fit 3-parameter logistic IC50 per population × rep × set × drug × month
+#   3. Fit 4-parameter logistic IC50 per population × rep × set × drug × month
 #      (point estimates only — no bootstrap needed since we're computing ratios)
 #   4. Normalise each evolved-strain plate IC50 to the ancestor IC50 on the
 #      same plate: log_ratio = log(strain IC50 / ancestor IC50)
