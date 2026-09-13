@@ -8,8 +8,8 @@
 #   3. Fit 4-parameter logistic IC50 per population × rep × set × drug × month
 #      (point estimates only — no bootstrap needed since we're computing ratios)
 #   4. Normalise each evolved-strain plate IC50 to the ancestor IC50 on the
-#      same plate: log_ratio = log(strain IC50 / ancestor IC50)
-#   5. Average log_ratio across plates per strain per drug
+#      same plate: log2_ratio = log2(strain IC50 / ancestor IC50)
+#   5. Average log2_ratio across plates per strain per drug
 #   6. Statistical tests: Welch t-test (40 vs 35 evolved) + one-sample t-test
 #      vs 0 (log ratio = 0 ↔ strain equals ancestor); Holm-corrected
 #   7. Dotplots + export
@@ -30,6 +30,15 @@ library(minpack.lm)
 library(ggsignif)
 
 EVO_COLORS <- c("40 evolved" = "#FA3208", "35 evolved" = "#0E63FF", "fRS585" = "#000000")
+
+theme_evo <- function(base_size = 18) {
+  theme_classic(base_size = base_size) +
+    theme(
+      panel.background = element_blank(),
+      legend.background = element_rect(fill = "transparent", colour = NA),
+      plot.background  = element_rect(fill = "transparent", colour = NA)
+    )
+}
 
 p_stars <- function(p) case_when(
   p < 0.001 ~ "***",
@@ -229,7 +238,7 @@ for (pop in all_pops) {
         x        = "Concentration (log scale)",
         y        = "OD (blank-corrected)"
       ) +
-      theme_bw(base_size = 11)
+      theme_evo(base_size = 11)
 
     if (nrow(anc_raw_sub) > 0)
       p <- p + geom_point(data = anc_raw_sub, aes(y = OD),
@@ -282,7 +291,7 @@ normalised_obs <- plate_ic50 |>
   filter(evolution_history != "fRS585", converged) |>
   left_join(anc_ref, by = c("drug", "month", "rep", "set")) |>
   filter(!is.na(ic50_anc)) |>
-  mutate(log_ratio = log(ic50) - log(ic50_anc))
+  mutate(log_ratio = log2(ic50) - log2(ic50_anc))
 
 n_total   <- plate_ic50 |> filter(evolution_history != "fRS585", converged) |> nrow()
 n_matched <- nrow(normalised_obs)
@@ -302,16 +311,46 @@ strain_normalised <- normalised_obs |>
   )
 
 # Summary table
-cat("\n=== Per-group summary (fold-change = exp(mean log ratio)) ===\n")
+cat("\n=== Per-group summary (fold-change = 2^(mean log2 ratio)) ===\n")
 strain_normalised |>
   group_by(drug, evolution_history) |>
   summarise(
     n              = n(),
-    mean_log_ratio = mean(log_ratio),
-    fold_change    = exp(mean(log_ratio)),
+    mean_log2_ratio = mean(log_ratio),
+    fold_change    = 2^mean(log_ratio),
     .groups        = "drop"
   ) |>
   print()
+
+# =============================================================================
+# 5b. Outlier removal — |z| > 3 within drug × evolution history
+# =============================================================================
+# z-scores computed on per-strain mean log ratios within each drug × group.
+# Flagged strain × drug combinations are removed from both the per-strain and
+# per-plate data frames so all downstream analyses and exports are consistent.
+
+outlier_flags <- strain_normalised |>
+  filter(evolution_history %in% c("35 evolved", "40 evolved")) |>
+  group_by(drug, evolution_history) |>
+  mutate(z_score = (log_ratio - mean(log_ratio)) / sd(log_ratio)) |>
+  ungroup() |>
+  filter(abs(z_score) > 3)
+
+cat("\n=== Outliers removed (|z| > 3 within drug \u00d7 evolution history) ===\n")
+print(outlier_flags |>
+        select(population, evolution_history, drug, log_ratio, z_score) |>
+        mutate(across(where(is.numeric), ~round(., 3))))
+
+outlier_keys <- outlier_flags |> select(population, drug)
+
+strain_normalised <- strain_normalised |>
+  anti_join(outlier_keys, by = c("population", "drug"))
+
+normalised_obs <- normalised_obs |>
+  anti_join(outlier_keys, by = c("population", "drug"))
+
+cat(sprintf("Retained: %d strain \u00d7 drug observations after outlier removal\n",
+            nrow(strain_normalised)))
 
 # =============================================================================
 # 6. Statistical tests
@@ -389,19 +428,19 @@ ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution
   scale_color_manual(values = EVO_COLORS) +
   labs(
     x       = NULL,
-    y       = "log(IC50 / ancestor IC50)",
+    y       = expression(log[2](IC50 / "ancestor IC50")),
     caption = paste(
       "Points: individual strains (mean across plates)  |",
       "Large point \u00b1 bar: group mean \u00b1 SE  |",
-      "Dashed line: ancestor level (log ratio = 0)"
+      "Dashed line: ancestor level (log2 ratio = 0)"
     )
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(legend.position = "none",
         strip.text   = element_text(size = 13, face = "bold"),
         plot.caption = element_text(size = 8, color = "grey40"))
 
-ggsave("figures/normalised-ic50-dotplot.png", width = 12, height = 5, dpi = 300)
+ggsave("figures/normalised-ic50-dotplot.png", width = 12, height = 5, dpi = 300, bg = "transparent")
 
 # ── With significance annotations ────────────────────────────────────────────
 
@@ -413,7 +452,7 @@ bracket_df_norm <- results_norm |>
     annotations = p_stars(p_welch_holm)
   ) |>
   left_join(y_range_norm, by = "drug") |>
-  mutate(y_position = y_max + y_span * 0.06)
+  mutate(y_position = y_max + y_span * 0.18)
 
 anc_star_df_norm <- results_norm |>
   filter(str_detect(comparison, "vs ancestor")) |>
@@ -424,45 +463,46 @@ anc_star_df_norm <- results_norm |>
   ) |>
   left_join(gmeans_norm, by = c("drug", "evolution_history")) |>
   left_join(y_range_norm, by = "drug") |>
-  mutate(y_pos = m + se + y_span * 0.04)
+  mutate(y_pos = m + se + y_span * 0.10)
 
 ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution_history)) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "#000000", linewidth = 0.6) +
-  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "#000000", linewidth = 1.0) +
+  geom_jitter(width = 0.12, size = 3.0, alpha = 0.6) +
   geom_pointrange(
     data = gmeans_norm,
     aes(y = m, ymin = m - se, ymax = m + se),
-    size = 0.7, linewidth = 1.1
+    size = 1.0, linewidth = 1.6
   ) +
   suppressWarnings(geom_signif(
     data       = bracket_df_norm,
     aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
-    manual     = TRUE, tip_length = 0.02, textsize = 4.5, color = "black"
+    manual     = TRUE, tip_length = 0.02, textsize = 6.5, color = "black"
   )) +
   geom_text(
     data    = anc_star_df_norm,
     aes(x = evolution_history, y = y_pos, label = label),
-    color   = "black", size = 4, fontface = "bold", nudge_x = 0.3
+    color   = "black", size = 6, fontface = "bold", nudge_x = 0.3
   ) +
   facet_wrap(~ drug, scales = "free_y") +
   scale_color_manual(values = EVO_COLORS) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
   labs(
     x       = NULL,
-    y       = "log(IC50 / ancestor IC50)",
+    y       = expression(log[2](IC50 / "ancestor IC50")),
     caption = paste(
       "Points: individual strains (mean across plates)  |",
       "Large point \u00b1 bar: group mean \u00b1 SE  |",
-      "Dashed line: ancestor level (log ratio = 0)\n",
+      "Dashed line: ancestor level (log2 ratio = 0)\n",
       "Brackets: Welch t-test, 40 vs 35 evolved (Holm-corrected)  |",
       "Stars to right of mean: one-sample t-test vs 0"
     )
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(legend.position = "none",
-        strip.text   = element_text(size = 13, face = "bold"),
-        plot.caption = element_text(size = 8, color = "grey40"))
+        strip.text   = element_text(size = 18, face = "bold"),
+        plot.caption = element_text(size = 13, color = "grey40"))
 
-ggsave("figures/normalised-ic50-dotplot-sig.png", width = 12, height = 5, dpi = 300)
+ggsave("figures/normalised-ic50-dotplot-sig.png", width = 12, height = 5, dpi = 300, bg = "transparent")
 
 # =============================================================================
 # 8. Month-adjusted LM (all drugs)
@@ -485,7 +525,7 @@ strain_by_month <- plate_ic50 |>
 
 lm_results <- strain_by_month |>
   mutate(
-    log_ic50 = log(mean_ic50),
+    log_ic50 = log2(mean_ic50),
     evolution_history = factor(evolution_history,
                                levels = c("40 evolved", "35 evolved", "fRS585"))
   ) |>
@@ -497,7 +537,7 @@ lm_results <- strain_by_month |>
       as_tibble() |>
       rename(diff = estimate, se = SE, p_holm = p.value) |>
       mutate(
-        fold_change = exp(diff),
+        fold_change = 2^diff,
         comparison  = str_replace(contrast, " - ", " vs ")
       ) |>
       select(comparison, diff, fold_change, se, df, p_holm)

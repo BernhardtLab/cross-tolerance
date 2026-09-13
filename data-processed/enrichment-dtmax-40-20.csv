@@ -1,0 +1,4 @@
+drug,n_top_high_ic50,n_bot_high_ic50,pct_top,pct_bot,odds_ratio,p_fisher,median_top,median_bot,W,p_wilcox
+amphotericin,4,4,0.667,0.333,3.681,0.201,0.249,-0.162,54,0.051
+caspofungin,3,9,0.5,0.75,0.356,0.943,0.207,0.238,41,0.337
+fluconazole,5,7,0.833,0.583,3.344,0.306,0.361,0.202,45,0.213

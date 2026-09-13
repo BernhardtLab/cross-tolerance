@@ -48,6 +48,15 @@ EVO_COLORS <- c(
   "fRS585"     = "#000000"
 )
 
+theme_evo <- function(base_size = 18) {
+  theme_classic(base_size = base_size) +
+    theme(
+      panel.background  = element_blank(),
+      legend.background = element_rect(fill = "transparent", colour = NA),
+      plot.background   = element_rect(fill = "transparent", colour = NA)
+    )
+}
+
 # Sharpe-Schoolfield High model constants
 K_B    <- 8.617333e-5   # Boltzmann constant (eV K⁻¹)
 TREF_K <- 288.15        # Reference temperature: 15°C in Kelvin
@@ -281,26 +290,26 @@ ggplot() +
   geom_line(
     data = tpc_preds_auc |> mutate(pred = ifelse(pred < 0, NA, pred)),
     aes(x = temp, y = pred, group = strain, color = evolution_history),
-    alpha = 0.2, linewidth = 0.8
+    alpha = 0.2, linewidth = 1.2
   ) +
   geom_line(
     data = mean_curves_auc,
     aes(x = temp, y = pred, color = evolution_history),
-    linewidth = 2.0
+    linewidth = 2.8
   ) +
   geom_point(
     data = obs_means_auc,
     aes(x = test_temperature, y = auc_gc, color = evolution_history),
-    size = 1.8, alpha = 0.6
+    size = 3.0, alpha = 0.6
   ) +
   scale_color_manual(values = EVO_COLORS, name = NULL) +
-  coord_cartesian(xlim = c(23, 48)) +
-  labs(x = "Temperature (\u00b0C)", y = "AUC (empirical)",
-       title = "Thermal Performance Curves \u2014 AUC (gcplyr)") +
-  theme(legend.position = c(0.02, 0.98), legend.justification = c(0, 1),
-        legend.background = element_blank())
+  coord_cartesian(xlim = c(23, 45)) +
+  labs(x = "Temperature (\u00b0C)", y = "Growth performance (OD\u00b7day)") +
+  theme_evo() +
+  theme(legend.position = c(0.02, 0.98), legend.justification = c(0, 1))
 
-ggsave(file.path(FIGS, "tpc-auc-gcplyr-17.png"), width = 9, height = 6, dpi = 300)
+ggsave(file.path(FIGS, "tpc-auc-gcplyr-17.png"), width = 9, height = 6, dpi = 300,
+       bg = "transparent")
 
 
 # ── TPC curves — faceted by evolution history ─────────────────────────────────
@@ -309,17 +318,17 @@ ggplot() +
   geom_line(
     data = tpc_preds_auc |> mutate(pred = ifelse(pred < 0, NA, pred)),
     aes(x = temp, y = pred, group = strain),
-    color = "grey70", alpha = 0.6, linewidth = 0.5
+    color = "grey70", alpha = 0.6, linewidth = 0.8
   ) +
   geom_line(
     data = mean_curves_auc,
     aes(x = temp, y = pred, color = evolution_history),
-    linewidth = 2.0
+    linewidth = 2.8
   ) +
   geom_point(
     data = obs_means_auc,
     aes(x = test_temperature, y = auc_gc, color = evolution_history),
-    size = 1.8, alpha = 0.7
+    size = 3.0, alpha = 0.7
   ) +
   scale_color_manual(values = EVO_COLORS, guide = "none") +
   coord_cartesian(xlim = c(23, 48)) +
@@ -332,10 +341,10 @@ ggplot() +
   ) +
   theme(
     strip.background = element_blank(),
-    strip.text       = element_text(face = "bold", size = 12)
+    strip.text = element_text(face = "bold", size = 18)
   )
 
-ggsave(file.path(FIGS, "tpc-auc-gcplyr-faceted-17.png"), width = 12, height = 5, dpi = 300)
+ggsave(file.path(FIGS, "tpc-auc-gcplyr-faceted-17.png"), width = 12, height = 5, dpi = 300, bg = "transparent")
 
 
 # ── Thermal traits strip chart (Topt, Tmax, B80) ─────────────────────────────
@@ -348,18 +357,18 @@ tpc_params_auc |>
                                    "Th (\u00b0C) \u2014 deactivation half-sat",
                                    "B80 \u2014 niche breadth (\u00b0C)"))) |>
   ggplot(aes(x = evolution_history, y = value, color = evolution_history)) +
-  geom_jitter(width = 0.12, size = 2.5, alpha = 0.8) +
+  geom_jitter(width = 0.12, size = 3.5, alpha = 0.8) +
   stat_summary(fun = mean, geom = "crossbar",
-               width = 0.35, linewidth = 0.7, fatten = 1.5) +
+               width = 0.35, linewidth = 1.1, fatten = 1.5) +
   scale_color_manual(values = EVO_COLORS, guide = "none") +
   facet_wrap(~ trait, scales = "free_y") +
   labs(x = NULL, y = NULL,
        title    = "Thermal traits by evolution history (AUC, gcplyr)",
        subtitle = "Crossbar = mean") +
   theme(strip.background = element_blank(),
-        strip.text       = element_text(face = "bold", size = 11))
+        strip.text = element_text(face = "bold", size = 18))
 
-ggsave(file.path(FIGS, "thermal-traits-auc-gcplyr-17.png"), width = 14, height = 5, dpi = 300)
+ggsave(file.path(FIGS, "thermal-traits-auc-gcplyr-17.png"), width = 14, height = 5, dpi = 300, bg = "transparent")
 
 
 # ── Thermal traits dot plot with ancestor reference line ─────────────────────
@@ -391,11 +400,11 @@ trait_labels_dotplot <- c(topt = "Topt (\u00b0C)", tmax = "Tmax (\u00b0C)",
 ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolution_history)) +
   geom_hline(data = anc_ref_dotplot, aes(yintercept = anc_val),
              linetype = "dashed", color = "#000000", linewidth = 0.6) +
-  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_jitter(width = 0.12, size = 3.0, alpha = 0.6) +
   geom_pointrange(
     data = group_means_dotplot,
     aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
-    size = 0.7, linewidth = 1.1
+    size = 1.0, linewidth = 1.6
   ) +
   facet_wrap(~ trait, scales = "free_y", labeller = as_labeller(trait_labels_dotplot)) +
   scale_color_manual(values = EVO_COLORS) +
@@ -403,12 +412,12 @@ ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolutio
        caption = paste("Points: individual strains  |",
                        "Large point \u00b1 bar: mean \u00b1 SE  |",
                        "Dashed line: ancestor (fRS585)")) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(legend.position = "none",
-        strip.text   = element_text(size = 13),
-        plot.caption = element_text(size = 9, color = "grey40"))
+        strip.text = element_text(size = 18),
+        plot.caption = element_text(size = 13, color = "grey40"))
 
-ggsave(file.path(FIGS, "thermal-traits-dotplot-auc-gcplyr-17.png"), width = 12, height = 5, dpi = 300)
+ggsave(file.path(FIGS, "thermal-traits-dotplot-auc-gcplyr-17.png"), width = 12, height = 5, dpi = 300, bg = "transparent")
 
 
 # =============================================================================
@@ -508,7 +517,7 @@ bracket_df <- results |>
   ) |>
   filter(!is.na(trait)) |>
   left_join(y_range, by = "trait") |>
-  mutate(y_position = y_max + y_span * 0.06)
+  mutate(y_position = y_max + y_span * 0.18)
 
 anc_star_df <- results |>
   filter(stringr::str_detect(comparison, "vs ancestor")) |>
@@ -520,41 +529,42 @@ anc_star_df <- results |>
   filter(!is.na(trait)) |>
   left_join(group_means_dotplot, by = c("trait", "evolution_history")) |>
   left_join(y_range, by = "trait") |>
-  mutate(y_pos = mean_val + se + y_span * 0.04)
+  mutate(y_pos = mean_val + se + y_span * 0.10)
 
 ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolution_history)) +
   geom_hline(data = anc_ref_dotplot, aes(yintercept = anc_val),
              linetype = "dashed", color = "#000000", linewidth = 0.6) +
-  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_jitter(width = 0.12, size = 3.0, alpha = 0.6) +
   geom_pointrange(
     data = group_means_dotplot,
     aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
-    size = 0.7, linewidth = 1.1
+    size = 1.0, linewidth = 1.6
   ) +
   suppressWarnings(ggsignif::geom_signif(
     data       = bracket_df,
     aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
-    manual     = TRUE, tip_length = 0.02, textsize = 4.5, color = "black"
+    manual     = TRUE, tip_length = 0.02, textsize = 6.5, color = "black"
   )) +
   geom_text(
     data     = anc_star_df,
     aes(x = evolution_history, y = y_pos, label = label),
-    color    = "black", size = 4, fontface = "bold", nudge_x = 0.3
+    color = "black", size = 6, fontface = "bold", nudge_x = 0.3
   ) +
   facet_wrap(~ trait, scales = "free_y", labeller = as_labeller(trait_labels_dotplot)) +
   scale_color_manual(values = EVO_COLORS) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
   labs(x = NULL, y = "Temperature (\u00b0C)",
        caption = paste(
          "Points: individual strains  |  Large point \u00b1 bar: mean \u00b1 SE  |",
          "Dashed line: ancestor (fRS585)\n",
          "Brackets: Welch t-test (Holm-corrected)  |  Stars to right of mean: vs. ancestor (one-sample t-test)"
        )) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(legend.position = "none",
-        strip.text   = element_text(size = 13),
-        plot.caption = element_text(size = 8, color = "grey40"))
+        strip.text = element_text(size = 18),
+        plot.caption = element_text(size = 13, color = "grey40"))
 
-ggsave(file.path(FIGS, "thermal-traits-dotplot-sig-auc-gcplyr-17.png"), width = 12, height = 5, dpi = 300)
+ggsave(file.path(FIGS, "thermal-traits-dotplot-sig-auc-gcplyr-17.png"), width = 12, height = 5, dpi = 300, bg = "transparent")
 
 
 # ── Deactivation energy (eh) dot plot with significance annotations ───────────
@@ -592,21 +602,21 @@ eh_stars <- results |>
 
 ggplot(eh_plot_data, aes(x = evolution_history, y = eh, color = evolution_history)) +
   geom_hline(yintercept = anc_eh, linetype = "dashed", color = "#000000", linewidth = 0.6) +
-  geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+  geom_jitter(width = 0.12, size = 3.0, alpha = 0.6) +
   geom_pointrange(
     data = eh_group_means,
     aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
-    size = 0.7, linewidth = 1.1
+    size = 1.0, linewidth = 1.6
   ) +
   suppressWarnings(ggsignif::geom_signif(
     data       = eh_bracket,
     aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
-    manual     = TRUE, tip_length = 0.02, textsize = 4.5, color = "black"
+    manual     = TRUE, tip_length = 0.02, textsize = 6.5, color = "black"
   )) +
   geom_text(
     data     = eh_stars,
     aes(x = evolution_history, y = y_pos, label = label),
-    color    = "black", size = 4, fontface = "bold", nudge_x = 0.3
+    color = "black", size = 6, fontface = "bold", nudge_x = 0.3
   ) +
   scale_color_manual(values = EVO_COLORS) +
   labs(
@@ -618,13 +628,13 @@ ggplot(eh_plot_data, aes(x = evolution_history, y = eh, color = evolution_histor
       "Bracket: Welch t-test (Holm-corrected)  |  Stars to right of mean: vs. ancestor (one-sample t-test)"
     )
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "none",
-    plot.caption    = element_text(size = 8, color = "grey40")
+    plot.caption = element_text(size = 13, color = "grey40")
   )
 
-ggsave(file.path(FIGS, "eh-dotplot-auc-gcplyr-17.png"), width = 5, height = 5, dpi = 300)
+ggsave(file.path(FIGS, "eh-dotplot-auc-gcplyr-17.png"), width = 5, height = 5, dpi = 300, bg = "transparent")
 
 
 # ── AUC at 41°C and 42°C: predicted and observed ─────────────────────────────
@@ -717,21 +727,21 @@ make_auc_dotplot <- function(auc_data, results_df, anc_vals, method_label) {
   ggplot(plot_df, aes(x = evolution_history, y = value, color = evolution_history)) +
     geom_hline(data = anc_ref, aes(yintercept = anc_val),
                linetype = "dashed", color = "#000000", linewidth = 0.6) +
-    geom_jitter(width = 0.12, size = 1.8, alpha = 0.6) +
+    geom_jitter(width = 0.12, size = 3.0, alpha = 0.6) +
     geom_pointrange(
       data = gmeans,
       aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
-      size = 0.7, linewidth = 1.1
+      size = 1.0, linewidth = 1.6
     ) +
     suppressWarnings(ggsignif::geom_signif(
       data       = bdf,
       aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
-      manual     = TRUE, tip_length = 0.02, textsize = 4.5, color = "black"
+      manual     = TRUE, tip_length = 0.02, textsize = 6.5, color = "black"
     )) +
     geom_text(
       data    = sdf,
       aes(x = evolution_history, y = y_pos, label = label),
-      color   = "black", size = 4, fontface = "bold", nudge_x = 0.3
+      color = "black", size = 6, fontface = "bold", nudge_x = 0.3
     ) +
     facet_wrap(~ trait, scales = "free_y") +
     scale_color_manual(values = EVO_COLORS) +
@@ -746,11 +756,11 @@ make_auc_dotplot <- function(auc_data, results_df, anc_vals, method_label) {
         "Stars to right of mean: vs. ancestor (one-sample t-test)"
       )
     ) +
-    theme_bw(base_size = 13) +
+    theme_evo() +
     theme(legend.position = "none",
-          strip.text   = element_text(size = 13),
-          plot.title   = element_text(size = 13, face = "bold"),
-          plot.caption = element_text(size = 8, color = "grey40"))
+          strip.text = element_text(size = 18),
+          plot.title = element_text(size = 18, face = "bold"),
+          plot.caption = element_text(size = 13, color = "grey40"))
 }
 
 anc_pred_vals <- c(auc_pred_41 = anc_pred_41, auc_pred_42 = anc_pred_42)
@@ -766,9 +776,9 @@ p_auc_obs <- make_auc_dotplot(
 )
 
 ggsave(file.path(FIGS, "auc-dotplot-predicted-gcplyr-17.png"), p_auc_pred,
-       width = 8, height = 5, dpi = 300)
+       width = 8, height = 5, dpi = 300, bg = "transparent")
 ggsave(file.path(FIGS, "auc-dotplot-observed-gcplyr-17.png"), p_auc_obs,
-       width = 8, height = 5, dpi = 300)
+       width = 8, height = 5, dpi = 300, bg = "transparent")
 
 
 # ── Per-strain TPC PDF ────────────────────────────────────────────────────────
@@ -801,7 +811,7 @@ p_per_strain <- ggplot() +
   geom_point(
     data = data_labeled,
     aes(x = test_temperature, y = auc_gc, color = evolution_history),
-    size = 1.5, alpha = 0.7
+    size = 2.5, alpha = 0.7
   ) +
   geom_vline(
     data = vlines,

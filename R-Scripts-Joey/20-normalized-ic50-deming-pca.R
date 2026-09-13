@@ -65,6 +65,15 @@ library(quantreg)
 
 EVO_COLORS <- c("40 evolved" = "#FA3208", "35 evolved" = "#0E63FF", "fRS585" = "#000000")
 
+theme_evo <- function(base_size = 13) {
+  theme_classic(base_size = base_size) +
+    theme(
+      panel.background = element_blank(),
+      legend.background = element_rect(fill = "transparent", colour = NA),
+      plot.background  = element_rect(fill = "transparent", colour = NA)
+    )
+}
+
 N_BOOT        <- 1000   # bootstrap iterations for per-strain SE (section 3)
 N_PERM_DEMING <- 5000   # permutation iterations for within-group Deming (section 5e)
 set.seed(7241)
@@ -580,14 +589,14 @@ ggplot(deming_dat, aes(x = th_c, y = mean_log_ratio, color = evolution_history))
       " | Line: Deming regression (pooled across evolution histories, per drug)"
     )
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
     plot.caption    = element_text(size = 8, color = "grey40")
   )
 
-ggsave("figures/deming-norm-20.png", width = 13, height = 5, dpi = 300)
+ggsave("figures/deming-norm-20.png", width = 13, height = 5, dpi = 300, bg = "transparent")
 
 # ── 6b. Within-group centered Deming ─────────────────────────────────────────
 
@@ -635,14 +644,14 @@ ggplot(deming_centered, aes(x = th_c_c, y = log_ratio_c, color = evolution_histo
       " | Error bars: \u00b11 bootstrap SE | Line: within-group Deming regression (pooled across groups)"
     )
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
     plot.caption    = element_text(size = 8, color = "grey40")
   )
 
-ggsave("figures/deming-norm-within-20.png", width = 13, height = 5, dpi = 300)
+ggsave("figures/deming-norm-within-20.png", width = 13, height = 5, dpi = 300, bg = "transparent")
 
 
 # ── 6c. Pooled Deming: tmax ───────────────────────────────────────────────────
@@ -690,14 +699,14 @@ ggplot(deming_dat, aes(x = tmax, y = mean_log_ratio, color = evolution_history))
       " | Line: Deming regression (pooled across evolution histories, per drug)"
     )
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
     plot.caption    = element_text(size = 8, color = "grey40")
   )
 
-ggsave("figures/deming-norm-tmax-20.png", width = 13, height = 5, dpi = 300)
+ggsave("figures/deming-norm-tmax-20.png", width = 13, height = 5, dpi = 300, bg = "transparent")
 
 # ── 6d. Within-group centered Deming: tmax ────────────────────────────────────
 
@@ -745,14 +754,14 @@ ggplot(tmax_centered, aes(x = tmax_c, y = log_ratio_c, color = evolution_history
       " | Error bars: \u00b11 bootstrap SE | Line: within-group Deming regression (pooled across groups)"
     )
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
     plot.caption    = element_text(size = 8, color = "grey40")
   )
 
-ggsave("figures/deming-norm-tmax-within-20.png", width = 13, height = 5, dpi = 300)
+ggsave("figures/deming-norm-tmax-within-20.png", width = 13, height = 5, dpi = 300, bg = "transparent")
 
 
 # ── 6e. ΔTmax vs log-ratio: quantile regression at 50th and 75th percentiles ──
@@ -806,14 +815,14 @@ ggplot(delta_tmax_dat,
     y       = "log(IC50 / ancestor IC50)",
     caption = "Error bars: \u00b11 bootstrap SE  |  Dashed lines: ancestor reference (0, 0)  |  Lines: pooled quantile regression"
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
     plot.caption    = element_text(size = 8, color = "grey40")
   )
 
-ggsave("figures/deming-norm-dtmax-20.png", width = 13, height = 5, dpi = 300)
+ggsave("figures/deming-norm-dtmax-20.png", width = 13, height = 5, dpi = 300, bg = "transparent")
 
 # ── 6f. Swapped axes: log-ratio on x, ΔTmax on y ─────────────────────────────
 
@@ -862,14 +871,14 @@ ggplot(delta_tmax_dat,
     y       = "\u0394Tmax relative to ancestor (\u00b0C)",
     caption = "Error bars: \u00b11 bootstrap SE  |  Dashed lines: ancestor reference (0, 0)  |  Lines: pooled quantile regression"
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
     plot.caption    = element_text(size = 8, color = "grey40")
   )
 
-ggsave("figures/deming-norm-dtmax-swapped-20.png", width = 13, height = 5, dpi = 300)
+ggsave("figures/deming-norm-dtmax-swapped-20.png", width = 13, height = 5, dpi = 300, bg = "transparent")
 
 # ── 6g. By-group: ΔTmax on x, log-ratio on y ─────────────────────────────────
 
@@ -918,14 +927,14 @@ ggplot(delta_tmax_dat,
     y       = "log(IC50 / ancestor IC50)",
     caption = "Error bars: \u00b11 bootstrap SE  |  Dashed lines: ancestor reference (0, 0)  |  Lines: per-group quantile regression"
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
     plot.caption    = element_text(size = 8, color = "grey40")
   )
 
-ggsave("figures/deming-norm-dtmax-bygroup-flipped-20.png", width = 13, height = 8, dpi = 300)
+ggsave("figures/deming-norm-dtmax-bygroup-flipped-20.png", width = 13, height = 8, dpi = 300, bg = "transparent")
 
 # ── 6h. By-group: log-ratio on x, ΔTmax on y ─────────────────────────────────
 
@@ -974,14 +983,166 @@ ggplot(delta_tmax_dat,
     y       = "\u0394Tmax relative to ancestor (\u00b0C)",
     caption = "Error bars: \u00b11 bootstrap SE  |  Dashed lines: ancestor reference (0, 0)  |  Lines: per-group quantile regression"
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
     plot.caption    = element_text(size = 8, color = "grey40")
   )
 
-ggsave("figures/deming-norm-dtmax-bygroup-20.png", width = 13, height = 8, dpi = 300)
+ggsave("figures/deming-norm-dtmax-bygroup-20.png", width = 13, height = 8, dpi = 300, bg = "transparent")
+
+
+# =============================================================================
+# 6i. Enrichment tests — 40-evolved, top-third ΔTh and ΔTmax
+# =============================================================================
+# Do strains with the largest thermal adaptation (top third of ΔTh or ΔTmax)
+# show higher drug tolerance than the bottom two-thirds?
+#
+# Two tests per thermal trait × drug (one-sided, H1: top-third > bottom):
+#   1. Fisher's exact test  — binarises outcome at log-ratio > 0
+#   2. Wilcoxon rank-sum    — uses full continuous log-ratio distribution
+
+anc_th_c      <- tpc_se |> filter(evolution_history == "fRS585") |> pull(th_c)
+
+forty_evolved <- delta_tmax_dat |> filter(evolution_history == "40 evolved")
+forty_th      <- deming_dat |>
+  filter(evolution_history == "40 evolved") |>
+  mutate(delta_th = th_c - anc_th_c)
+
+tmax_threshold_40 <- forty_evolved |>
+  distinct(strain, delta_tmax) |> pull(delta_tmax) |> quantile(2/3)
+
+th_threshold_40 <- forty_th |>
+  distinct(strain, delta_th) |> pull(delta_th) |> quantile(2/3)
+
+cat(sprintf("ΔTmax top-third threshold (40-evolved): ≥ %.3f°C\n", tmax_threshold_40))
+cat(sprintf("ΔTh  top-third threshold (40-evolved): ≥ %.3f°C\n\n", th_threshold_40))
+
+run_enrichment <- function(dat, delta_var, threshold, label) {
+  d <- dat |> mutate(high = .data[[delta_var]] >= threshold)
+
+  # Fisher's exact test
+  fisher_res <- d |>
+    group_by(drug) |>
+    group_modify(function(g, key) {
+      tab <- table(high_thermal = g$high,
+                   high_ic50    = g$mean_log_ratio > 0)
+      ft  <- fisher.test(tab, alternative = "greater")
+      tibble(
+        n_top_high_ic50  = sum(g$high  & g$mean_log_ratio > 0),
+        n_bot_high_ic50  = sum(!g$high & g$mean_log_ratio > 0),
+        pct_top          = mean(g$mean_log_ratio[g$high]  > 0),
+        pct_bot          = mean(g$mean_log_ratio[!g$high] > 0),
+        odds_ratio       = ft$estimate,
+        p_fisher         = ft$p.value
+      )
+    }) |> ungroup()
+
+  # Wilcoxon rank-sum
+  wilcox_res <- d |>
+    group_by(drug) |>
+    group_modify(function(g, key) {
+      top <- g$mean_log_ratio[g$high]
+      bot <- g$mean_log_ratio[!g$high]
+      wt  <- wilcox.test(top, bot, alternative = "greater", exact = FALSE)
+      tibble(
+        median_top = median(top),
+        median_bot = median(bot),
+        W          = wt$statistic,
+        p_wilcox   = wt$p.value
+      )
+    }) |> ungroup()
+
+  res <- left_join(fisher_res, wilcox_res, by = "drug") |>
+    mutate(across(where(is.numeric), ~round(., 3)))
+
+  cat(sprintf("=== %s ===\n", label))
+  print(res, n = Inf, width = Inf)
+  cat("\n")
+  res
+}
+
+enrich_dtmax <- run_enrichment(forty_evolved, "delta_tmax", tmax_threshold_40,
+                               "ΔTmax, 40-evolved (top-third ≥ 0.650°C)")
+enrich_dth   <- run_enrichment(forty_th,      "delta_th",   th_threshold_40,
+                               "ΔTh, 40-evolved (top-third ≥ 0.378°C)")
+
+write_csv(enrich_dtmax, "data-processed/enrichment-dtmax-40-20.csv")
+write_csv(enrich_dth,   "data-processed/enrichment-dth-40-20.csv")
+
+# ── Visualise top-third vs bottom two-thirds on ΔTmax scatter (40-evolved) ───
+
+plot_dat_40 <- delta_tmax_dat |>
+  filter(evolution_history == "40 evolved") |>
+  mutate(
+    tier = if_else(delta_tmax >= tmax_threshold_40,
+                   "top third", "bottom two-thirds"),
+    tier = factor(tier, levels = c("top third", "bottom two-thirds"))
+  )
+
+qr_40 <- qr_lines_bygroup |> filter(evolution_history == "40 evolved")
+
+# ── Scatter: tier shown by point shape (no regression line) ──────────────────
+ggplot(plot_dat_40, aes(x = delta_tmax, y = mean_log_ratio)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.4) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.4) +
+  geom_vline(xintercept = tmax_threshold_40, linetype = "dotted",
+             color = "grey40", linewidth = 0.5) +
+  geom_errorbar(
+    aes(ymin = mean_log_ratio - se_log_ratio,
+        ymax = mean_log_ratio + se_log_ratio),
+    width = 0, alpha = 0.4, linewidth = 0.4, color = EVO_COLORS["40 evolved"]
+  ) +
+  geom_errorbar(
+    aes(xmin = delta_tmax - se_delta_tmax,
+        xmax = delta_tmax + se_delta_tmax),
+    width = 0, alpha = 0.4, linewidth = 0.4, orientation = "y",
+    color = EVO_COLORS["40 evolved"]
+  ) +
+  geom_point(aes(shape = tier), size = 3,
+             color = EVO_COLORS["40 evolved"], alpha = 0.9) +
+  facet_wrap(~ drug, scales = "free_y") +
+  scale_shape_manual(values = c("top third" = 17, "bottom two-thirds" = 16),
+                     name = "\u0394Tmax tier") +
+  labs(
+    x       = "\u0394Tmax relative to ancestor (\u00b0C)",
+    y       = "log(IC50 / ancestor IC50)",
+    caption = paste0(
+      "Dotted vertical line: top-third threshold (\u0394Tmax \u2265 ",
+      round(tmax_threshold_40, 2), "\u00b0C)",
+      "  |  Error bars: \u00b11 bootstrap SE"
+    )
+  ) +
+  theme_evo() +
+  theme(
+    legend.position = "bottom",
+    strip.text      = element_text(size = 12, face = "bold"),
+    plot.caption    = element_text(size = 8, color = "grey40")
+  )
+
+ggsave("figures/wilcox-dtmax-tier-40-20.png", width = 13, height = 5, dpi = 300, bg = "transparent")
+
+# ── Strip chart: direct Wilcoxon visualization ────────────────────────────────
+ggplot(plot_dat_40, aes(x = tier, y = mean_log_ratio, color = evolution_history)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.4) +
+  geom_jitter(width = 0.12, size = 2.5, alpha = 0.85) +
+  stat_summary(fun = median, geom = "crossbar", width = 0.4,
+               linewidth = 0.7, color = "black", fatten = 1) +
+  facet_wrap(~ drug, scales = "free_y") +
+  scale_color_manual(values = EVO_COLORS, guide = "none") +
+  labs(
+    x       = "\u0394Tmax tier (40-evolved)",
+    y       = "log(IC50 / ancestor IC50)",
+    caption = "Crossbar: median  |  Wilcoxon rank-sum p: amphotericin = 0.051, caspofungin = 0.337, fluconazole = 0.213"
+  ) +
+  theme_evo() +
+  theme(
+    strip.text   = element_text(size = 12, face = "bold"),
+    plot.caption = element_text(size = 8, color = "grey40")
+  )
+
+ggsave("figures/wilcox-dtmax-strip-40-20.png", width = 10, height = 5, dpi = 300, bg = "transparent")
 
 
 # =============================================================================
@@ -997,11 +1158,11 @@ ic50_wide <- norm_boot |>
 
 pca_input <- tpc_se |>
   filter(evolution_history %in% c("35 evolved", "40 evolved")) |>
-  select(strain, evolution_history, topt, tmax, th_c, b80) |>
+  select(strain, evolution_history, topt, tmax, th_c) |>
   inner_join(ic50_wide, by = c("strain" = "population")) |>
   drop_na()
 
-PCA_VARS <- c("topt", "tmax", "th_c", "b80", "fluconazole", "caspofungin", "amphotericin")
+PCA_VARS <- c("topt", "tmax", "th_c", "fluconazole", "caspofungin", "amphotericin")
 
 cat(sprintf("\nPCA input: %d strains × %d variables\n", nrow(pca_input), length(PCA_VARS)))
 cat("Missing after drop_na:", nrow(tpc_se |> filter(evolution_history != "fRS585")) - nrow(pca_input), "strains\n")
@@ -1049,12 +1210,12 @@ ggplot(scores, aes(x = PC1, y = PC2, color = evolution_history)) +
   labs(
     x       = sprintf("PC1 (%.1f%%)", pct[1]),
     y       = sprintf("PC2 (%.1f%%)", pct[2]),
-    caption = "Variables: Topt, Tmax, Th, B80 + log(IC50 / ancestor IC50) for 3 drugs"
+    caption = "Variables: Topt, Tmax, Th + log(IC50 / ancestor IC50) for 3 drugs"
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(legend.position = "bottom")
 
-ggsave("figures/pca-biplot-20.png", width = 7, height = 6, dpi = 300)
+ggsave("figures/pca-biplot-20.png", width = 7, height = 6, dpi = 300, bg = "transparent")
 
 # ── 7b. Within-group centered PCA ─────────────────────────────────────────────
 # Group-mean center each variable within evolution history before PCA so the
@@ -1105,16 +1266,12 @@ ggplot(scores_c, aes(x = PC1, y = PC2, color = evolution_history)) +
   scale_color_manual(values = EVO_COLORS, name = NULL) +
   labs(
     x       = sprintf("PC1 (%.1f%%)", pct_c[1]),
-    y       = sprintf("PC2 (%.1f%%)", pct_c[2]),
-    caption = paste(
-      "Variables group-mean centered within each evolution history before PCA.",
-      "Within-group covariation only."
-    )
+    y       = sprintf("PC2 (%.1f%%)", pct_c[2])
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(legend.position = "bottom")
 
-ggsave("figures/pca-biplot-within-20.png", width = 7, height = 6, dpi = 300)
+ggsave("figures/pca-biplot-within-20.png", width = 5, height = 4, dpi = 300, bg = "transparent")
 
 
 # =============================================================================
@@ -1153,3 +1310,189 @@ write_csv(
 )
 
 cat("\nAll outputs written.\n")
+
+
+# =============================================================================
+# 9. Group-separation tests on PCA scores
+# =============================================================================
+# Tests whether 35-evolved and 40-evolved strains differ in PCA space.
+# Uses the POOLED PCA from section 7a only. The within-group-centered PCA
+# removes between-group mean differences by construction, so testing group
+# separation on those scores would be circular.
+#
+# 9a. Welch t-test + Wilcoxon on PC1 and PC2 scores individually
+#     (unadjusted p-values)
+# 9b. MANOVA (Pillai trace) on PCs retaining ≥ 5% variance
+# 9c. PERMANOVA (vegan::adonis2) — permutation-based, no distributional
+#     assumptions, on the same PCs as MANOVA
+
+library(vegan)
+
+# Variance explained per PC (from pooled PCA)
+pct_var  <- summary(pca)$importance["Proportion of Variance", ] * 100
+pcs_keep <- names(pct_var[pct_var >= 5])
+
+cat(sprintf("\nPCs retained for MANOVA/PERMANOVA (≥ 5%% variance each): %s\n",
+            paste(pcs_keep, collapse = ", ")))
+cat("Variance explained:", paste(sprintf("%s = %.1f%%", pcs_keep, pct_var[pcs_keep]),
+                                 collapse = ", "), "\n")
+
+scores_ev <- scores |>
+  mutate(evolution_history = as.character(evolution_history))
+
+g35 <- scores_ev |> filter(evolution_history == "35 evolved")
+g40 <- scores_ev |> filter(evolution_history == "40 evolved")
+
+# ── 9a. Per-PC Welch t-test + Wilcoxon ───────────────────────────────────────
+
+pc_tests <- map_dfr(c("PC1", "PC2"), function(pc) {
+  t_res <- t.test(g35[[pc]], g40[[pc]])
+  w_res <- wilcox.test(g35[[pc]], g40[[pc]], exact = FALSE)
+  tibble(
+    PC         = pc,
+    mean_35    = mean(g35[[pc]]),
+    mean_40    = mean(g40[[pc]]),
+    diff_40_35 = mean(g40[[pc]]) - mean(g35[[pc]]),
+    ci_lo      = t_res$conf.int[1],
+    ci_hi      = t_res$conf.int[2],
+    p_welch    = t_res$p.value,
+    p_wilcox   = w_res$p.value
+  )
+}) |>
+
+
+cat("\n=== Per-PC tests: 35 evolved vs 40 evolved (pooled PCA) ===\n")
+print(pc_tests |> mutate(across(where(is.numeric), ~round(., 4))), width = Inf)
+
+# ── 9b. MANOVA (Pillai trace) ─────────────────────────────────────────────────
+
+manova_mat <- scores_ev |> select(all_of(pcs_keep)) |> as.matrix()
+grp        <- scores_ev$evolution_history
+
+manova_fit <- manova(manova_mat ~ grp)
+
+cat("\n=== MANOVA (Pillai trace) on PCA scores ===\n")
+print(summary(manova_fit, test = "Pillai"))
+
+# Univariate follow-up (already done per-PC above, but printed again for context)
+cat("\n=== MANOVA: univariate follow-up ===\n")
+print(summary.aov(manova_fit))
+
+# ── 9c. PERMANOVA (adonis2) ───────────────────────────────────────────────────
+# Euclidean distance on PC scores. With orthogonal PCs and Euclidean distance,
+# adonis2 is testing the same hypothesis as MANOVA but without normality
+# assumptions. Results should be very similar; large discrepancies would
+# suggest the normality assumption matters.
+
+set.seed(6193)
+perm_sep <- adonis2(
+  manova_mat ~ grp,
+  method       = "euclidean",
+  permutations = 9999
+)
+
+cat("\n=== PERMANOVA (adonis2, 9999 permutations) on PCA scores ===\n")
+print(perm_sep)
+
+# ── Export ────────────────────────────────────────────────────────────────────
+
+write_csv(pc_tests, "data-processed/pca-group-tests-20.csv")
+
+tidy_manova <- broom::tidy(manova_fit)
+write_csv(tidy_manova, "data-processed/pca-manova-20.csv")
+
+perm_tbl <- as_tibble(perm_sep, rownames = "term")
+write_csv(perm_tbl, "data-processed/pca-permanova-20.csv")
+
+
+# =============================================================================
+# 10. Within-group Spearman correlations: thermal traits vs drug tolerance
+# =============================================================================
+# For each evolution history group, correlate each thermal trait (topt, tmax,
+# th_c) against each drug's mean log-ratio across strains. Spearman rank
+# correlation is used: nonparametric, robust to extreme values in a few
+# strains, and symmetric (no need to designate a predictor axis).
+#
+# No multiple-testing correction applied.
+
+thermal_vars <- c("topt", "tmax", "th_c")
+drug_vars    <- c("fluconazole", "caspofungin", "amphotericin")
+
+# Join thermal traits and IC50 log-ratios per strain
+corr_input <- tpc_se |>
+  filter(evolution_history %in% c("35 evolved", "40 evolved")) |>
+  dplyr::select(strain, evolution_history, all_of(thermal_vars)) |>
+  inner_join(
+    norm_boot |>
+      filter(evolution_history %in% c("35 evolved", "40 evolved")) |>
+      dplyr::select(population, drug, mean_log_ratio) |>
+      pivot_wider(names_from = drug, values_from = mean_log_ratio),
+    by = c("strain" = "population")
+  ) |>
+  drop_na()
+
+within_corr <- corr_input |>
+  group_by(evolution_history) |>
+  group_modify(function(d, key) {
+    expand.grid(
+      thermal = thermal_vars,
+      drug    = drug_vars,
+      stringsAsFactors = FALSE
+    ) |>
+      as_tibble() |>
+      rowwise() |>
+      mutate(
+        n     = nrow(d),
+        rho   = cor(d[[thermal]], d[[drug]], method = "spearman"),
+        p_raw = cor.test(d[[thermal]], d[[drug]],
+                         method = "spearman", exact = FALSE)$p.value
+      ) |>
+      ungroup()
+  }) |>
+  ungroup() |>
+  mutate(sig = case_when(
+    p_raw < 0.001 ~ "***",
+    p_raw < 0.01  ~ "**",
+    p_raw < 0.05  ~ "*",
+    TRUE          ~ "ns"
+  ))
+
+cat("\n=== Within-group Spearman correlations: thermal traits vs log(IC50/ancestor) ===\n")
+within_corr |>
+  mutate(across(c(rho, p_raw), ~round(., 3))) |>
+  arrange(evolution_history, thermal, drug) |>
+  print(n = Inf, width = Inf)
+
+# ── Heatmap of rho values ─────────────────────────────────────────────────────
+
+within_corr |>
+  mutate(
+    thermal           = factor(thermal, levels = c("topt", "tmax", "th_c"),
+                               labels = c("Topt", "Tmax", "Th")),
+    drug              = factor(drug, levels = c("fluconazole", "caspofungin", "amphotericin")),
+    evolution_history = factor(evolution_history, levels = c("35 evolved", "40 evolved"))
+  ) |>
+  ggplot(aes(x = drug, y = thermal, fill = rho)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = sprintf("%.2f%s", rho, sig)), size = 3.8) +
+  facet_wrap(~ evolution_history) +
+  scale_fill_gradient2(
+    low = "#0E63FF", mid = "white", high = "#FA3208",
+    midpoint = 0, limits = c(-1, 1), name = "Spearman \u03c1"
+  ) +
+  labs(
+    x       = NULL,
+    y       = NULL,
+    caption = "Values: Spearman \u03c1  |  Significance: unadjusted p (* p<0.05, ** p<0.01, *** p<0.001)"
+  ) +
+  theme_evo() +
+  theme(
+    strip.text   = element_text(size = 13, face = "bold"),
+    axis.text    = element_text(size = 11),
+    plot.caption = element_text(size = 8, color = "grey40")
+  )
+
+ggsave("figures/within-group-spearman-20.png", width = 9, height = 4,
+       dpi = 300, bg = "transparent")
+
+write_csv(within_corr, "data-processed/within-group-spearman-20.csv")

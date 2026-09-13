@@ -60,6 +60,15 @@ OUT_DIR  <- "data-processed/gcplyr"
 FIGS     <- "figures"
 
 EVO_COLORS <- c("40 evolved" = "#FA3208", "35 evolved" = "#0E63FF", "fRS585" = "#000000")
+
+theme_evo <- function(base_size = 13) {
+  theme_classic(base_size = base_size) +
+    theme(
+      panel.background = element_blank(),
+      legend.background = element_rect(fill = "transparent", colour = NA),
+      plot.background  = element_rect(fill = "transparent", colour = NA)
+    )
+}
 TARGET_EVO <- c("35 evolved", "40 evolved", "fRS585")
 
 # SSH constants
@@ -872,7 +881,7 @@ ggplot(plot_tpc,
       "Bracket: Welch t-test (Holm-corrected)  |  Stars right of mean: vs. ancestor (one-sample t-test)"
     )
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "none",
     strip.text      = element_text(size = 13),
@@ -881,7 +890,7 @@ ggplot(plot_tpc,
 
 ggsave(
   file.path(FIGS, "thermal-traits-dotplot-boot-19.png"),
-  width = 15, height = 7, dpi = 300
+  width = 15, height = 7, dpi = 300, bg = "transparent"
 )
 
 # ── 6b. IC50 dot plots — per-strain bootstrap SE (log scale) ──────────────────
@@ -1036,7 +1045,7 @@ for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
         "Bracket: Welch t-test (Holm-corrected)  |  Stars right of mean: vs. ancestor (one-sample t-test)"
       )
     ) +
-    theme_bw(base_size = 13) +
+    theme_evo() +
     theme(
       legend.position = "none",
       plot.caption    = element_text(size = 8, color = "grey40")
@@ -1044,7 +1053,7 @@ for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
 
   ggsave(
     file.path(FIGS, sprintf("%s-ic50-dotplot-boot-19.png", drg)),
-    width = 5, height = 6, dpi = 300
+    width = 5, height = 6, dpi = 300, bg = "transparent"
   )
 }
 
@@ -1090,7 +1099,7 @@ ggplot() +
     y       = "AUC (blank-corrected)",
     caption = "Ribbon: 95% bootstrap CI (1,000 residual resamples)  |  Points: per-well AUC"
   ) +
-  theme_bw(base_size = 9) +
+  theme_evo(base_size = 9) +
   theme(
     legend.position = "none",
     strip.text      = element_text(size = 7),
@@ -1099,7 +1108,7 @@ ggplot() +
 
 ggsave(
   file.path(FIGS, "tpc-ci-ribbon-per-strain-19.png"),
-  width = 18, height = 14, dpi = 200
+  width = 18, height = 14, dpi = 200, bg = "transparent"
 )
 
 
@@ -1157,7 +1166,7 @@ for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
       y       = "OD (blank-corrected)",
       caption = "Ribbon: 95% bootstrap CI (1,000 residual resamples)  |  Points: per-well OD (all reps pooled)"
     ) +
-    theme_bw(base_size = 9) +
+    theme_evo(base_size = 9) +
     theme(
       legend.position = "none",
       strip.text      = element_text(size = 7),
@@ -1166,7 +1175,7 @@ for (drg in c("fluconazole", "caspofungin", "amphotericin")) {
 
   ggsave(
     file.path(FIGS, sprintf("%s-ci-ribbon-per-strain-19.png", drg)),
-    width = 18, height = 14, dpi = 200
+    width = 18, height = 14, dpi = 200, bg = "transparent"
   )
 }
 
@@ -1368,7 +1377,7 @@ ggplot(deming_dat,
     y       = "log(IC50)",
     caption = "Error bars: \u00b11 bootstrap SE on each axis  |  Line: Deming regression (pooled across evolution histories, per drug)"
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
@@ -1377,7 +1386,7 @@ ggplot(deming_dat,
 
 ggsave(
   file.path(FIGS, "th-ic50-deming-19.png"),
-  width = 13, height = 5, dpi = 300
+  width = 13, height = 5, dpi = 300, bg = "transparent"
 )
 
 
@@ -1501,7 +1510,7 @@ ggplot(deming_centered,
       " |  Error bars: \u00b11 bootstrap SE  |  Line: within-group Deming regression (pooled across groups)"
     )
   ) +
-  theme_bw(base_size = 13) +
+  theme_evo() +
   theme(
     legend.position = "bottom",
     strip.text      = element_text(size = 12, face = "bold"),
@@ -1510,7 +1519,7 @@ ggplot(deming_centered,
 
 ggsave(
   file.path(FIGS, "th-ic50-deming-within-19.png"),
-  width = 13, height = 5, dpi = 300
+  width = 13, height = 5, dpi = 300, bg = "transparent"
 )
 
 

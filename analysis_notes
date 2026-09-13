@@ -1,0 +1,38 @@
+## notes from data analysis
+
+Sunday September 13
+in terms of cross tolerance support, we have the PCA, and the deming regressions
+
+**Main question:** is higher thermal tolerance associated with higher drug tolerance, within or across evolutionary treatment groups?
+
+**Across groups:**
+- 40-evolved has consistently higher thermal traits (Topt, Tmax, Th) than 35-evolved
+- But drug tolerance shifts are drug-specific: 40-evolved is higher only for caspofungin; 35-evolved actually has higher fluconazole and amphotericin tolerance
+- Pooled Deming regression slopes go in opposite directions across drugs (positive for caspofungin, negative for amphotericin and fluconazole) — no consistent cross-tolerance signal
+- The pooled Deming slopes are confounded by between-group separation and should not be interpreted as evidence of cross-tolerance
+
+**Within groups:**
+- Within-group Spearman correlations (n=18 per group): all non-significant across all thermal trait × drug combinations
+- Pooled within-group centered Spearman (variables centered within each group, then pooled to n=36): still all non-significant; closest is th_c × fluconazole (ρ = 0.26, p = 0.13)
+- Within-group centered Deming permutation tests (500 permutations): all non-significant (p = 0.10–1.0)
+- Within-group centered PCA: th_c, fluconazole, and amphotericin co-load on PC1 (31.3% of within-group variance), pointing in the same direction — the strongest suggestion of a within-group association
+  - BUT: this signal is sensitive to two influential strains (35_D4 and 35_B6), which sit at the extreme negative end of PC1 with both low th_c and low drug tolerance; removing them dissolves the co-loading
+  - Caspofungin does not participate in this shared axis (PC1 loading ≈ 0)
+  - The two main axes of within-group variation are orthogonal: PC1 (thermal deactivation + drug tolerance) and PC2 (Topt vs Tmax shape trade-off, independent of drugs)
+
+**Power:**
+- At n=36, power to detect a true ρ of 0.26 is only ~33% (two-sided α = 0.05)
+- To reach 80% power for ρ = 0.26 would require n ≈ 114 strains
+- The non-significant Spearman results are therefore better described as inconclusive than as evidence against cross-tolerance — the study is underpowered for this specific question
+- The PCA is more sensitive than bivariate tests because it extracts shared structure across all variables simultaneously, which is why it picks up a signal the pairwise tests miss
+
+**Conclusion:**
+There is a weak, directional within-group signal in the PCA — strains with higher th_c tend to have higher fluconazole and amphotericin tolerance — but it is not confirmed by bivariate tests, which are underpowered at n=18–36 for effects of this size. The signal is also sensitive to two influential strains (35_D4 and 35_B6). The honest framing is that the data are inconclusive on within-group cross-tolerance: thermal and drug tolerance may have evolved largely independently, but we lack the power to rule out a weak association of ρ ~ 0.25–0.35.
+
+---
+
+**Manuscript text (PCA results):**
+
+To examine whether within-group variation in thermal performance was associated with variation in antifungal drug tolerance, we conducted a principal components analysis (PCA) on all 36 evolved strains (18 per selection temperature). To remove between-group mean differences prior to ordination, all six variables — three thermal performance traits (T~opt~, CT~max~, and the Sharpe-Schoolfield deactivation temperature T~h~) and log(IC50/ancestor IC50) for each of three antifungal drugs — were centered within each evolution history group before analysis.
+
+The first two PCs together explained 60.3% of within-group variance. PC1 (31.3%) was characterized by co-loading of T~h~ (loading = −0.570), fluconazole tolerance (−0.544), and amphotericin B tolerance (−0.497) in the same direction, with caspofungin contributing negligibly (loading = 0.078). PC2 (29.0%) captured an independent axis of variation in TPC shape, with T~opt~ (0.667) and CT~max~ (−0.679) loading in opposing directions and drug tolerance variables near zero. The co-loading of T~h~ with fluconazole and amphotericin B tolerance on PC1 is suggestive of a shared axis of within-group variation. Pairwise Spearman rank correlations between thermal traits and drug tolerances, both within each group (n = 18) and pooled across groups after within-group centering (n = 36), were not statistically significant (all p > 0.05). However, power to detect a true correlation of ρ ≈ 0.26 at n = 36 is approximately 33%, so these null results should be interpreted with caution.
