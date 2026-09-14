@@ -1496,3 +1496,168 @@ ggsave("figures/within-group-spearman-20.png", width = 9, height = 4,
        dpi = 300, bg = "transparent")
 
 write_csv(within_corr, "data-processed/within-group-spearman-20.csv")
+
+
+# =============================================================================
+# 11. TPC trait correlation figures
+# =============================================================================
+# Pairs plot (Topt, Tmax, Th) and investigation of the Topt–Th sign flip
+# between evolution history groups.
+#
+# Outputs (figures/):
+#   tpc-trait-pairs-plot.png      — pairs plot with density diagonals
+#   topt-th-scatter.png           — Topt vs Th with per-group regression lines
+#   eh-topt-th-scatter.png        — eh vs Topt and Th, illustrating the
+#                                   mechanism behind the Topt–Th sign flip
+
+library(patchwork)
+library(ggrepel)
+
+# ── 11a. Load raw SSH params (needed for eh) ──────────────────────────────────
+
+tpc_params_raw <- read_csv("data-processed/gcplyr/tpc-params-auc-gcplyr-17.csv",
+                           show_col_types = FALSE)
+
+traits <- tpc_se |>
+  filter(evolution_history %in% c("35 evolved", "40 evolved", "fRS585")) |>
+  mutate(evolution_history = factor(evolution_history,
+                                    levels = c("35 evolved", "40 evolved", "fRS585")))
+
+traits_ssh <- tpc_params_raw |>
+  filter(evolution_history %in% c("35 evolved", "40 evolved")) |>
+  mutate(evolution_history = factor(evolution_history,
+                                    levels = c("35 evolved", "40 evolved")))
+
+# ── 11b. TPC trait pairs plot ─────────────────────────────────────────────────
+
+var_labels <- c(topt = "Topt (\u00b0C)", tmax = "Tmax (\u00b0C)", th_c = "Th (\u00b0C)")
+
+make_diag <- function(v) {
+  ggplot(traits, aes(x = .data[[v]], fill = evolution_history,
+                     color = evolution_history)) +
+    geom_density(alpha = 0.4, linewidth = 0.5) +
+    scale_fill_manual(values  = EVO_COLORS, guide = "none") +
+    scale_color_manual(values = EVO_COLORS, guide = "none") +
+    labs(x = NULL, y = NULL, title = var_labels[v]) +
+    theme_classic(base_size = 11) +
+    theme(plot.title = element_text(hjust = 0.5, size = 11))
+}
+
+make_lower <- function(xv, yv) {
+  ggplot(traits, aes(x = .data[[xv]], y = .data[[yv]], color = evolution_history)) +
+    geom_point(size = 1.8, alpha = 0.7) +
+    scale_color_manual(values = EVO_COLORS, guide = "none") +
+    labs(x = var_labels[xv], y = var_labels[yv]) +
+    theme_classic(base_size = 11)
+}
+
+make_upper <- function(xv, yv) {
+  r_all <- cor(traits[[xv]], traits[[yv]], use = "complete.obs")
+  r_35  <- cor(
+    traits[[xv]][traits$evolution_history == "35 evolved"],
+    traits[[yv]][traits$evolution_history == "35 evolved"],
+    use = "complete.obs"
+  )
+  r_40  <- cor(
+    traits[[xv]][traits$evolution_history == "40 evolved"],
+    traits[[yv]][traits$evolution_history == "40 evolved"],
+    use = "complete.obs"
+  )
+  label_df <- tibble(
+    x     = c(0.5, 0.5, 0.5),
+    y     = c(0.65, 0.45, 0.25),
+    label = c(sprintf("r = %.2f (all)", r_all),
+              sprintf("r = %.2f (35\u00b0C)", r_35),
+              sprintf("r = %.2f (40\u00b0C)", r_40)),
+    color = c("black", EVO_COLORS["35 evolved"], EVO_COLORS["40 evolved"])
+  )
+  ggplot(label_df, aes(x = x, y = y, label = label, color = color)) +
+    geom_text(size = 3.5, hjust = 0.5) +
+    scale_color_identity() +
+    xlim(0, 1) + ylim(0, 1) +
+    theme_void()
+}
+
+pairs_plot <-
+  (make_diag("topt")          | make_upper("topt", "tmax") | make_upper("topt", "th_c")) /
+  (make_lower("topt", "tmax") | make_diag("tmax")           | make_upper("tmax", "th_c")) /
+  (make_lower("topt", "th_c") | make_lower("tmax", "th_c")  | make_diag("th_c")) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+ggsave("figures/tpc-trait-pairs-plot.png", pairs_plot,
+       width = 8, height = 7, dpi = 300, bg = "transparent")
+
+# ── 11c. Topt vs Th scatter with per-group regression lines ───────────────────
+# Within-group correlations: 35 evolved r = 0.956 (p < 0.001),
+#                             40 evolved r = −0.55 (p = 0.018)
+
+topt_th_plot <- traits |>
+  filter(evolution_history != "fRS585") |>
+  ggplot(aes(x = topt, y = th_c, color = evolution_history)) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.8, alpha = 0.15) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  geom_text_repel(
+    aes(label = strain),
+    size = 2.8, max.overlaps = 20, show.legend = FALSE
+  ) +
+  scale_color_manual(values = EVO_COLORS, name = NULL) +
+  labs(x = "Topt (\u00b0C)", y = "Th (\u00b0C)") +
+  theme_classic(base_size = 12) +
+  theme(legend.position = "bottom")
+
+ggsave("figures/topt-th-scatter.png", topt_th_plot,
+       width = 7, height = 6, dpi = 300, bg = "transparent")
+
+# ── 11d. eh vs Topt and Th ────────────────────────────────────────────────────
+# eh (deactivation energy) predicts Topt equally in both groups (r ≈ 0.95),
+# but has opposite relationships with Th: positive in 35-evolved (r = 0.82),
+# negative in 40-evolved (r = −0.66). This mechanistically explains the
+# Topt–Th sign flip: the 40-evolved group shows an eh–Th trade-off in which
+# high deactivation steepness accompanies lower deactivation temperature.
+
+annotate_r <- function(plt, x_var, y_var) {
+  r_df <- traits_ssh |>
+    group_by(evolution_history) |>
+    summarise(
+      r = cor(.data[[x_var]], .data[[y_var]], use = "complete.obs"),
+      p = cor.test(.data[[x_var]], .data[[y_var]])$p.value,
+      .groups = "drop"
+    ) |>
+    mutate(
+      label = sprintf("r = %.2f%s", r,
+                      ifelse(p < 0.001, "***",
+                             ifelse(p < 0.01, "**",
+                                    ifelse(p < 0.05, "*", "")))),
+      x     = -Inf,
+      y     = if_else(evolution_history == "35 evolved", Inf, -Inf),
+      vjust = if_else(evolution_history == "35 evolved", 1.5, -0.5)
+    )
+  plt +
+    geom_text(
+      data        = r_df,
+      aes(x = x, y = y, label = label, color = evolution_history, vjust = vjust),
+      hjust       = -0.1, size = 3.8, fontface = "bold",
+      show.legend = FALSE, inherit.aes = FALSE
+    )
+}
+
+make_eh_scatter <- function(y_var, y_lab) {
+  plt <- traits_ssh |>
+    ggplot(aes(x = eh, y = .data[[y_var]], color = evolution_history)) +
+    geom_smooth(method = "lm", se = TRUE, linewidth = 0.8, alpha = 0.15) +
+    geom_point(size = 2.5, alpha = 0.8) +
+    scale_color_manual(values = EVO_COLORS, name = NULL) +
+    labs(x = "Deactivation energy eh (eV)", y = y_lab) +
+    theme_classic(base_size = 12) +
+    theme(legend.position = "bottom")
+  annotate_r(plt, "eh", y_var)
+}
+
+eh_fig <- (make_eh_scatter("topt", "Topt (\u00b0C)") |
+           make_eh_scatter("th_c", "Th (\u00b0C)")) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+ggsave("figures/eh-topt-th-scatter.png", eh_fig,
+       width = 10, height = 5, dpi = 300, bg = "transparent")
