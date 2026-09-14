@@ -35,6 +35,33 @@ There is a weak, directional within-group signal in the PCA — strains with hig
 
 To examine whether within-group variation in thermal performance was associated with variation in antifungal drug tolerance, we conducted a principal components analysis (PCA) on all 36 evolved strains (18 per selection temperature). To remove between-group mean differences prior to ordination, all six variables — three thermal performance traits (Topt, Tmax, and the Sharpe-Schoolfield deactivation temperature Th) and log(IC50/ancestor IC50) for each of three antifungal drugs — were centered within each evolution history group before analysis.
 
+---
+
+**Topt–Th sign flip between groups (September 14, 2026):**
+
+The pairs plot of Topt, Tmax, and Th revealed a striking sign flip in the within-group Topt–Th correlation:
+- 35 evolved: r = 0.956, p < 0.001
+- 40 evolved: r = −0.55, p = 0.018
+
+To understand the mechanism, within-group correlations were computed between the raw SSH model parameters (e, eh) and the derived traits (Topt, Th). Activation energy (e) showed no significant correlation with either Topt or Th in either group (all p > 0.13).
+
+Deactivation energy (eh) tells the full story:
+
+| Relationship | 35 evolved | 40 evolved |
+|---|---|---|
+| eh vs Topt | r = 0.948, p < 0.001 | r = 0.962, p < 0.001 |
+| eh vs Th   | r = 0.818, p < 0.001 | r = −0.663, p = 0.003 |
+
+eh strongly predicts Topt in both groups — that part is consistent. The divergence is entirely in the eh–Th relationship, which flips sign between groups.
+
+In the 35-evolved group, eh and Th co-vary positively: strains with steeper deactivation also have a higher deactivation temperature, producing a "globally hotter" TPC. In the 40-evolved group, eh and Th trade off: strains with steeper deactivation tend to have lower Th, and vice versa. Since Topt is tied to eh in both groups, this eh–Th trade-off in the 40-evolved group mechanistically produces the negative Topt–Th correlation.
+
+In the SSH model, eh and Th both govern the falling limb but in complementary ways — high eh with moderate Th can produce similar deactivation behaviour to low eh with high Th. The 40-evolved group appears to have explored this trade-off space, possibly because selection at 40°C (above the ancestral Topt of ~39.4°C) put specific pressure on the deactivation parameters, allowing eh and Th to vary somewhat independently rather than co-evolving upward together as in the 35-evolved group.
+
+Figures: `figures/topt-th-scatter.png`, `figures/eh-topt-th-scatter.png`
+
+---
+
 **Manuscript text (plate-normalized IC50 results, Holm-corrected):**
 
 After plate normalization, neither evolved group had a significantly altered IC~50~ relative to the ancestor for any antifungal drug, and the two groups did not differ significantly from each other (Figure 2G). For fluconazole, both groups trended toward elevated tolerance — 1.60-fold in the 35°C-evolved group (one-sample *t*-test on plate-normalized log[IC~50~/ancestor IC~50~], *n* = 18 populations, Holm-corrected *p* = 0.128, 95% CI for fold change: [1.08, 2.38]) and 1.47-fold in the 40°C-evolved group (Holm-corrected *p* = 0.263, 95% CI: [1.00, 2.18]) — but neither survived correction for multiple comparisons. The two evolved groups did not differ from each other in fluconazole tolerance (40°C/35°C: 0.92-fold; Welch *t*-test, *n* = 18 per group, Holm-corrected *p* = 0.891, 95% CI: [0.54, 1.56]). For caspofungin, the 40°C-evolved group showed a marginal trend toward elevated tolerance relative to the ancestor (1.20-fold; Holm-corrected *p* = 0.319, 95% CI: [0.98, 1.49]), while the 35°C-evolved group was indistinguishable from the ancestor (1.08-fold; Holm-corrected *p* = 0.654); the two groups did not differ from each other (40°C/35°C: 1.11-fold; Holm-corrected *p* = 0.891, 95% CI: [0.84, 1.46]). Neither group showed a significant change in amphotericin B tolerance relative to the ancestor (35°C-evolved: 1.08-fold, Holm-corrected *p* = 0.654; 40°C-evolved: 0.82-fold, Holm-corrected *p* = 0.604) or relative to each other (40°C/35°C: 0.76-fold; Holm-corrected *p* = 0.337, 95% CI: [0.53, 1.07]).
