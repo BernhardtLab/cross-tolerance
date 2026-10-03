@@ -309,7 +309,7 @@ ggplot() +
   theme(legend.position = c(0.02, 0.98), legend.justification = c(0, 1))
 
 ggsave(file.path(FIGS, "tpc-auc-gcplyr-17.png"), width = 9, height = 6, dpi = 300,
-       bg = "transparent")
+       bg = "transparent") ### this in figure 2
 
 
 # ── TPC curves — faceted by evolution history ─────────────────────────────────
@@ -408,10 +408,7 @@ ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolutio
   ) +
   facet_wrap(~ trait, scales = "free_y", labeller = as_labeller(trait_labels_dotplot)) +
   scale_color_manual(values = EVO_COLORS) +
-  labs(x = NULL, y = "Temperature (\u00b0C)",
-       caption = paste("Points: individual strains  |",
-                       "Large point \u00b1 bar: mean \u00b1 SE  |",
-                       "Dashed line: ancestor (fRS585)")) +
+  labs(x = NULL, y = "Temperature (\u00b0C)") +
   theme_evo() +
   theme(legend.position = "none",
         strip.text = element_text(size = 18),
