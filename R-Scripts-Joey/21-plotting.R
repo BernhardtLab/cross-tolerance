@@ -118,6 +118,26 @@ obs_means <- well_metrics |>
   group_by(strain, evolution_history, test_temperature) |>
   summarise(auc_gc = mean(auc_gc, na.rm = TRUE), .groups = "drop")
 
+# Bracket geometry: one bracket per trait spanning its 3 group ticks
+brac_y <- -0.12   # y of horizontal bar
+tip_h  <-  0.025  # height of end ticks (upward)
+lbl_y  <- -0.155  # y of label
+pad    <-  0.22   # padding beyond outermost tick
+
+trait_brackets <- tibble(
+  label = c("T[opt]", "T[h]", "T[max]"),
+  xs = list(
+    c(grp_means$topt, anc$topt),
+    c(grp_means$th_c, anc$th_c),
+    c(grp_means$tmax, anc$tmax)
+  )
+) |>
+  mutate(
+    xmin = map_dbl(xs, min) - pad,
+    xmax = map_dbl(xs, max) + pad,
+    xmid = (xmin + xmax) / 2
+  )
+
 plot_tpc <- ggplot() +
   geom_line(
     data = tpc_preds |>
@@ -154,19 +174,19 @@ plot_tpc <- ggplot() +
            y = y_topt + 0.08,  yend = y_topt + 0.01,
            arrow = arrow(length = unit(0.2, "cm")), color = "grey30") +
   annotate("text", x = anc$topt + 1.3, y = y_topt + 0.09,
-           label = "Topt", hjust = 0, size = 3.5, color = "grey20") +
+           label = "T[opt]", hjust = 0, size = 3.5, color = "grey20", parse = TRUE) +
   annotate("segment",
            x = anc$th_c + 1.2, xend = anc$th_c + 0.2,
            y = y_th + 0.08,    yend = y_th + 0.01,
            arrow = arrow(length = unit(0.2, "cm")), color = "grey30") +
   annotate("text", x = anc$th_c + 1.3, y = y_th + 0.09,
-           label = "Th", hjust = 0, size = 3.5, color = "grey20") +
+           label = "T[h]", hjust = 0, size = 3.5, color = "grey20", parse = TRUE) +
   annotate("segment",
            x = anc$tmax + 0.8, xend = anc$tmax + 0.1,
            y = y_tmax + 0.12,  yend = y_tmax + 0.03,
            arrow = arrow(length = unit(0.2, "cm")), color = "grey30") +
   annotate("text", x = anc$tmax + 0.9, y = y_tmax + 0.13,
-           label = "Tmax", hjust = 0, size = 3.5, color = "grey20") +
+           label = "T[max]", hjust = 0, size = 3.5, color = "grey20", parse = TRUE) +
   # Coloured ticks on x-axis
   annotate("segment",
            x    = c(grp_means$topt, grp_means$th_c, grp_means$tmax,
@@ -177,6 +197,23 @@ plot_tpc <- ggplot() +
            color = c(EVO_COLORS[rep(as.character(grp_means$evolution_history), 3)],
                      rep("#000000", 3)),
            linewidth = 0.8) +
+  # Grouping brackets under ticks
+  annotate("segment",
+           x    = trait_brackets$xmin, xend = trait_brackets$xmax,
+           y    = brac_y,              yend = brac_y,
+           color = "grey50", linewidth = 0.5) +
+  annotate("segment",
+           x    = trait_brackets$xmin, xend = trait_brackets$xmin,
+           y    = brac_y,              yend = brac_y + tip_h,
+           color = "grey50", linewidth = 0.5) +
+  annotate("segment",
+           x    = trait_brackets$xmax, xend = trait_brackets$xmax,
+           y    = brac_y,              yend = brac_y + tip_h,
+           color = "grey50", linewidth = 0.5) +
+  annotate("text",
+           x = trait_brackets$xmid, y = lbl_y,
+           label = trait_brackets$label,
+           size = 3, color = "grey40", hjust = 0.5, parse = TRUE) +
   coord_cartesian(xlim = c(23, 45), clip = "off") +
   labs(x = "Temperature (\u00b0C)", y = "Growth performance (OD\u00b7day)") +
   theme_evo() +
@@ -184,7 +221,8 @@ plot_tpc <- ggplot() +
     legend.position        = c(0.03, 0.03),
     legend.justification   = c("left", "bottom"),
     legend.background      = element_rect(fill = "white", colour = NA),
-    legend.key.size        = unit(0.45, "cm")
+    legend.key.size        = unit(0.45, "cm"),
+    plot.margin            = margin(5, 5, 20, 5, "pt")
   )
 
 
@@ -213,15 +251,15 @@ plot_pca <- ggplot(pca_scores, aes(x = PC1, y = PC2, fill = evolution_history)) 
   geom_text(
     data        = pca_loadings |>
       mutate(label = recode(variable,
-                            topt         = "Topt",
-                            tmax         = "Tmax",
-                            th_c         = "Th",
+                            topt         = "T[opt]",
+                            tmax         = "T[max]",
+                            th_c         = "T[h]",
                             caspofungin  = "Casp",
                             fluconazole  = "Fluc",
                             amphotericin = "Amph")),
     aes(x = PC1_scaled * 1.12, y = PC2_scaled * 1.12, label = label),
     inherit.aes = FALSE,
-    size = 3.2, color = "grey20"
+    size = 3.2, color = "grey20", parse = TRUE
   ) +
   scale_fill_manual(values = EVO_COLORS, name = NULL) +
   labs(
@@ -315,7 +353,8 @@ plot_traits <- ggplot(plot_data_traits,
     color = "black", size = 5, fontface = "bold", nudge_x = 0.3
   ) +
   facet_wrap(~ trait, scales = "free_y",
-             labeller = as_labeller(c(topt = "Topt", tmax = "Tmax", th_c = "Th"))) +
+             labeller = as_labeller(c(topt = "T[opt]", tmax = "T[max]", th_c = "T[h]"),
+                                   label_parsed)) +
   scale_fill_manual(values = EVO_COLORS, guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.12))) +
   labs(x = NULL, y = "Temperature (\u00b0C)") +
