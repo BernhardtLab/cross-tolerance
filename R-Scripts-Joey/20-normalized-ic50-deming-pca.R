@@ -90,8 +90,11 @@ p_stars <- function(p) case_when(
 # 2. Load data
 # =============================================================================
 
-plate_norm <- read_csv("data-processed/normalised-ic50-per-plate.csv",
-                       show_col_types = FALSE)
+# plate_norm <- read_csv("data-processed/normalised-ic50-per-plate.csv",
+#                        show_col_types = FALSE)
+
+plate_norm <- read_csv("data-processed/normalised-ic50-per-plate-july2026.csv",
+                       show_col_types = FALSE) ## I downloaded this from github to restore an old version of the file
 
 tpc_se <- read_csv("data-processed/gcplyr/tpc-boot-se-19.csv",
                    show_col_types = FALSE)
