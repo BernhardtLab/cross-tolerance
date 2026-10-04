@@ -89,12 +89,12 @@ pca_pct      <- read_csv(file.path(OUT, "pca-pct-within-20.csv"),
 # =============================================================================
 
 mean_curves <- tpc_preds |>
-  filter(evolution_history %in% EVO_LEVELS) |>
+  filter(evolution_history %in% c(EVO_LEVELS, "fRS585")) |>
   group_by(evolution_history, temp) |>
   summarise(pred = mean(pred, na.rm = TRUE), .groups = "drop")
 
 obs_means <- well_metrics |>
-  filter(!is.na(auc_gc), evolution_history %in% EVO_LEVELS) |>
+  filter(!is.na(auc_gc), evolution_history %in% c(EVO_LEVELS, "fRS585")) |>
   group_by(strain, evolution_history, test_temperature) |>
   summarise(auc_gc = mean(auc_gc, na.rm = TRUE), .groups = "drop")
 
@@ -302,7 +302,10 @@ plot_ic50 <- ggplot(plot_data_ic50,
     aes(x = evolution_history, y = y_pos, label = label),
     color = "black", size = 5, fontface = "bold", nudge_x = 0.3
   ) +
-  facet_wrap(~ drug, scales = "free_y") +
+  facet_wrap(~ drug, scales = "free_y",
+             labeller = as_labeller(c(amphotericin = "Amphotericin",
+                                      caspofungin  = "Caspofungin",
+                                      fluconazole  = "Fluconazole"))) +
   scale_color_manual(values = EVO_COLORS, name = NULL) +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
   labs(x = NULL, y = expression(log[2](IC50 / "ancestor IC50"))) +
@@ -321,4 +324,4 @@ combined <- (plot_tpc | plot_pca) / plot_traits / plot_ic50 +
   theme(legend.position = "bottom")
 
 ggsave(file.path(FIGS, "combined-figure-21.png"),
-       combined, width = 7, height = 10, dpi = 300, bg = "transparent")
+       combined, width = 8, height = 9, dpi = 300, bg = "transparent")

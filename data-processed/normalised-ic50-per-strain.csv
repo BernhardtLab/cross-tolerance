@@ -20,6 +20,8 @@ population,evolution_history,drug,log_ratio,n_obs
 35_D2,35 evolved,amphotericin,0.3258492844296901,3
 35_D2,35 evolved,caspofungin,-0.006009579811524723,3
 35_D2,35 evolved,fluconazole,1.511955239123359,3
+35_D4,35 evolved,amphotericin,-1.031120832590516,3
+35_D4,35 evolved,caspofungin,1.4878569462523465,3
 35_D4,35 evolved,fluconazole,-1.3109523787680215,3
 35_D8,35 evolved,amphotericin,0.06512230640527927,3
 35_D8,35 evolved,caspofungin,-0.28635813485829004,3

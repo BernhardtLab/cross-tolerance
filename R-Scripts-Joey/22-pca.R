@@ -49,11 +49,11 @@ PCA_VARS <- c("topt", "tmax", "th_c", "fluconazole", "caspofungin", "amphoterici
 ic50_strain <- read_csv(file.path(OUT, "normalised-ic50-per-strain.csv"),
                         show_col_types = FALSE)
 
-ic50_strain <- read_csv("data-processed/normalised-ic50-per-plate-july2026.csv",
+ic50_strain_july <- read_csv("data-processed/normalised-ic50-per-plate-july2026.csv",
                        show_col_types = FALSE) ## I downloaded this from github to restore an old version of the file
 
 
-identical(ic50_strain, ic50_strain_old)
+identical(ic50_strain, ic50_strain_july)
 
 
 tpc_se <- read_csv(file.path(OUT, "gcplyr/tpc-boot-se-19.csv"),
