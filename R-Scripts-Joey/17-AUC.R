@@ -411,6 +411,7 @@ ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolutio
   labs(x = NULL, y = "Temperature (\u00b0C)") +
   theme_evo() +
   theme(legend.position = "none",
+        strip.background = element_blank(),
         strip.text = element_text(size = 18),
         plot.caption = element_text(size = 13, color = "grey40"))
 
@@ -547,18 +548,20 @@ ggplot(plot_data_dotplot, aes(x = evolution_history, y = value, color = evolutio
     aes(x = evolution_history, y = y_pos, label = label),
     color = "black", size = 6, fontface = "bold", nudge_x = 0.3
   ) +
-  facet_wrap(~ trait, scales = "free_y", labeller = as_labeller(trait_labels_dotplot)) +
+  facet_wrap(~ trait, scales = "free_y",
+             labeller = as_labeller(c(topt = "Topt", tmax = "Tmax", th_c = "Th"))) +
   scale_color_manual(values = EVO_COLORS) +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
   labs(x = NULL, y = "Temperature (\u00b0C)",
-       caption = paste(
-         "Points: individual strains  |  Large point \u00b1 bar: mean \u00b1 SE  |",
-         "Dashed line: ancestor (fRS585)\n",
-         "Brackets: Welch t-test (Holm-corrected)  |  Stars to right of mean: vs. ancestor (one-sample t-test)"
-       )) +
+       # caption = paste(
+       #   "Points: individual strains  |  Large point \u00b1 bar: mean \u00b1 SE  |",
+       #   "Dashed line: ancestor (fRS585)\n",
+       #   "Brackets: Welch t-test (Holm-corrected)  |  Stars to right of mean: vs. ancestor (one-sample t-test)")
+) +
   theme_evo() +
   theme(legend.position = "none",
         strip.text = element_text(size = 18),
+        strip.background = element_blank(),
         plot.caption = element_text(size = 13, color = "grey40"))
 
 ggsave(file.path(FIGS, "thermal-traits-dotplot-sig-auc-gcplyr-17.png"), width = 12, height = 5, dpi = 300, bg = "transparent")

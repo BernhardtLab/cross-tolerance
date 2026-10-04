@@ -134,6 +134,9 @@ norm_boot |>
   print()
 
 
+if (FALSE) {  # ── Deming regression (sections 4–6i) — disabled ────────────
+
+
 # =============================================================================
 # 4. Join TPC and IC50 data for Deming regression
 # =============================================================================
@@ -1144,6 +1147,8 @@ ggplot(plot_dat_40, aes(x = tier, y = mean_log_ratio, color = evolution_history)
 
 ggsave("figures/wilcox-dtmax-strip-40-20.png", width = 10, height = 5, dpi = 300, bg = "transparent")
 
+}  # end if (FALSE) — Deming regression (sections 4–6i)
+
 
 # =============================================================================
 # 7. PCA: thermal traits + normalized log-ratios
@@ -1278,19 +1283,22 @@ ggsave("figures/pca-biplot-within-20.png", width = 5, height = 4, dpi = 300, bg 
 # 8. Export
 # =============================================================================
 
-write_csv(norm_boot,             "data-processed/norm-ic50-boot-20.csv")
-write_csv(deming_pooled,         "data-processed/deming-norm-pooled-20.csv")
-write_csv(deming_by_group,       "data-processed/deming-norm-by-group-20.csv")
-write_csv(deming_within,         "data-processed/deming-norm-within-20.csv")
-write_csv(deming_pooled_tmax,    "data-processed/deming-norm-tmax-pooled-20.csv")
-write_csv(deming_by_group_tmax,  "data-processed/deming-norm-tmax-by-group-20.csv")
-write_csv(deming_within_tmax,    "data-processed/deming-norm-tmax-within-20.csv")
-write_csv(ols_tmax_by_group,        "data-processed/ols-norm-tmax-by-group-20.csv")
-write_csv(deming_pooled_dtmax,     "data-processed/deming-norm-dtmax-pooled-20.csv")
-write_csv(deming_by_group_dtmax,   "data-processed/deming-norm-dtmax-by-group-20.csv")
-write_csv(deming_within_dtmax,     "data-processed/deming-norm-dtmax-within-20.csv")
-write_csv(ols_dtmax_by_group,      "data-processed/ols-norm-dtmax-by-group-20.csv")
-write_csv(perm_results,          "data-processed/deming-norm-perm-20.csv")
+write_csv(norm_boot, "data-processed/norm-ic50-boot-20.csv")
+
+if (FALSE) {  # Deming exports — disabled
+  write_csv(deming_pooled,         "data-processed/deming-norm-pooled-20.csv")
+  write_csv(deming_by_group,       "data-processed/deming-norm-by-group-20.csv")
+  write_csv(deming_within,         "data-processed/deming-norm-within-20.csv")
+  write_csv(deming_pooled_tmax,    "data-processed/deming-norm-tmax-pooled-20.csv")
+  write_csv(deming_by_group_tmax,  "data-processed/deming-norm-tmax-by-group-20.csv")
+  write_csv(deming_within_tmax,    "data-processed/deming-norm-tmax-within-20.csv")
+  write_csv(ols_tmax_by_group,     "data-processed/ols-norm-tmax-by-group-20.csv")
+  write_csv(deming_pooled_dtmax,   "data-processed/deming-norm-dtmax-pooled-20.csv")
+  write_csv(deming_by_group_dtmax, "data-processed/deming-norm-dtmax-by-group-20.csv")
+  write_csv(deming_within_dtmax,   "data-processed/deming-norm-dtmax-within-20.csv")
+  write_csv(ols_dtmax_by_group,    "data-processed/ols-norm-dtmax-by-group-20.csv")
+  write_csv(perm_results,          "data-processed/deming-norm-perm-20.csv")
+}  # end Deming exports
 
 write_csv(
   scores   |> select(strain, evolution_history, PC1, PC2, PC3),
@@ -1307,6 +1315,10 @@ write_csv(
 write_csv(
   loadings_c |> select(variable, PC1, PC2),
   "data-processed/pca-loadings-within-20.csv"
+)
+write_csv(
+  tibble(PC = names(pct_c), pct = as.numeric(pct_c)),
+  "data-processed/pca-pct-within-20.csv"
 )
 
 cat("\nAll outputs written.\n")
@@ -1378,21 +1390,21 @@ print(summary(manova_fit, test = "Pillai"))
 cat("\n=== MANOVA: univariate follow-up ===\n")
 print(summary.aov(manova_fit))
 
-# ── 9c. PERMANOVA (adonis2) ───────────────────────────────────────────────────
+# ── 9c. PERMANOVA (adonis2) — commented out ───────────────────────────────────
 # Euclidean distance on PC scores. With orthogonal PCs and Euclidean distance,
 # adonis2 is testing the same hypothesis as MANOVA but without normality
 # assumptions. Results should be very similar; large discrepancies would
 # suggest the normality assumption matters.
 
-set.seed(6193)
-perm_sep <- adonis2(
-  manova_mat ~ grp,
-  method       = "euclidean",
-  permutations = 9999
-)
-
-cat("\n=== PERMANOVA (adonis2, 9999 permutations) on PCA scores ===\n")
-print(perm_sep)
+# set.seed(6193)
+# perm_sep <- adonis2(
+#   manova_mat ~ grp,
+#   method       = "euclidean",
+#   permutations = 9999
+# )
+#
+# cat("\n=== PERMANOVA (adonis2, 9999 permutations) on PCA scores ===\n")
+# print(perm_sep)
 
 # ── Export ────────────────────────────────────────────────────────────────────
 
@@ -1401,8 +1413,11 @@ write_csv(pc_tests, "data-processed/pca-group-tests-20.csv")
 tidy_manova <- broom::tidy(manova_fit)
 write_csv(tidy_manova, "data-processed/pca-manova-20.csv")
 
-perm_tbl <- as_tibble(perm_sep, rownames = "term")
-write_csv(perm_tbl, "data-processed/pca-permanova-20.csv")
+# perm_tbl <- as_tibble(perm_sep, rownames = "term")
+# write_csv(perm_tbl, "data-processed/pca-permanova-20.csv")
+
+
+if (FALSE) {  # ── Section 10: Spearman correlations — disabled ───────────
 
 
 # =============================================================================
@@ -1496,6 +1511,11 @@ ggsave("figures/within-group-spearman-20.png", width = 9, height = 4,
        dpi = 300, bg = "transparent")
 
 write_csv(within_corr, "data-processed/within-group-spearman-20.csv")
+
+}  # end if (FALSE) — Section 10
+
+
+if (FALSE) {  # ── Section 11: TPC trait correlation figures — disabled ────
 
 
 # =============================================================================
@@ -1661,3 +1681,5 @@ eh_fig <- (make_eh_scatter("topt", "Topt (\u00b0C)") |
 
 ggsave("figures/eh-topt-th-scatter.png", eh_fig,
        width = 10, height = 5, dpi = 300, bg = "transparent")
+
+}  # end if (FALSE) — Section 11

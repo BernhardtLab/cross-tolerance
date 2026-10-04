@@ -343,13 +343,13 @@ print(outlier_flags |>
 
 outlier_keys <- outlier_flags |> select(population, drug)
 
-strain_normalised <- strain_normalised |>
-  anti_join(outlier_keys, by = c("population", "drug"))
+# Outlier removal disabled — flagged observations retained
+# strain_normalised <- strain_normalised |>
+#   anti_join(outlier_keys, by = c("population", "drug"))
+# normalised_obs <- normalised_obs |>
+#   anti_join(outlier_keys, by = c("population", "drug"))
 
-normalised_obs <- normalised_obs |>
-  anti_join(outlier_keys, by = c("population", "drug"))
-
-cat(sprintf("Retained: %d strain \u00d7 drug observations after outlier removal\n",
+cat(sprintf("Retained: %d strain \u00d7 drug observations (outlier removal disabled)\n",
             nrow(strain_normalised)))
 
 # =============================================================================
@@ -489,17 +489,17 @@ ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution
   labs(
     x       = NULL,
     y       = expression(log[2](IC50 / "ancestor IC50")),
-    caption = paste(
-      "Points: individual strains (mean across plates)  |",
-      "Large point \u00b1 bar: group mean \u00b1 SE  |",
-      "Dashed line: ancestor level (log2 ratio = 0)\n",
-      "Brackets: Welch t-test, 40 vs 35 evolved (Holm-corrected)  |",
-      "Stars to right of mean: one-sample t-test vs 0"
-    )
+    # caption = paste(
+    #   "Points: individual strains (mean across plates)  |",
+    #   "Large point \u00b1 bar: group mean \u00b1 SE  |",
+    #   "Dashed line: ancestor level (log2 ratio = 0)\n",
+    #   "Brackets: Welch t-test, 40 vs 35 evolved (Holm-corrected)  |",
+    #   "Stars to right of mean: one-sample t-test vs 0")
   ) +
   theme_evo() +
   theme(legend.position = "none",
-        strip.text   = element_text(size = 18, face = "bold"),
+        strip.background = element_blank(),
+        strip.text   = element_text(size = 18),
         plot.caption = element_text(size = 13, color = "grey40"))
 
 ggsave("figures/normalised-ic50-dotplot-sig.png", width = 12, height = 5, dpi = 300, bg = "transparent")
