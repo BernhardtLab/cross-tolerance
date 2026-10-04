@@ -84,12 +84,32 @@ pca_pct      <- read_csv(file.path(OUT, "pca-pct-within-20.csv"),
                          show_col_types = FALSE)
 
 
+# Ancestor landmark values (for TPC annotations)
+anc <- tpc_params |> filter(evolution_history == "fRS585")
+
+# Predicted y on ancestor curve at each landmark temperature
+anc_curve <- tpc_preds |>
+  filter(evolution_history == "fRS585") |>
+  group_by(temp) |>
+  summarise(pred = mean(pred), .groups = "drop")
+y_topt <- approx(anc_curve$temp, anc_curve$pred, xout = anc$topt)$y
+y_th   <- approx(anc_curve$temp, anc_curve$pred, xout = anc$th_c)$y
+y_tmax <- approx(anc_curve$temp, anc_curve$pred, xout = anc$tmax)$y
+
+# Evolved group means per trait (for TPC annotations)
+grp_means <- tpc_params |>
+  filter(evolution_history %in% EVO_LEVELS) |>
+  group_by(evolution_history) |>
+  summarise(across(c(topt, tmax, th_c), mean)) |>
+  mutate(evolution_history = factor(evolution_history, levels = EVO_LEVELS))
+
+
 # =============================================================================
 # 3. TPC curves plot
 # =============================================================================
 
 mean_curves <- tpc_preds |>
-  filter(evolution_history %in% c(EVO_LEVELS, "fRS585")) |>
+  filter(evolution_history %in% c(EVO_LEVELS, "fRS585"), temp >= 23, temp <= 45) |>
   group_by(evolution_history, temp) |>
   summarise(pred = mean(pred, na.rm = TRUE), .groups = "drop")
 
@@ -101,25 +121,71 @@ obs_means <- well_metrics |>
 plot_tpc <- ggplot() +
   geom_line(
     data = tpc_preds |>
-      filter(evolution_history %in% EVO_LEVELS) |>
+      filter(evolution_history %in% EVO_LEVELS, temp >= 23, temp <= 45) |>
       mutate(pred = ifelse(pred < 0, NA, pred)),
     aes(x = temp, y = pred, group = strain, color = evolution_history),
     alpha = 0.2, linewidth = 0.8
   ) +
+  # Evolved group mean curves
   geom_line(
-    data = mean_curves,
+    data = mean_curves |> filter(evolution_history %in% EVO_LEVELS),
     aes(x = temp, y = pred, color = evolution_history),
     linewidth = 2.0
   ) +
+  # Ancestor reference curve — dashed to distinguish from evolved means
+  geom_line(
+    data = mean_curves |> filter(evolution_history == "fRS585"),
+    aes(x = temp, y = pred, color = evolution_history),
+    linewidth = 1.5
+  ) +
   geom_point(
     data = obs_means,
-    aes(x = test_temperature, y = auc_gc, color = evolution_history),
-    size = 2.0, alpha = 0.6
+    aes(x = test_temperature, y = auc_gc, fill = evolution_history),
+    shape = 21, size = 2.5, alpha = 0.8, color = "black"
   ) +
-  scale_color_manual(values = EVO_COLORS, name = NULL) +
-  coord_cartesian(xlim = c(23, 45)) +
+  scale_color_manual(values = EVO_COLORS, name = NULL,
+                     labels = c("35 evolved" = "35 evolved",
+                                "40 evolved" = "40 evolved",
+                                "fRS585"     = "Ancestor")) +
+  scale_fill_manual(values = EVO_COLORS, guide = "none") +
+  # Arrows pointing to ancestor curve features
+  annotate("segment",
+           x = anc$topt + 1.2, xend = anc$topt + 0.2,
+           y = y_topt + 0.08,  yend = y_topt + 0.01,
+           arrow = arrow(length = unit(0.2, "cm")), color = "grey30") +
+  annotate("text", x = anc$topt + 1.3, y = y_topt + 0.09,
+           label = "Topt", hjust = 0, size = 3.5, color = "grey20") +
+  annotate("segment",
+           x = anc$th_c + 1.2, xend = anc$th_c + 0.2,
+           y = y_th + 0.08,    yend = y_th + 0.01,
+           arrow = arrow(length = unit(0.2, "cm")), color = "grey30") +
+  annotate("text", x = anc$th_c + 1.3, y = y_th + 0.09,
+           label = "Th", hjust = 0, size = 3.5, color = "grey20") +
+  annotate("segment",
+           x = anc$tmax + 0.8, xend = anc$tmax + 0.1,
+           y = y_tmax + 0.12,  yend = y_tmax + 0.03,
+           arrow = arrow(length = unit(0.2, "cm")), color = "grey30") +
+  annotate("text", x = anc$tmax + 0.9, y = y_tmax + 0.13,
+           label = "Tmax", hjust = 0, size = 3.5, color = "grey20") +
+  # Coloured ticks on x-axis
+  annotate("segment",
+           x    = c(grp_means$topt, grp_means$th_c, grp_means$tmax,
+                    anc$topt, anc$th_c, anc$tmax),
+           xend = c(grp_means$topt, grp_means$th_c, grp_means$tmax,
+                    anc$topt, anc$th_c, anc$tmax),
+           y = 0.02, yend = -0.08,
+           color = c(EVO_COLORS[rep(as.character(grp_means$evolution_history), 3)],
+                     rep("#000000", 3)),
+           linewidth = 0.8) +
+  coord_cartesian(xlim = c(23, 45), clip = "off") +
   labs(x = "Temperature (\u00b0C)", y = "Growth performance (OD\u00b7day)") +
-  theme_evo()
+  theme_evo() +
+  theme(
+    legend.position        = c(0.03, 0.03),
+    legend.justification   = c("left", "bottom"),
+    legend.background      = element_rect(fill = "white", colour = NA),
+    legend.key.size        = unit(0.45, "cm")
+  )
 
 
 # =============================================================================
@@ -135,8 +201,8 @@ pca_loadings <- pca_loadings |>
 pc1_pct <- pca_pct |> filter(PC == "PC1") |> pull(pct)
 pc2_pct <- pca_pct |> filter(PC == "PC2") |> pull(pct)
 
-plot_pca <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = evolution_history)) +
-  geom_point(size = 2.5, alpha = 0.8) +
+plot_pca <- ggplot(pca_scores, aes(x = PC1, y = PC2, fill = evolution_history)) +
+  geom_point(shape = 21, size = 2.5, alpha = 0.8, color = "black") +
   geom_segment(
     data        = pca_loadings,
     aes(x = 0, y = 0, xend = PC1_scaled, yend = PC2_scaled),
@@ -145,17 +211,25 @@ plot_pca <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = evolution_history))
     color = "grey30", linewidth = 0.6
   ) +
   geom_text(
-    data        = pca_loadings,
-    aes(x = PC1_scaled * 1.12, y = PC2_scaled * 1.12, label = variable),
+    data        = pca_loadings |>
+      mutate(label = recode(variable,
+                            topt         = "Topt",
+                            tmax         = "Tmax",
+                            th_c         = "Th",
+                            caspofungin  = "Casp",
+                            fluconazole  = "Fluc",
+                            amphotericin = "Amph")),
+    aes(x = PC1_scaled * 1.12, y = PC2_scaled * 1.12, label = label),
     inherit.aes = FALSE,
     size = 3.2, color = "grey20"
   ) +
-  scale_color_manual(values = EVO_COLORS, name = NULL) +
+  scale_fill_manual(values = EVO_COLORS, name = NULL) +
   labs(
     x = sprintf("PC1 (%.1f%%)", pc1_pct),
     y = sprintf("PC2 (%.1f%%)", pc2_pct)
   ) +
-  theme_evo()
+  theme_evo() +
+  theme(legend.position = "none")
 
 
 # =============================================================================
@@ -215,19 +289,25 @@ anc_stars_traits <- stats_tpc |>
   mutate(y_pos = mean_val + se + y_span * 0.10)
 
 plot_traits <- ggplot(plot_data_traits,
-                      aes(x = evolution_history, y = value, color = evolution_history)) +
+                      aes(x = evolution_history, y = value, fill = evolution_history)) +
   geom_hline(data = anc_ref_traits, aes(yintercept = anc_val),
              linetype = "dashed", color = "#000000", linewidth = 0.6) +
-  geom_jitter(width = 0.12, size = 2.5, alpha = 0.6) +
-  geom_pointrange(
+  geom_jitter(shape = 21, width = 0.12, size = 2.5, alpha = 0.6, color = "black") +
+  geom_linerange(
     data = group_means_traits,
     aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
-    size = 0.8, linewidth = 1.4
+    linewidth = 1.4, color = "black"
+  ) +
+  geom_point(
+    data  = group_means_traits,
+    aes(y = mean_val, fill = evolution_history),
+    shape = 21, size = 3, color = "black", stroke = 1.5
   ) +
   suppressWarnings(ggsignif::geom_signif(
-    data       = bracket_traits,
+    data        = bracket_traits,
     aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
-    manual     = TRUE, tip_length = 0.02, textsize = 5.5, color = "black"
+    manual      = TRUE, inherit.aes = FALSE,
+    tip_length  = 0.02, textsize = 4.6, color = "black"
   )) +
   geom_text(
     data  = anc_stars_traits,
@@ -236,12 +316,19 @@ plot_traits <- ggplot(plot_data_traits,
   ) +
   facet_wrap(~ trait, scales = "free_y",
              labeller = as_labeller(c(topt = "Topt", tmax = "Tmax", th_c = "Th"))) +
-  scale_color_manual(values = EVO_COLORS, name = NULL) +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
+  scale_fill_manual(values = EVO_COLORS, guide = "none") +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.12))) +
   labs(x = NULL, y = "Temperature (\u00b0C)") +
   theme_evo() +
-  theme(strip.background = element_blank(),
-        strip.text = element_text(size = 13))
+  theme(
+    strip.background  = element_blank(),
+    strip.text        = element_text(size = 13),
+    legend.position   = "none",
+    axis.text.x       = element_blank(),
+    axis.ticks.x      = element_blank(),
+    axis.line.x       = element_blank(),
+    axis.title.x      = element_blank()
+  )
 
 
 # =============================================================================
@@ -284,18 +371,24 @@ anc_stars_ic50 <- stats_ic50 |>
   mutate(y_pos = mean_val + se + y_span * 0.10)
 
 plot_ic50 <- ggplot(plot_data_ic50,
-                    aes(x = evolution_history, y = log_ratio, color = evolution_history)) +
+                    aes(x = evolution_history, y = log_ratio, fill = evolution_history)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "#000000", linewidth = 0.6) +
-  geom_jitter(width = 0.12, size = 2.5, alpha = 0.6) +
-  geom_pointrange(
+  geom_jitter(shape = 21, width = 0.12, size = 2.5, alpha = 0.6, color = "black") +
+  geom_linerange(
     data = gmeans_ic50,
     aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
-    size = 0.8, linewidth = 1.4
+    linewidth = 1.4, color = "black"
+  ) +
+  geom_point(
+    data  = gmeans_ic50,
+    aes(y = mean_val, fill = evolution_history),
+    shape = 21, size = 3, color = "black", stroke = 1.5
   ) +
   suppressWarnings(ggsignif::geom_signif(
-    data       = bracket_ic50,
+    data        = bracket_ic50,
     aes(xmin = xmin, xmax = xmax, annotations = annotations, y_position = y_position),
-    manual     = TRUE, tip_length = 0.02, textsize = 5.5, color = "black"
+    manual      = TRUE, inherit.aes = FALSE,
+    tip_length  = 0.02, textsize = 4.6, color = "black"
   )) +
   geom_text(
     data  = anc_stars_ic50,
@@ -306,22 +399,29 @@ plot_ic50 <- ggplot(plot_data_ic50,
              labeller = as_labeller(c(amphotericin = "Amphotericin",
                                       caspofungin  = "Caspofungin",
                                       fluconazole  = "Fluconazole"))) +
-  scale_color_manual(values = EVO_COLORS, name = NULL) +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
-  labs(x = NULL, y = expression(log[2](IC50 / "ancestor IC50"))) +
+  scale_fill_manual(values = EVO_COLORS, guide = "none") +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.12))) +
+  labs(x = "Evolution history", y = expression(log[2](IC50 / "ancestor IC50"))) +
   theme_evo() +
-  theme(strip.background = element_blank(),
-        strip.text = element_text(size = 13))
+  theme(
+    strip.background = element_blank(),
+    strip.text       = element_text(size = 13),
+    legend.position  = "none"
+  )
 
 
 # =============================================================================
 # 7. Combine and save
 # =============================================================================
 
-combined <- (plot_tpc | plot_pca) / plot_traits / plot_ic50 +
-  plot_layout(heights = c(1.3, 1, 1), guides = "collect") +
+combined <- ((plot_tpc | plot_pca) + plot_layout(widths = c(3, 2))) /
+  plot_traits /
+  plot_ic50 +
+  plot_layout(heights = c(1.6, 1, 1)) +
   plot_annotation(tag_levels = "A") &
-  theme(legend.position = "bottom")
+  theme(axis.title   = element_text(size = 12),
+        axis.text    = element_text(size = 11),
+        plot.margin  = margin(0, 2, 0, 2, "pt"))
 
 ggsave(file.path(FIGS, "combined-figure-21.png"),
-       combined, width = 8, height = 9, dpi = 300, bg = "transparent")
+       combined, width = 8, height = 8, dpi = 300, bg = "transparent")
