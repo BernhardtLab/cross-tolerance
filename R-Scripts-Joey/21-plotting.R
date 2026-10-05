@@ -324,22 +324,28 @@ anc_stars_traits <- stats_tpc |>
   filter(!is.na(trait)) |>
   left_join(group_means_traits, by = c("trait", "evolution_history")) |>
   left_join(y_range_traits, by = "trait") |>
-  mutate(y_pos = mean_val + se + y_span * 0.10)
+  mutate(
+    y_pos    = mean_val + se + y_span * 0.10,
+    txt_face = if_else(label == "ns", "plain", "bold"),
+    txt_size = if_else(label == "ns", 3.5, 5)
+  )
 
 plot_traits <- ggplot(plot_data_traits,
                       aes(x = evolution_history, y = value, fill = evolution_history)) +
   geom_hline(data = anc_ref_traits, aes(yintercept = anc_val),
              linetype = "dashed", color = "#000000", linewidth = 0.6) +
   geom_jitter(shape = 21, width = 0.12, size = 2.5, alpha = 0.6, color = "black") +
-  geom_linerange(
+  geom_errorbar(
     data = group_means_traits,
     aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
-    linewidth = 1.4, color = "black"
+    linewidth = 1.2, width = 0.15, color = "black",
+    position = position_nudge(x = -0.3)
   ) +
   geom_point(
     data  = group_means_traits,
     aes(y = mean_val, fill = evolution_history),
-    shape = 21, size = 3, color = "black", stroke = 1.5
+    shape = 21, size = 2, color = "black", stroke = 1.2,
+    position = position_nudge(x = -0.3)
   ) +
   suppressWarnings(ggsignif::geom_signif(
     data        = bracket_traits,
@@ -349,13 +355,15 @@ plot_traits <- ggplot(plot_data_traits,
   )) +
   geom_text(
     data  = anc_stars_traits,
-    aes(x = evolution_history, y = y_pos, label = label),
-    color = "black", size = 5, fontface = "bold", nudge_x = 0.3
+    aes(x = evolution_history, y = y_pos, label = label,
+        size = txt_size, fontface = txt_face),
+    color = "black", nudge_x = -0.3
   ) +
   facet_wrap(~ trait, scales = "free_y",
              labeller = as_labeller(c(topt = "T[opt]", tmax = "T[max]", th_c = "T[h]"),
                                    label_parsed)) +
   scale_fill_manual(values = EVO_COLORS, guide = "none") +
+  scale_size_identity() +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.12))) +
   labs(x = NULL, y = "Temperature (\u00b0C)") +
   theme_evo() +
@@ -407,21 +415,27 @@ anc_stars_ic50 <- stats_ic50 |>
   ) |>
   left_join(gmeans_ic50, by = c("drug", "evolution_history")) |>
   left_join(y_range_ic50, by = "drug") |>
-  mutate(y_pos = mean_val + se + y_span * 0.10)
+  mutate(
+    y_pos    = mean_val + se + y_span * 0.10,
+    txt_face = if_else(label == "ns", "plain", "bold"),
+    txt_size = if_else(label == "ns", 3.5, 5)
+  )
 
 plot_ic50 <- ggplot(plot_data_ic50,
                     aes(x = evolution_history, y = log_ratio, fill = evolution_history)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "#000000", linewidth = 0.6) +
   geom_jitter(shape = 21, width = 0.12, size = 2.5, alpha = 0.6, color = "black") +
-  geom_linerange(
+  geom_errorbar(
     data = gmeans_ic50,
     aes(y = mean_val, ymin = mean_val - se, ymax = mean_val + se),
-    linewidth = 1.4, color = "black"
+    linewidth = 1.2, width = 0.15, color = "black",
+    position = position_nudge(x = -0.3)
   ) +
   geom_point(
     data  = gmeans_ic50,
     aes(y = mean_val, fill = evolution_history),
-    shape = 21, size = 3, color = "black", stroke = 1.5
+    shape = 21, size = 2, color = "black", stroke = 1.2,
+    position = position_nudge(x = -0.3)
   ) +
   suppressWarnings(ggsignif::geom_signif(
     data        = bracket_ic50,
@@ -431,16 +445,18 @@ plot_ic50 <- ggplot(plot_data_ic50,
   )) +
   geom_text(
     data  = anc_stars_ic50,
-    aes(x = evolution_history, y = y_pos, label = label),
-    color = "black", size = 5, fontface = "bold", nudge_x = 0.3
+    aes(x = evolution_history, y = y_pos, label = label,
+        size = txt_size, fontface = txt_face),
+    color = "black", nudge_x = -0.3
   ) +
   facet_wrap(~ drug, scales = "free_y",
              labeller = as_labeller(c(amphotericin = "Amphotericin",
                                       caspofungin  = "Caspofungin",
                                       fluconazole  = "Fluconazole"))) +
   scale_fill_manual(values = EVO_COLORS, guide = "none") +
+  scale_size_identity() +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.12))) +
-  labs(x = "Evolution history", y = expression(log[2](IC50 / "ancestor IC50"))) +
+  labs(x = "Evolution history", y = expression(log[2](IC[50] / "ancestor IC"[50]))) +
   theme_evo() +
   theme(
     strip.background = element_blank(),
@@ -456,11 +472,11 @@ plot_ic50 <- ggplot(plot_data_ic50,
 combined <- ((plot_tpc | plot_pca) + plot_layout(widths = c(3, 2))) /
   plot_traits /
   plot_ic50 +
-  plot_layout(heights = c(1.6, 1, 1)) +
+  plot_layout(heights = c(1.1, 1, 1)) +
   plot_annotation(tag_levels = "A") &
   theme(axis.title   = element_text(size = 12),
         axis.text    = element_text(size = 11),
         plot.margin  = margin(0, 2, 0, 2, "pt"))
 
 ggsave(file.path(FIGS, "combined-figure-21.png"),
-       combined, width = 8, height = 8, dpi = 300, bg = "transparent")
+       combined, width = 7, height = 8, dpi = 300, bg = "transparent")
