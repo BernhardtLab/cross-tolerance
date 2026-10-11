@@ -15,7 +15,7 @@
 #   7. Dotplots + export
 #
 # Evolved-strain plate observations whose ancestor IC50 fit failed are dropped.
-# All 36 strains retain ≥1 matched observation. Counts printed at runtime.
+# All 36 strains retain ≥1 matched observation.
 #
 # Outputs:
 #   data-processed/normalised-ic50-per-plate.csv   (per-plate IC50s + log ratio)
@@ -562,3 +562,52 @@ write_csv(normalised_obs,   "data-processed/normalised-ic50-per-plate.csv")
 write_csv(strain_normalised, "data-processed/normalised-ic50-per-strain.csv")
 write_csv(results_norm,      "data-processed/stats-results-normalised-ic50.csv")
 write_csv(lm_results,        "data-processed/stats-results-month-adjusted-lm-ic50.csv")
+
+# =============================================================================
+# 10. Supplement figures — IC50 curve fits (evolved strains only, no ancestor)
+#     One PNG per drug; one facet per plate (strain × replicate).
+# =============================================================================
+
+evo_raw    <- raw_plot_data |> filter(population != "fRS585")
+evo_curves <- pred_curves   |> filter(population != "fRS585")
+evo_ic50   <- ic50_lines    |> filter(population != "fRS585")
+
+NCOL <- 8
+
+for (drug_i in all_drugs) {
+  raw_sub   <- evo_raw    |> filter(drug == drug_i)
+  curve_sub <- evo_curves |> filter(drug == drug_i)
+  ic50_sub  <- evo_ic50   |> filter(drug == drug_i)
+
+  n_facets <- n_distinct(paste(raw_sub$population, raw_sub$plate_id))
+  n_rows   <- ceiling(n_facets / NCOL)
+
+  p <- ggplot(raw_sub, aes(x = concentration, y = OD, color = evolution_history)) +
+    geom_point(size = 0.9, alpha = 0.7) +
+    geom_line(data = curve_sub, aes(y = od_pred, color = evolution_history),
+              linewidth = 0.65) +
+    geom_vline(data = ic50_sub, aes(xintercept = ic50),
+               linetype = "dashed", color = "firebrick", linewidth = 0.5) +
+    geom_text(data = ic50_sub,
+              aes(x = ic50, y = Inf, label = ic50_label),
+              vjust = 1.4, hjust = -0.1, size = 2.0, color = "firebrick",
+              inherit.aes = FALSE) +
+    scale_x_log10() +
+    scale_color_manual(values = EVO_COLORS, name = NULL) +
+    facet_wrap(~ population + plate_id, ncol = NCOL) +
+    labs(
+      title = drug_i,
+      x     = "Concentration (log scale)",
+      y     = "OD (blank-corrected)"
+    ) +
+    theme_evo(base_size = 8) +
+    theme(strip.text = element_text(size = 6))
+
+  out_file <- sprintf("figures/supp-ic50-curves-%s.pdf",
+                      gsub("[^a-zA-Z0-9]", "-", tolower(drug_i)))
+  ggsave(out_file, p,
+         width  = NCOL * 2.2,
+         height = n_rows * 2.2 + 0.8,
+         bg     = "white")
+  cat("Saved:", out_file, "\n")
+}
