@@ -424,7 +424,7 @@ ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution
     aes(y = m, ymin = m - se, ymax = m + se),
     size = 0.7, linewidth = 1.1
   ) +
-  facet_wrap(~ drug, scales = "free_y") +
+  facet_wrap(~ drug, scales = "free_y", strip.position = "bottom") +
   scale_color_manual(values = EVO_COLORS) +
   labs(
     x       = NULL,
@@ -435,12 +435,13 @@ ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution
       "Dashed line: ancestor level (log2 ratio = 0)"
     )
   ) +
-  theme_evo() +
+  theme_evo(base_size = 22) +
   theme(legend.position = "none",
-        strip.text   = element_text(size = 13, face = "bold"),
-        plot.caption = element_text(size = 8, color = "grey40"))
+        strip.placement = "outside",
+        strip.text   = element_text(size = 16, face = "bold"),
+        plot.caption = element_text(size = 11, color = "grey40"))
 
-ggsave("figures/normalised-ic50-dotplot.png", width = 12, height = 5, dpi = 300, bg = "transparent")
+ggsave("figures/normalised-ic50-dotplot.png", width = 8, height = 4, dpi = 300, bg = "transparent")
 
 # ── With significance annotations ────────────────────────────────────────────
 
@@ -483,7 +484,7 @@ ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution
     aes(x = evolution_history, y = y_pos, label = label),
     color   = "black", size = 6, fontface = "bold", nudge_x = 0.3
   ) +
-  facet_wrap(~ drug, scales = "free_y") +
+  facet_wrap(~ drug, scales = "free_y", strip.position = "bottom") +
   scale_color_manual(values = EVO_COLORS) +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
   labs(
@@ -496,13 +497,14 @@ ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution
     #   "Brackets: Welch t-test, 40 vs 35 evolved (Holm-corrected)  |",
     #   "Stars to right of mean: one-sample t-test vs 0")
   ) +
-  theme_evo() +
+  theme_evo(base_size = 22) +
   theme(legend.position = "none",
+        strip.placement  = "outside",
         strip.background = element_blank(),
         strip.text   = element_text(size = 18),
         plot.caption = element_text(size = 13, color = "grey40"))
 
-ggsave("figures/normalised-ic50-dotplot-sig.png", width = 12, height = 5, dpi = 300, bg = "transparent")
+ggsave("figures/normalised-ic50-dotplot-sig.png", width = 8, height = 4, dpi = 300, bg = "transparent")
 
 # =============================================================================
 # 8. Month-adjusted LM (all drugs)
@@ -579,34 +581,45 @@ for (drug_i in all_drugs) {
   curve_sub <- evo_curves |> filter(drug == drug_i)
   ic50_sub  <- evo_ic50   |> filter(drug == drug_i)
 
-  n_facets <- n_distinct(paste(raw_sub$population, raw_sub$plate_id))
+  make_label <- function(population, plate_id) paste0(population, " | ", plate_id)
+
+  raw_sub   <- raw_sub   |> mutate(facet_label = make_label(population, plate_id))
+  curve_sub <- curve_sub |> mutate(facet_label = make_label(population, plate_id))
+  ic50_sub  <- ic50_sub  |> mutate(facet_label = make_label(population, plate_id))
+
+  n_facets <- n_distinct(raw_sub$facet_label)
   n_rows   <- ceiling(n_facets / NCOL)
 
   p <- ggplot(raw_sub, aes(x = concentration, y = OD, color = evolution_history)) +
-    geom_point(size = 0.9, alpha = 0.7) +
+    geom_point(size = 2.0, alpha = 0.7) +
     geom_line(data = curve_sub, aes(y = od_pred, color = evolution_history),
-              linewidth = 0.65) +
+              linewidth = 1.0) +
     geom_vline(data = ic50_sub, aes(xintercept = ic50),
-               linetype = "dashed", color = "firebrick", linewidth = 0.5) +
+               linetype = "dashed", color = "firebrick", linewidth = 0.7) +
     geom_text(data = ic50_sub,
               aes(x = ic50, y = Inf, label = ic50_label),
-              vjust = 1.4, hjust = -0.1, size = 2.0, color = "firebrick",
+              vjust = 1.4, hjust = -0.1, size = 3.5, color = "firebrick",
               inherit.aes = FALSE) +
     scale_x_log10() +
     scale_color_manual(values = EVO_COLORS, name = NULL) +
-    facet_wrap(~ population + plate_id, ncol = NCOL) +
+    facet_wrap(~ facet_label, ncol = NCOL) +
     labs(
       title = drug_i,
-      x     = "Concentration (log scale)",
+      x     = paste(str_to_sentence(drug_i), "concentration (log scale)"),
       y     = "OD (blank-corrected)"
     ) +
-    theme_evo(base_size = 8) +
-    theme(strip.text = element_text(size = 6))
+    theme_evo(base_size = 20) +
+    theme(
+      strip.text     = element_text(size = 9, margin = margin(2, 0, 2, 0)),
+      strip.background = element_blank(),
+      legend.position = "bottom",
+      legend.text     = element_text(size = 20)
+    )
 
   out_file <- sprintf("figures/supp-ic50-curves-%s.pdf",
                       gsub("[^a-zA-Z0-9]", "-", tolower(drug_i)))
   ggsave(out_file, p,
-         width  = NCOL * 2.2,
+         width  = NCOL * 4.1,
          height = n_rows * 2.2 + 0.8,
          bg     = "white")
   cat("Saved:", out_file, "\n")
