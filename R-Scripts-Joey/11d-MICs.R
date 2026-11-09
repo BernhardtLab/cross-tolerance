@@ -567,7 +567,7 @@ write_csv(lm_results,        "data-processed/stats-results-month-adjusted-lm-ic5
 
 # =============================================================================
 # 10. Supplement figures — IC50 curve fits (evolved strains only, no ancestor)
-#     One PNG per drug; one facet per plate (strain × replicate).
+#     One PNG per drug; one facet per plate (strain × replicate). Note these are for Figure S5 in the SI.
 # =============================================================================
 
 evo_raw    <- raw_plot_data |> filter(population != "fRS585")
