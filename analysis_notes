@@ -3,8 +3,8 @@
 Nov 10 -- come back to the weird MIC fits, and decide what to do with them. With so few populations (36), we will have limited power to detect anything, and this could be thrown off by weird fits / outliers.
 
 Fluconazole
-40_E9, IC50 = 2.49
-40_G9, ic50 = 127
+40_E9, IC50 = 2.49 (february plate 2 rep 1)
+40_G9, ic50 = 127 (march set 4 rep 3)
 
 Caspofungin
 40_C7, not fit
@@ -97,9 +97,11 @@ Figures: `figures/topt-th-scatter.png`, `figures/eh-topt-th-scatter.png`
 
 ---
 
-**Manuscript text (plate-normalized IC50 results, Holm-corrected):**
+**Manuscript text (plate-normalized IC50 results, uncorrected p-values; updated November 9, 2026):**
 
-After plate normalization, neither evolved group had a significantly altered IC~50~ relative to the ancestor for any antifungal drug, and the two groups did not differ significantly from each other (Figure 2G). For fluconazole, both groups trended toward elevated tolerance — 1.60-fold in the 35°C-evolved group (one-sample *t*-test on plate-normalized log[IC~50~/ancestor IC~50~], *n* = 18 populations, Holm-corrected *p* = 0.128, 95% CI for fold change: [1.08, 2.38]) and 1.47-fold in the 40°C-evolved group (Holm-corrected *p* = 0.263, 95% CI: [1.00, 2.18]) — but neither survived correction for multiple comparisons. The two evolved groups did not differ from each other in fluconazole tolerance (40°C/35°C: 0.92-fold; Welch *t*-test, *n* = 18 per group, Holm-corrected *p* = 0.891, 95% CI: [0.54, 1.56]). For caspofungin, the 40°C-evolved group showed a marginal trend toward elevated tolerance relative to the ancestor (1.20-fold; Holm-corrected *p* = 0.319, 95% CI: [0.98, 1.49]), while the 35°C-evolved group was indistinguishable from the ancestor (1.08-fold; Holm-corrected *p* = 0.654); the two groups did not differ from each other (40°C/35°C: 1.11-fold; Holm-corrected *p* = 0.891, 95% CI: [0.84, 1.46]). Neither group showed a significant change in amphotericin B tolerance relative to the ancestor (35°C-evolved: 1.08-fold, Holm-corrected *p* = 0.654; 40°C-evolved: 0.82-fold, Holm-corrected *p* = 0.604) or relative to each other (40°C/35°C: 0.76-fold; Holm-corrected *p* = 0.337, 95% CI: [0.53, 1.07]).
+Results reflect the exclusion of five poorly fitting dose-response curves (40_E9 and 40_G9 fluconazole, 40_C9 caspofungin, 40_D8 and 40_E11 amphotericin B; one plate each) and report uncorrected *p*-values. Source: `data-processed/supp-table-ic50-pvalues.csv` (11d-MICs.R, section 6b).
+
+After plate normalization, both evolved groups showed modestly elevated fluconazole tolerance relative to the ancestor, whereas neither group differed from the ancestor in caspofungin or amphotericin B tolerance, and the two groups did not differ from each other for any drug (Figure 2G). For fluconazole, IC~50~ was 1.39-fold higher than the ancestor in the 35°C-evolved group (one-sample *t*-test on plate-normalized log~2~[IC~50~/ancestor IC~50~], *n* = 18 populations, *p* = 0.021, 95% CI for fold change: [1.06, 1.82]) and 1.37-fold higher in the 40°C-evolved group (*n* = 18, *p* = 0.013, 95% CI: [1.08, 1.74]); the two groups were nearly identical (40°C/35°C: 0.99-fold; Welch *t*-test, *n* = 18 per group, *p* = 0.934, 95% CI: [0.70, 1.40]). For caspofungin, the 40°C-evolved group showed a marginal, non-significant trend toward elevated tolerance (1.15-fold; *p* = 0.058, 95% CI: [0.99, 1.33]), while the 35°C-evolved group was indistinguishable from the ancestor (1.06-fold; *p* = 0.394, 95% CI: [0.92, 1.21]); the two groups did not differ (40°C/35°C: 1.09-fold; *p* = 0.374, 95% CI: [0.90, 1.32]). Neither group showed a change in amphotericin B tolerance relative to the ancestor (35°C-evolved: 1.06-fold, *p* = 0.327, 95% CI: [0.94, 1.18]; 40°C-evolved: 0.94-fold, *p* = 0.449, 95% CI: [0.78, 1.12]) or relative to each other (40°C/35°C: 0.89-fold; *p* = 0.241, 95% CI: [0.72, 1.09]). The fluconazole results remained significant after Holm correction within drug (35°C-evolved: *p* = 0.043; 40°C-evolved: *p* = 0.039) but not after Holm correction across all nine tests (*p* = 0.170 and 0.116, respectively; Table SX); we therefore interpret them as suggestive evidence of a modest increase in fluconazole tolerance shared by both selection regimes, rather than a temperature-specific effect.
 
 ---
 

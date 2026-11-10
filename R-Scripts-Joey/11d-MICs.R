@@ -11,9 +11,12 @@
 #      same plate: log2_ratio = log2(strain IC50 / ancestor IC50)
 #   5. Average log2_ratio across plates per strain per drug
 #   6. Statistical tests: Welch t-test (40 vs 35 evolved) + one-sample t-test
-#      vs 0 (log ratio = 0 ↔ strain equals ancestor); Holm-corrected
+#      vs 0 (log ratio = 0 ↔ strain equals ancestor); p-values uncorrected
 #   7. Dotplots + export
 #
+# Five converged-but-poorly-fitting individual dose-response curves (one strain
+# × drug on one plate each) are manually excluded (sec. 3a); the rest of each
+# plate, including the ancestor curve, is retained.
 # Evolved-strain plate observations whose ancestor IC50 fit failed are dropped.
 # All 36 strains retain ≥1 matched observation.
 #
@@ -21,6 +24,7 @@
 #   data-processed/normalised-ic50-per-plate.csv   (per-plate IC50s + log ratio)
 #   data-processed/normalised-ic50-per-strain.csv  (per-strain mean log ratio)
 #   data-processed/stats-results-normalised-ic50.csv
+#   data-processed/supp-table-ic50-pvalues.csv     (uncorrected vs Holm p-values)
 #   figures/normalised-ic50-dotplot.png
 #   figures/normalised-ic50-dotplot-sig.png
 # =============================================================================
@@ -151,6 +155,35 @@ if (n_fail > 0) {
     select(population, rep, set, drug, month) |>
     print()
 }
+
+# =============================================================================
+# 3a. Manual exclusion of poorly fitting dose-response curves
+# =============================================================================
+# These fits converged, but visual inspection of the diagnostic PDF showed that
+# the 4PL curve does not describe the data well (see analysis_notes).
+# Each row of bad_fits identifies a single dose-response curve (one strain ×
+# drug on one plate); other strains and the ancestor on the same plate are kept.
+# The curves are kept in plate_ic50 so they still appear in the diagnostic and
+# supplement figures, but are removed before normalisation and the LM.
+
+bad_fits <- tribble(
+  ~population, ~drug,          ~month,     ~set,     ~rep,
+  "40_E9",     "fluconazole",  "February", "Plate2", "Rep1",  # IC50 = 2.49
+  "40_G9",     "fluconazole",  "March",    "Set4",   "Rep3",  # IC50 = 127
+  "40_C9",     "caspofungin",  "January",  "Set1",   "Rep3",  # IC50 = 0.00154
+  "40_D8",     "amphotericin", "January",  "Set2",   "Rep3",  # IC50 = 0.0622
+  "40_E11",    "amphotericin", "March",    "Set4",   "Rep3"   # IC50 = 0.0214
+)
+
+# Guard against typos: every listed curve must match exactly one row
+stopifnot(nrow(semi_join(plate_ic50, bad_fits,
+                         by = c("population", "drug", "month", "set", "rep"))) ==
+            nrow(bad_fits))
+
+plate_ic50_clean <- plate_ic50 |>
+  anti_join(bad_fits, by = c("population", "drug", "month", "set", "rep"))
+
+cat(sprintf("Manually excluded %d poorly fitting dose-response curves\n", nrow(bad_fits)))
 
 # =============================================================================
 # 3b. Diagnostic PDF — fitted 4PL curves + IC50 for all strains
@@ -287,13 +320,13 @@ anc_ref <- plate_ic50 |>
   filter(evolution_history == "fRS585", converged) |>
   select(drug, month, rep, set, ic50_anc = ic50)
 
-normalised_obs <- plate_ic50 |>
+normalised_obs <- plate_ic50_clean |>
   filter(evolution_history != "fRS585", converged) |>
   left_join(anc_ref, by = c("drug", "month", "rep", "set")) |>
   filter(!is.na(ic50_anc)) |>
   mutate(log_ratio = log2(ic50) - log2(ic50_anc))
 
-n_total   <- plate_ic50 |> filter(evolution_history != "fRS585", converged) |> nrow()
+n_total   <- plate_ic50_clean |> filter(evolution_history != "fRS585", converged) |> nrow()
 n_matched <- nrow(normalised_obs)
 cat(sprintf("Normalised: %d of %d evolved-strain plate obs matched to ancestor (%d dropped)\n",
             n_matched, n_total, n_total - n_matched))
@@ -387,16 +420,53 @@ results_norm <- strain_normalised |>
       run_tests_norm(g40, g35,    label_x = "40 evolved", label_y = "35 evolved"),
       run_tests_norm(g35, mu = 0, label_x = "35 evolved"),
       run_tests_norm(g40, mu = 0, label_x = "40 evolved")
-    ) |>
-      mutate(
-        p_welch_holm  = p.adjust(p_welch,  method = "holm"),
-        p_wilcox_holm = p.adjust(p_wilcox, method = "holm")
-      )
+    )
   }) |>
   ungroup()
 
-cat("\n=== Normalised IC50 — statistical results (Holm-corrected) ===\n")
+cat("\n=== Normalised IC50 — statistical results (uncorrected p-values) ===\n")
 print(results_norm, n = Inf)
+
+# =============================================================================
+# 6b. Supplementary table — uncorrected vs Holm-corrected p-values
+# =============================================================================
+# Main text reports uncorrected p-values. For transparency, this table shows
+# Welch t-test p-values alongside two Holm corrections:
+#   - within drug (3 tests per drug)
+#   - across all 9 tests (3 drugs × 3 comparisons)
+# Fold changes and 95% CIs are back-transformed from the log2 scale.
+
+group_n <- strain_normalised |>
+  count(drug, evolution_history) |>
+  pivot_wider(names_from = evolution_history, values_from = n)
+
+fmt_p <- function(p) if_else(p < 0.001, "<0.001", sprintf("%.3f", p))
+
+supp_table_p <- results_norm |>
+  group_by(drug) |>
+  mutate(p_holm_within_drug = p.adjust(p_welch, method = "holm")) |>
+  ungroup() |>
+  mutate(p_holm_all_tests = p.adjust(p_welch, method = "holm")) |>
+  left_join(group_n, by = "drug") |>
+  mutate(n = case_when(
+    comparison == "40 evolved vs 35 evolved" ~
+      paste(`40 evolved`, `35 evolved`, sep = " / "),
+    comparison == "35 evolved vs ancestor" ~ as.character(`35 evolved`),
+    comparison == "40 evolved vs ancestor" ~ as.character(`40 evolved`)
+  )) |>
+  transmute(
+    Drug                       = str_to_sentence(drug),
+    Comparison                 = str_replace(comparison, "vs ancestor", "vs ancestor (fRS585)"),
+    `n (strains)`              = n,
+    `Fold change`              = sprintf("%.2f", 2^diff),
+    `95% CI`                   = sprintf("[%.2f, %.2f]", 2^ci_lo, 2^ci_hi),
+    `p (uncorrected)`          = fmt_p(p_welch),
+    `p (Holm, within drug)`    = fmt_p(p_holm_within_drug),
+    `p (Holm, all 9 tests)`    = fmt_p(p_holm_all_tests)
+  )
+
+cat("\n=== Supplementary table: uncorrected vs Holm-corrected p-values ===\n")
+print(as.data.frame(supp_table_p))
 
 # =============================================================================
 # 7. Dot plots
@@ -450,7 +520,7 @@ bracket_df_norm <- results_norm |>
   mutate(
     xmin        = "35 evolved",
     xmax        = "40 evolved",
-    annotations = p_stars(p_welch_holm)
+    annotations = p_stars(p_welch)
   ) |>
   left_join(y_range_norm, by = "drug") |>
   mutate(y_position = y_max + y_span * 0.18)
@@ -460,7 +530,7 @@ anc_star_df_norm <- results_norm |>
   mutate(
     evolution_history = factor(str_remove(comparison, " vs ancestor"),
                                levels = c("35 evolved", "40 evolved")),
-    label = p_stars(p_welch_holm)
+    label = p_stars(p_welch)
   ) |>
   left_join(gmeans_norm, by = c("drug", "evolution_history")) |>
   left_join(y_range_norm, by = "drug") |>
@@ -494,7 +564,7 @@ ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution
     #   "Points: individual strains (mean across plates)  |",
     #   "Large point \u00b1 bar: group mean \u00b1 SE  |",
     #   "Dashed line: ancestor level (log2 ratio = 0)\n",
-    #   "Brackets: Welch t-test, 40 vs 35 evolved (Holm-corrected)  |",
+    #   "Brackets: Welch t-test, 40 vs 35 evolved (uncorrected)  |",
     #   "Stars to right of mean: one-sample t-test vs 0")
   ) +
   theme_evo(base_size = 22) +
@@ -518,7 +588,7 @@ ggsave("figures/normalised-ic50-dotplot-sig.png", width = 8, height = 4, dpi = 3
 library(emmeans)
 
 # Per-strain mean IC50 within each drug × month (includes fRS585)
-strain_by_month <- plate_ic50 |>
+strain_by_month <- plate_ic50_clean |>
   filter(converged,
          evolution_history %in% c("35 evolved", "40 evolved", "fRS585")) |>
   mutate(month = factor(month, levels = c("January", "February", "March"))) |>
@@ -535,23 +605,23 @@ lm_results <- strain_by_month |>
   group_modify(function(d, key) {
     fit  <- lm(log_ic50 ~ evolution_history + month, data = d)
     emm  <- emmeans(fit, ~ evolution_history)
-    contrast(emm, method = "pairwise", adjust = "holm") |>
+    contrast(emm, method = "pairwise", adjust = "none") |>
       as_tibble() |>
-      rename(diff = estimate, se = SE, p_holm = p.value) |>
+      rename(diff = estimate, se = SE, p = p.value) |>
       mutate(
         fold_change = 2^diff,
         comparison  = str_replace(contrast, " - ", " vs ")
       ) |>
-      select(comparison, diff, fold_change, se, df, p_holm)
+      select(comparison, diff, fold_change, se, df, p)
   }) |>
   ungroup()
 
-cat("\n=== Month-adjusted LM results (Holm-corrected) ===\n")
+cat("\n=== Month-adjusted LM results (uncorrected p-values) ===\n")
 lm_results |>
   mutate(
     fold_change = round(fold_change, 2),
     diff        = round(diff, 3),
-    p_holm      = ifelse(p_holm < 0.001, "<0.001", sprintf("%.3f", p_holm))
+    p           = ifelse(p < 0.001, "<0.001", sprintf("%.3f", p))
   ) |>
   as.data.frame() |>
   print()
@@ -564,15 +634,45 @@ write_csv(normalised_obs,   "data-processed/normalised-ic50-per-plate.csv")
 write_csv(strain_normalised, "data-processed/normalised-ic50-per-strain.csv")
 write_csv(results_norm,      "data-processed/stats-results-normalised-ic50.csv")
 write_csv(lm_results,        "data-processed/stats-results-month-adjusted-lm-ic50.csv")
+write_csv(supp_table_p,      "data-processed/supp-table-ic50-pvalues.csv")
 
 # =============================================================================
-# 10. Supplement figures — IC50 curve fits (evolved strains only, no ancestor)
-#     One PNG per drug; one facet per plate (strain × replicate). Note these are for Figure S5 in the SI.
+# 10. Supplement figures — IC50 curve fits (evolved strains + same-plate ancestor)
+#     One PDF per drug; one facet per evolved strain × plate. The ancestor
+#     (fRS585) from the same plate is overlaid in each facet as a reference.
+#     Curves excluded in section 3a are labelled and drawn dashed.
+#     Note these are for Figure S5 in the SI.
 # =============================================================================
 
 evo_raw    <- raw_plot_data |> filter(population != "fRS585")
 evo_curves <- pred_curves   |> filter(population != "fRS585")
 evo_ic50   <- ic50_lines    |> filter(population != "fRS585")
+
+anc_raw   <- raw_plot_data |> filter(population == "fRS585")
+anc_curve <- pred_curves   |> filter(population == "fRS585")
+anc_ic50  <- ic50_lines    |> filter(population == "fRS585") |>
+  mutate(ic50_label = sprintf("Anc = %.3g", ic50))
+
+# Curves manually excluded in section 3a are flagged in the facet title and
+# their fitted curve is drawn dashed
+excluded_ids <- with(bad_fits, paste(population, drug, paste(month, set, rep)))
+is_excluded  <- function(population, drug, plate_id) {
+  paste(population, drug, plate_id) %in% excluded_ids
+}
+
+make_label <- function(population, plate_id, drug) {
+  lab <- paste0(population, " | ", plate_id)
+  if_else(is_excluded(population, drug, plate_id),
+          paste0(lab, " (excluded from analysis)"), lab)
+}
+
+# Copy the ancestor data for a plate into every evolved-strain facet on that plate
+expand_to_facets <- function(anc_df, facets) {
+  anc_df |>
+    select(-population) |>
+    inner_join(facets, by = c("drug", "plate_id"), relationship = "many-to-many") |>
+    mutate(facet_label = make_label(population, plate_id, drug))
+}
 
 NCOL <- 8
 
@@ -581,18 +681,34 @@ for (drug_i in all_drugs) {
   curve_sub <- evo_curves |> filter(drug == drug_i)
   ic50_sub  <- evo_ic50   |> filter(drug == drug_i)
 
-  make_label <- function(population, plate_id) paste0(population, " | ", plate_id)
+  raw_sub   <- raw_sub   |> mutate(facet_label = make_label(population, plate_id, drug))
+  curve_sub <- curve_sub |> mutate(facet_label = make_label(population, plate_id, drug),
+                                   excluded    = is_excluded(population, drug, plate_id))
+  ic50_sub  <- ic50_sub  |> mutate(facet_label = make_label(population, plate_id, drug))
 
-  raw_sub   <- raw_sub   |> mutate(facet_label = make_label(population, plate_id))
-  curve_sub <- curve_sub |> mutate(facet_label = make_label(population, plate_id))
-  ic50_sub  <- ic50_sub  |> mutate(facet_label = make_label(population, plate_id))
+  facets <- raw_sub |> distinct(drug, plate_id, population)
+
+  anc_raw_sub   <- anc_raw   |> filter(drug == drug_i) |> expand_to_facets(facets)
+  anc_curve_sub <- anc_curve |> filter(drug == drug_i) |> expand_to_facets(facets)
+  anc_ic50_sub  <- anc_ic50  |> filter(drug == drug_i) |> expand_to_facets(facets)
 
   n_facets <- n_distinct(raw_sub$facet_label)
   n_rows   <- ceiling(n_facets / NCOL)
 
+  # Ancestor layers first so the evolved strain renders on top
   p <- ggplot(raw_sub, aes(x = concentration, y = OD, color = evolution_history)) +
+    geom_point(data = anc_raw_sub, aes(color = "fRS585"), size = 1.6, alpha = 0.4) +
+    geom_line(data = anc_curve_sub, aes(y = od_pred, color = "fRS585"),
+              linewidth = 0.8, alpha = 0.6) +
+    geom_vline(data = anc_ic50_sub, aes(xintercept = ic50),
+               linetype = "dotted", color = "grey30", linewidth = 0.7) +
+    geom_text(data = anc_ic50_sub,
+              aes(x = ic50, y = Inf, label = ic50_label),
+              vjust = 2.9, hjust = -0.1, size = 3.5, color = "grey30",
+              inherit.aes = FALSE) +
     geom_point(size = 2.0, alpha = 0.7) +
-    geom_line(data = curve_sub, aes(y = od_pred, color = evolution_history),
+    geom_line(data = curve_sub,
+              aes(y = od_pred, color = evolution_history, linetype = excluded),
               linewidth = 1.0) +
     geom_vline(data = ic50_sub, aes(xintercept = ic50),
                linetype = "dashed", color = "firebrick", linewidth = 0.7) +
@@ -601,19 +717,29 @@ for (drug_i in all_drugs) {
               vjust = 1.4, hjust = -0.1, size = 3.5, color = "firebrick",
               inherit.aes = FALSE) +
     scale_x_log10() +
-    scale_color_manual(values = EVO_COLORS, name = NULL) +
+    scale_color_manual(
+      values = EVO_COLORS, name = NULL,
+      breaks = c("35 evolved", "40 evolved", "fRS585"),
+      labels = c("35 evolved", "40 evolved", "Ancestor (fRS585)")
+    ) +
+    scale_linetype_manual(values = c(`FALSE` = "solid", `TRUE` = "dashed"),
+                          guide = "none") +
     facet_wrap(~ facet_label, ncol = NCOL) +
     labs(
-      title = drug_i,
-      x     = paste(str_to_sentence(drug_i), "concentration (log scale)"),
-      y     = "OD (blank-corrected)"
+      title   = drug_i,
+      x       = paste(str_to_sentence(drug_i), "concentration (log scale)"),
+      y       = "OD (blank-corrected)",
+      caption = if (any(curve_sub$excluded))
+        paste("Dashed strain curve, \"(excluded from analysis)\": poor 4PL fit,",
+              "removed before normalisation and statistical tests")
     ) +
     theme_evo(base_size = 20) +
     theme(
       strip.text     = element_text(size = 9, margin = margin(2, 0, 2, 0)),
       strip.background = element_blank(),
       legend.position = "bottom",
-      legend.text     = element_text(size = 20)
+      legend.text     = element_text(size = 20),
+      plot.caption    = element_text(size = 14, color = "grey40")
     )
 
   out_file <- sprintf("figures/supp-ic50-curves-%s.pdf",

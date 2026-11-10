@@ -16,6 +16,12 @@ all_traits <- left_join(ic50_strains, tpc_params, by = c("population" = "strain"
 fluc <- all_traits |> 
   filter(drug == "fluconazole")
 
+fluc |> 
+  ggplot(aes( x = log_ratio)) + g
+
+
+
+
 ### mutual information: log_ratio vs th_c
 library(FNN)
 

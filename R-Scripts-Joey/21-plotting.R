@@ -401,7 +401,7 @@ bracket_ic50 <- stats_ic50 |>
   mutate(
     xmin        = "35 evolved",
     xmax        = "40 evolved",
-    annotations = p_stars(p_welch_holm)
+    annotations = p_stars(p_welch)
   ) |>
   left_join(y_range_ic50, by = "drug") |>
   mutate(y_position = y_max + y_span * 0.18)
@@ -411,7 +411,7 @@ anc_stars_ic50 <- stats_ic50 |>
   mutate(
     evolution_history = factor(str_remove(comparison, " vs ancestor"),
                                levels = EVO_LEVELS),
-    label             = p_stars(p_welch_holm)
+    label             = p_stars(p_welch)
   ) |>
   left_join(gmeans_ic50, by = c("drug", "evolution_history")) |>
   left_join(y_range_ic50, by = "drug") |>
