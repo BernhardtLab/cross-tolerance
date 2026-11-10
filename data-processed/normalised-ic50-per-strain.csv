@@ -69,7 +69,7 @@ population,evolution_history,drug,log_ratio,n_obs
 40_C7,40 evolved,caspofungin,0.5831914021301268,2
 40_C7,40 evolved,fluconazole,-0.07878233958143324,3
 40_C9,40 evolved,amphotericin,0.2121484522511496,6
-40_C9,40 evolved,caspofungin,0.07300362530247963,6
+40_C9,40 evolved,caspofungin,0.3935804460732344,5
 40_C9,40 evolved,fluconazole,0.6563426339393649,6
 40_D2,40 evolved,amphotericin,-0.5544247074788499,3
 40_D2,40 evolved,caspofungin,-0.12793799222615415,3
@@ -77,10 +77,10 @@ population,evolution_history,drug,log_ratio,n_obs
 40_D4,40 evolved,amphotericin,-0.19110563406132677,3
 40_D4,40 evolved,caspofungin,-0.3783725473659845,3
 40_D4,40 evolved,fluconazole,0.012850307627556384,3
-40_D8,40 evolved,amphotericin,-1.8346876571881197,3
+40_D8,40 evolved,amphotericin,-0.5980441968079871,2
 40_D8,40 evolved,caspofungin,-0.4196963037905726,3
 40_D8,40 evolved,fluconazole,0.0052698321659814615,3
-40_E11,40 evolved,amphotericin,-0.26605555594660785,6
+40_E11,40 evolved,amphotericin,0.3907379810045619,5
 40_E11,40 evolved,caspofungin,0.16815527286401827,6
 40_E11,40 evolved,fluconazole,0.5752132708318379,6
 40_E7,40 evolved,amphotericin,0.32620395579173966,5
@@ -88,7 +88,7 @@ population,evolution_history,drug,log_ratio,n_obs
 40_E7,40 evolved,fluconazole,0.3987720668510655,6
 40_E9,40 evolved,amphotericin,0.09088974249319215,3
 40_E9,40 evolved,caspofungin,-0.5070280055027906,3
-40_E9,40 evolved,fluconazole,-0.98063397541501085,3
+40_E9,40 evolved,fluconazole,0.3532858228045488,2
 40_F2,40 evolved,amphotericin,-0.3075486734050598,3
 40_F2,40 evolved,caspofungin,0.07945515543675885,3
 40_F2,40 evolved,fluconazole,1.1671755702946593,3
@@ -106,4 +106,4 @@ population,evolution_history,drug,log_ratio,n_obs
 40_G5,40 evolved,fluconazole,1.2156965099370864,3
 40_G9,40 evolved,amphotericin,0.5730623979932825,6
 40_G9,40 evolved,caspofungin,0.676366362257912,6
-40_G9,40 evolved,fluconazole,2.0897243739772233,6
+40_G9,40 evolved,fluconazole,1.9470302474796677,5

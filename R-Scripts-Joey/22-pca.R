@@ -9,9 +9,9 @@
 #   data-processed/gcplyr/tpc-boot-se-19.csv       (from Script 19)
 #
 # Outputs — data-processed/:
-#   pca-scores-within-20.csv
-#   pca-loadings-within-20.csv
-#   pca-pct-within-20.csv
+#   pca-scores-within-22.csv
+#   pca-loadings-within-22.csv
+#   pca-pct-within-22.csv
 #
 # Outputs — figures/:
 #   pca-biplot-within-22.png
@@ -157,15 +157,15 @@ ggsave(file.path(FIGS, "pca-biplot-within-22.png"),
 
 write_csv(
   scores_c |> select(strain, evolution_history, PC1, PC2, PC3),
-  file.path(OUT, "pca-scores-within-20.csv")
+  file.path(OUT, "pca-scores-within-22.csv")
 )
 write_csv(
   loadings_c |> select(variable, PC1, PC2),
-  file.path(OUT, "pca-loadings-within-20.csv")
+  file.path(OUT, "pca-loadings-within-22.csv")
 )
 write_csv(
   tibble(PC = names(pct_c), pct = as.numeric(pct_c)),
-  file.path(OUT, "pca-pct-within-20.csv")
+  file.path(OUT, "pca-pct-within-22.csv")
 )
 
 cat("\nAll outputs written.\n")

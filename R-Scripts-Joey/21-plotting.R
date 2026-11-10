@@ -16,9 +16,9 @@
 #   data-processed/gcplyr/stats-results-auc-gcplyr-17.csv
 #   data-processed/normalised-ic50-per-strain.csv
 #   data-processed/stats-results-normalised-ic50.csv
-#   data-processed/pca-scores-within-20.csv
-#   data-processed/pca-loadings-within-20.csv
-#   data-processed/pca-pct-within-20.csv
+#   data-processed/pca-scores-within-22.csv    (from 22-pca.R)
+#   data-processed/pca-loadings-within-22.csv
+#   data-processed/pca-pct-within-22.csv
 #
 # Output:
 #   figures/combined-figure-21.png
@@ -75,12 +75,12 @@ ic50_strains <- read_csv(file.path(OUT, "normalised-ic50-per-strain.csv"),
 stats_ic50   <- read_csv(file.path(OUT, "stats-results-normalised-ic50.csv"),
                          show_col_types = FALSE)
 
-pca_scores   <- read_csv(file.path(OUT, "pca-scores-within-20.csv"),
+pca_scores   <- read_csv(file.path(OUT, "pca-scores-within-22.csv"),
                          show_col_types = FALSE) |>
   mutate(evolution_history = factor(evolution_history, levels = EVO_LEVELS))
-pca_loadings <- read_csv(file.path(OUT, "pca-loadings-within-20.csv"),
+pca_loadings <- read_csv(file.path(OUT, "pca-loadings-within-22.csv"),
                          show_col_types = FALSE)
-pca_pct      <- read_csv(file.path(OUT, "pca-pct-within-20.csv"),
+pca_pct      <- read_csv(file.path(OUT, "pca-pct-within-22.csv"),
                          show_col_types = FALSE)
 
 
