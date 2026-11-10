@@ -2,7 +2,7 @@
 
 Nov 10 -- 
 
--- come back to redo PCA with the few bad fits removed
+-- come back to redo PCA with the few bad fits removed (i think this is done now; check on new results)
 
 come back to the weird MIC fits, and decide what to do with them. With so few populations (36), we will have limited power to detect anything, and this could be thrown off by weird fits / outliers. (ok done)
 

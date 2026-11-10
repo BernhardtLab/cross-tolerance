@@ -1,10 +1,13 @@
 # =============================================================================
 # 11d-MICs.R
 # Ancestor-normalised IC50 analysis
+## Author: Joey Bernhardt
+## Last updated: November 10 2026
+
 #
 # Approach:
 #   1. Read raw OD data (all_mic_data-new.csv)
-#   2. Blank-correct per plate × concentration (same as 11c)
+#   2. Blank-correct per plate × concentration
 #   3. Fit 4-parameter logistic IC50 per population × rep × set × drug × month
 #      (point estimates only — no bootstrap needed since we're computing ratios)
 #   4. Normalise each evolved-strain plate IC50 to the ancestor IC50 on the
@@ -16,7 +19,7 @@
 #
 # Five converged-but-poorly-fitting individual dose-response curves (one strain
 # × drug on one plate each) are manually excluded (sec. 3a); the rest of each
-# plate, including the ancestor curve, is retained.
+# plate, including the ancestor curve, is retained. We determined this by visually inspecting the curves.
 # Evolved-strain plate observations whose ancestor IC50 fit failed are dropped.
 # All 36 strains retain ≥1 matched observation.
 #
@@ -82,16 +85,14 @@ mic_data <- all_mic_data |>
 
 stopifnot(all(!is.na(mic_data$blank_OD)))
 
-cat("Blank-corrected rows:", nrow(mic_data), "\n")
 
 # =============================================================================
 # 3. Fit IC50 per plate (point estimate)
 # =============================================================================
-# 3-parameter logistic: OD = d / (1 + exp(b * (log(conc) - log(IC50))))
 # Fit per population × rep × set × drug × month.
-# Replace zero concentration with min_conc / 10 (same as 11c).
+# Replace zero concentration with min_conc / 10.
 
-mic_data <- mic_data |>
+mic_data2 <- mic_data |>
   group_by(population, drug) |>
   mutate(
     min_conc      = min(concentration[concentration > 0], na.rm = TRUE),
@@ -141,7 +142,7 @@ fit_ic50 <- function(df) {
 
 cat("Fitting IC50s per plate — this may take a minute...\n")
 
-plate_ic50 <- mic_data |>
+plate_ic50 <- mic_data2 |>
   group_by(population, evolution_history, rep, set, drug, month) |>
   group_modify(~ fit_ic50(.x)) |>
   ungroup()
@@ -159,12 +160,11 @@ if (n_fail > 0) {
 # =============================================================================
 # 3a. Manual exclusion of poorly fitting dose-response curves
 # =============================================================================
-# These fits converged, but visual inspection of the diagnostic PDF showed that
-# the 4PL curve does not describe the data well (see analysis_notes).
+# These fits converged, but visual inspection of the fitted curves plotted on top of the OD data showed that the 4PL curve does not describe the data well (see analysis_notes).
 # Each row of bad_fits identifies a single dose-response curve (one strain ×
 # drug on one plate); other strains and the ancestor on the same plate are kept.
 # The curves are kept in plate_ic50 so they still appear in the diagnostic and
-# supplement figures, but are removed before normalisation and the LM.
+# supplement figures, but are removed before normalisation further analysis.
 
 bad_fits <- tribble(
   ~population, ~drug,          ~month,     ~set,     ~rep,
