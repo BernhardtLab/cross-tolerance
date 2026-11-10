@@ -307,7 +307,7 @@ bracket_traits <- stats_tpc |>
     trait       = factor(trait, levels = TRAIT_LEVELS),
     xmin        = "35 evolved",
     xmax        = "40 evolved",
-    annotations = p_stars(p_welch_holm)
+    annotations = p_stars(p_welch)
   ) |>
   filter(!is.na(trait)) |>
   left_join(y_range_traits, by = "trait") |>
@@ -319,7 +319,7 @@ anc_stars_traits <- stats_tpc |>
     trait             = factor(trait, levels = TRAIT_LEVELS),
     evolution_history = factor(str_remove(comparison, " vs ancestor"),
                                levels = EVO_LEVELS),
-    label             = p_stars(p_welch_holm)
+    label             = p_stars(p_welch)
   ) |>
   filter(!is.na(trait)) |>
   left_join(group_means_traits, by = c("trait", "evolution_history")) |>
