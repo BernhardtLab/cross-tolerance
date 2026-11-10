@@ -1,8 +1,37 @@
 ## notes from data analysis
 
+Nov 10 -- come back to the weird MIC fits, and decide what to do with them. With so few populations (36), we will have limited power to detect anything, and this could be thrown off by weird fits / outliers.
+
+Fluconazole
+40_E9, IC50 = 2.49
+40_G9, ic50 = 127
+
+Caspofungin
+40_C7, not fit
+40_C9, 0.00154
+40_C7, not fit
+
+Amphotericin
+35_B8, not fit
+40_D8, ic50 = 0.0622
+40_E7, not fit
+40_E11, ic50 = 0.0214
+40_E7, not fit
+
+
+
+
+
+November 9
+Consider mutual information, also consider trade-offs between topt and tmax
+Do the comparison of OD values in R (from figure S2)
+Figure out what to do with the IC50 curves that don't fit well -- remove them?
+
+
+
 October 11
 
-- need to get the AUC definitions in the main text
+- need to get the AUC definitions in the main text (done)
 
 
 
