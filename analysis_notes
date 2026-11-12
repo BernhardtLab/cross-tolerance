@@ -1,6 +1,13 @@
 ## notes from data analysis
 
+Nov 12
+-- going through all the MIC fits, and flagging poor MIC fits for both the ancestors and descendants. It looks like some of the ancestor poor fits might be throwing off the ratios. Need to figure out what to do about this
+
+
 Nov 10 -- 
+
+-- come back to MIC script line 316
+
 
 -- come back to redo PCA with the few bad fits removed (i think this is done now; check on new results)
 

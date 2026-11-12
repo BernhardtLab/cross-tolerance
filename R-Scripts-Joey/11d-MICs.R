@@ -28,8 +28,10 @@
 #   data-processed/normalised-ic50-per-strain.csv  (per-strain mean log ratio)
 #   data-processed/stats-results-normalised-ic50.csv
 #   data-processed/supp-table-ic50-pvalues.csv     (uncorrected vs Holm p-values)
+#   data-processed/supp-table-ancestor-fit-flags.csv (ancestor 4PL fit diagnostics + poor-fit flags)
 #   figures/normalised-ic50-dotplot.png
 #   figures/normalised-ic50-dotplot-sig.png
+#   figures/supp-ic50-curves-ancestor-{drug}.pdf  (ancestor-only fitted curves, one per drug; poorly constrained fits shaded)
 # =============================================================================
 
 library(tidyverse)
@@ -183,7 +185,6 @@ stopifnot(nrow(semi_join(plate_ic50, bad_fits,
 plate_ic50_clean <- plate_ic50 |>
   anti_join(bad_fits, by = c("population", "drug", "month", "set", "rep"))
 
-cat(sprintf("Manually excluded %d poorly fitting dose-response curves\n", nrow(bad_fits)))
 
 # =============================================================================
 # 3b. Diagnostic PDF — fitted 4PL curves + IC50 for all strains
@@ -196,7 +197,7 @@ make_4pl_curve <- function(ic50, bot, top, slope, min_c, max_c) {
 }
 
 # Concentration range per plate (used to span the prediction curve)
-conc_range <- mic_data |>
+conc_range <- mic_data2 |>
   filter(concentration > 0) |>
   group_by(population, drug, month, rep, set) |>
   summarise(min_c = min(concentration), max_c = max(concentration), .groups = "drop")
@@ -355,35 +356,6 @@ strain_normalised |>
   ) |>
   print()
 
-# =============================================================================
-# 5b. Outlier removal — |z| > 3 within drug × evolution history
-# =============================================================================
-# z-scores computed on per-strain mean log ratios within each drug × group.
-# Flagged strain × drug combinations are removed from both the per-strain and
-# per-plate data frames so all downstream analyses and exports are consistent.
-
-outlier_flags <- strain_normalised |>
-  filter(evolution_history %in% c("35 evolved", "40 evolved")) |>
-  group_by(drug, evolution_history) |>
-  mutate(z_score = (log_ratio - mean(log_ratio)) / sd(log_ratio)) |>
-  ungroup() |>
-  filter(abs(z_score) > 3)
-
-cat("\n=== Outliers removed (|z| > 3 within drug \u00d7 evolution history) ===\n")
-print(outlier_flags |>
-        select(population, evolution_history, drug, log_ratio, z_score) |>
-        mutate(across(where(is.numeric), ~round(., 3))))
-
-outlier_keys <- outlier_flags |> select(population, drug)
-
-# Outlier removal disabled — flagged observations retained
-# strain_normalised <- strain_normalised |>
-#   anti_join(outlier_keys, by = c("population", "drug"))
-# normalised_obs <- normalised_obs |>
-#   anti_join(outlier_keys, by = c("population", "drug"))
-
-cat(sprintf("Retained: %d strain \u00d7 drug observations (outlier removal disabled)\n",
-            nrow(strain_normalised)))
 
 # =============================================================================
 # 6. Statistical tests
@@ -576,55 +548,6 @@ ggplot(plot_df_norm, aes(x = evolution_history, y = log_ratio, color = evolution
 
 ggsave("figures/normalised-ic50-dotplot-sig.png", width = 8, height = 4, dpi = 300, bg = "transparent")
 
-# =============================================================================
-# 8. Month-adjusted LM (all drugs)
-# =============================================================================
-# Fits log(IC50) ~ evolution_history + month per drug using per-strain
-# per-month means. emmeans gives marginal means adjusted for month batch
-# effect. Assumes additive (no interaction) month effect on log scale.
-# The 40-evolved group has measurements in both months for all drugs,
-# making the month effect estimable even though 35-evolved is March-only.
-
-library(emmeans)
-
-# Per-strain mean IC50 within each drug × month (includes fRS585)
-strain_by_month <- plate_ic50_clean |>
-  filter(converged,
-         evolution_history %in% c("35 evolved", "40 evolved", "fRS585")) |>
-  mutate(month = factor(month, levels = c("January", "February", "March"))) |>
-  group_by(population, evolution_history, drug, month) |>
-  summarise(mean_ic50 = mean(ic50), .groups = "drop")
-
-lm_results <- strain_by_month |>
-  mutate(
-    log_ic50 = log2(mean_ic50),
-    evolution_history = factor(evolution_history,
-                               levels = c("40 evolved", "35 evolved", "fRS585"))
-  ) |>
-  group_by(drug) |>
-  group_modify(function(d, key) {
-    fit  <- lm(log_ic50 ~ evolution_history + month, data = d)
-    emm  <- emmeans(fit, ~ evolution_history)
-    contrast(emm, method = "pairwise", adjust = "none") |>
-      as_tibble() |>
-      rename(diff = estimate, se = SE, p = p.value) |>
-      mutate(
-        fold_change = 2^diff,
-        comparison  = str_replace(contrast, " - ", " vs ")
-      ) |>
-      select(comparison, diff, fold_change, se, df, p)
-  }) |>
-  ungroup()
-
-cat("\n=== Month-adjusted LM results (uncorrected p-values) ===\n")
-lm_results |>
-  mutate(
-    fold_change = round(fold_change, 2),
-    diff        = round(diff, 3),
-    p           = ifelse(p < 0.001, "<0.001", sprintf("%.3f", p))
-  ) |>
-  as.data.frame() |>
-  print()
 
 # =============================================================================
 # 9. Export
@@ -633,8 +556,114 @@ lm_results |>
 write_csv(normalised_obs,   "data-processed/normalised-ic50-per-plate.csv")
 write_csv(strain_normalised, "data-processed/normalised-ic50-per-strain.csv")
 write_csv(results_norm,      "data-processed/stats-results-normalised-ic50.csv")
-write_csv(lm_results,        "data-processed/stats-results-month-adjusted-lm-ic50.csv")
 write_csv(supp_table_p,      "data-processed/supp-table-ic50-pvalues.csv")
+
+# =============================================================================
+# 9b. Fit-quality flags for all converged 4PL fits (diagnostic only)
+# =============================================================================
+# A fit is flagged as poorly constrained if any of:
+#   - shallow:      slope < 1 (IC50 poorly located along the concentration axis)
+#   - top_extrap:   fitted top > 1.1 × max observed OD (curve extrapolates
+#                   beyond the data rather than following the upper plateau)
+#   - top_support:  ≤ 2 tested concentrations below the IC50 (upper plateau
+#                   barely sampled)
+# Wald standard errors are deliberately not used: for steep curves (slope > ~20)
+# the OD drop falls between two adjacent concentrations, the IC50 is only
+# bracketed by that interval, and the SE blows up even though the fit is fine.
+# Flagged fits are NOT removed from the analysis; they are only marked in the
+# supplement figures (sections 10 and 7c).
+
+fit_flags <- mic_data2 |>
+  filter(population != "Blank", concentration > 0) |>
+  group_by(population, drug, month, set, rep) |>
+  summarise(max_od = max(OD), concs = list(sort(unique(concentration))),
+            .groups = "drop") |>
+  inner_join(plate_ic50 |> filter(converged),
+             by = c("population", "drug", "month", "set", "rep")) |>
+  mutate(
+    plate_id     = paste(month, set, rep),
+    n_conc_below = map2_int(concs, ic50, \(cc, e) sum(cc < e)),
+    top_ratio    = top / max_od,
+    shallow      = slope < 1,
+    top_extrap   = top_ratio > 1.1,
+    top_support  = n_conc_below <= 2,
+    poor_fit     = shallow | top_extrap | top_support,
+    flag_reason  = pmap_chr(
+      list(shallow, top_extrap, top_support),
+      \(a, b, c) paste(c("shallow slope", "top extrapolated",
+                         "few points above IC50")[c(a, b, c)], collapse = "; ")
+    )
+  ) |>
+  select(population, drug, plate_id, ic50, top, max_od, top_ratio, slope,
+         n_conc_below, poor_fit, flag_reason)
+
+anc_fit_flags <- fit_flags |>
+  filter(population == "fRS585") |>
+  select(-population)
+
+# =============================================================================
+# 9c. Sensitivity analysis — exclude observations with poorly constrained fits
+# =============================================================================
+# Drops every evolved-strain plate observation where the strain's fit OR the
+# same-plate ancestor's fit is flagged in 9b, then reruns sections 5–6.
+
+flagged_obs <- fit_flags |>
+  filter(poor_fit) |>
+  select(population, drug, plate_id)
+
+normalised_obs_sens <- normalised_obs |>
+  mutate(plate_id = paste(month, set, rep)) |>
+  # strain fit flagged
+  anti_join(flagged_obs, by = c("population", "drug", "plate_id")) |>
+  # ancestor fit on the same plate flagged
+  anti_join(flagged_obs |> filter(population == "fRS585") |> select(-population),
+            by = c("drug", "plate_id"))
+
+cat(sprintf("Sensitivity: dropped %d of %d plate observations with a flagged strain or ancestor fit\n",
+            nrow(normalised_obs) - nrow(normalised_obs_sens), nrow(normalised_obs)))
+
+strain_normalised_sens <- normalised_obs_sens |>
+  group_by(population, evolution_history, drug) |>
+  summarise(log_ratio = mean(log_ratio), n_obs = n(), .groups = "drop")
+
+results_sens <- strain_normalised_sens |>
+  group_by(drug) |>
+  group_modify(function(d, key) {
+    g35 <- d |> filter(evolution_history == "35 evolved") |> pull(log_ratio)
+    g40 <- d |> filter(evolution_history == "40 evolved") |> pull(log_ratio)
+    bind_rows(
+      run_tests_norm(g40, g35,    label_x = "40 evolved", label_y = "35 evolved"),
+      run_tests_norm(g35, mu = 0, label_x = "35 evolved"),
+      run_tests_norm(g40, mu = 0, label_x = "40 evolved")
+    )
+  }) |>
+  ungroup()
+
+sens_compare <- results_norm |>
+  select(drug, comparison, diff, ci_lo, ci_hi, p_welch) |>
+  left_join(results_sens |> select(drug, comparison, diff, ci_lo, ci_hi, p_welch),
+            by = c("drug", "comparison"), suffix = c("_main", "_sens")) |>
+  left_join(strain_normalised |> count(drug, evolution_history, name = "n_strains_main") |>
+              pivot_wider(names_from = evolution_history, values_from = n_strains_main,
+                          names_prefix = "n_main_"), by = "drug") |>
+  left_join(strain_normalised_sens |> count(drug, evolution_history, name = "n_strains_sens") |>
+              pivot_wider(names_from = evolution_history, values_from = n_strains_sens,
+                          names_prefix = "n_sens_"), by = "drug") |>
+  transmute(
+    drug, comparison,
+    fold_change_main = 2^diff_main, ci_lo_main = 2^ci_lo_main, ci_hi_main = 2^ci_hi_main,
+    p_welch_main,
+    fold_change_sens = 2^diff_sens, ci_lo_sens = 2^ci_lo_sens, ci_hi_sens = 2^ci_hi_sens,
+    p_welch_sens,
+    n_obs_main = nrow(normalised_obs), n_obs_sens = nrow(normalised_obs_sens),
+    across(starts_with("n_main_")), across(starts_with("n_sens_"))
+  )
+
+cat("\n=== Sensitivity: main vs excluding poorly constrained fits ===\n")
+print(as.data.frame(sens_compare |> select(drug, comparison, fold_change_main, p_welch_main,
+                                           fold_change_sens, p_welch_sens)))
+
+write_csv(sens_compare, "data-processed/sensitivity-ic50-excl-poor-fits.csv")
 
 # =============================================================================
 # 10. Supplement figures — IC50 curve fits (evolved strains + same-plate ancestor)
@@ -660,10 +689,37 @@ is_excluded  <- function(population, drug, plate_id) {
   paste(population, drug, plate_id) %in% excluded_ids
 }
 
+# Poor-fit flags (section 9b): a panel is flagged if the evolved strain's fit,
+# the same-plate ancestor's fit, or both are poorly constrained
+panel_flags <- evo_raw |>
+  distinct(population, drug, plate_id) |>
+  left_join(fit_flags |> select(population, drug, plate_id,
+                                strain_poor = poor_fit, strain_reason = flag_reason),
+            by = c("population", "drug", "plate_id")) |>
+  left_join(anc_fit_flags |> select(drug, plate_id,
+                                    anc_poor = poor_fit, anc_reason = flag_reason),
+            by = c("drug", "plate_id")) |>
+  mutate(
+    strain_poor = coalesce(strain_poor, FALSE),
+    anc_poor    = coalesce(anc_poor, FALSE),
+    poor_fit    = strain_poor | anc_poor,
+    flag_text   = case_when(
+      strain_poor & anc_poor ~ paste0("POOR FIT: strain (", strain_reason,
+                                      "), ancestor (", anc_reason, ")"),
+      strain_poor            ~ paste0("POOR FIT: strain (", strain_reason, ")"),
+      anc_poor               ~ paste0("POOR FIT: ancestor (", anc_reason, ")"),
+      .default               = ""
+    )
+  )
+panel_flag_key <- with(panel_flags, paste(population, drug, plate_id))
+
+# Second strip line is always present (blank if unflagged) so strips align
 make_label <- function(population, plate_id, drug) {
   lab <- paste0(population, " | ", plate_id)
-  if_else(is_excluded(population, drug, plate_id),
-          paste0(lab, " (excluded from analysis)"), lab)
+  lab <- if_else(is_excluded(population, drug, plate_id),
+                 paste0(lab, " (excluded from analysis)"), lab)
+  flag <- panel_flags$flag_text[match(paste(population, drug, plate_id), panel_flag_key)]
+  paste0(lab, "\n", coalesce(flag, ""))
 }
 
 # Copy the ancestor data for a plate into every evolved-strain facet on that plate
@@ -692,11 +748,31 @@ for (drug_i in all_drugs) {
   anc_curve_sub <- anc_curve |> filter(drug == drug_i) |> expand_to_facets(facets)
   anc_ic50_sub  <- anc_ic50  |> filter(drug == drug_i) |> expand_to_facets(facets)
 
+  flag_panels <- panel_flags |>
+    filter(drug == drug_i, poor_fit) |>
+    mutate(facet_label = make_label(population, plate_id, drug))
+
   n_facets <- n_distinct(raw_sub$facet_label)
   n_rows   <- ceiling(n_facets / NCOL)
 
+  caption_lines <- c(
+    if (any(curve_sub$excluded))
+      paste("Dashed strain curve, \"(excluded from analysis)\": poor 4PL fit,",
+            "removed before normalisation and statistical tests."),
+    if (nrow(flag_panels) > 0)
+      paste("Shaded panels, \"POOR FIT\": strain and/or ancestor fit poorly constrained",
+            "(slope < 1, top > 1.1 × max OD, or ≤ 2 concentrations below IC50);",
+            "diagnostic only, not excluded.")
+  )
+
   # Ancestor layers first so the evolved strain renders on top
   p <- ggplot(raw_sub, aes(x = concentration, y = OD, color = evolution_history)) +
+    # Tint flagged panels; xmin = 0 maps to -Inf on the log scale. An empty
+    # geom_rect layer breaks facet rendering, so only add it when needed.
+    (if (nrow(flag_panels) > 0)
+      geom_rect(data = flag_panels,
+                aes(xmin = 0, xmax = Inf, ymin = -Inf, ymax = Inf),
+                fill = "firebrick", alpha = 0.08, inherit.aes = FALSE)) +
     geom_point(data = anc_raw_sub, aes(color = "fRS585"), size = 1.6, alpha = 0.4) +
     geom_line(data = anc_curve_sub, aes(y = od_pred, color = "fRS585"),
               linewidth = 0.8, alpha = 0.6) +
@@ -729,9 +805,7 @@ for (drug_i in all_drugs) {
       title   = drug_i,
       x       = paste(str_to_sentence(drug_i), "concentration (log scale)"),
       y       = "OD (blank-corrected)",
-      caption = if (any(curve_sub$excluded))
-        paste("Dashed strain curve, \"(excluded from analysis)\": poor 4PL fit,",
-              "removed before normalisation and statistical tests")
+      caption = if (length(caption_lines) > 0) paste(caption_lines, collapse = "\n")
     ) +
     theme_evo(base_size = 20) +
     theme(
@@ -746,7 +820,92 @@ for (drug_i in all_drugs) {
                       gsub("[^a-zA-Z0-9]", "-", tolower(drug_i)))
   ggsave(out_file, p,
          width  = NCOL * 4.1,
-         height = n_rows * 2.2 + 0.8,
+         height = n_rows * 2.5 + 1.2,
+         bg     = "white")
+  cat("Saved:", out_file, "\n")
+}
+
+# =============================================================================
+# 7c. Supplement — ancestor-only fitted curves (one facet per plate)
+# =============================================================================
+# Visual check of ancestor fit quality, since every evolved-strain IC50 is
+# normalised to the ancestor on the same plate. Flags are computed in
+# section 9b.
+
+cat("Ancestor fits flagged as poorly constrained:\n")
+anc_fit_flags |>
+  filter(poor_fit) |>
+  select(drug, plate_id, ic50, slope, top_ratio, n_conc_below, flag_reason) |>
+  print()
+
+write_csv(anc_fit_flags |> arrange(drug, plate_id),
+          "data-processed/supp-table-ancestor-fit-flags.csv")
+
+anc_facet_labels <- anc_fit_flags |>
+  mutate(facet_label = if_else(poor_fit,
+                               paste0(plate_id, "\nPOOR FIT: ", flag_reason),
+                               paste0(plate_id, "\n"))) |>
+  select(drug, plate_id, poor_fit, facet_label)
+
+NCOL_ANC <- 7
+
+for (drug_i in all_drugs) {
+  labs_i <- anc_facet_labels |> filter(drug == drug_i) |> arrange(plate_id)
+  add_label <- function(df) {
+    df |>
+      filter(drug == drug_i) |>
+      inner_join(labs_i, by = c("drug", "plate_id")) |>
+      mutate(facet_label = factor(facet_label, levels = labs_i$facet_label))
+  }
+  anc_raw_sub   <- add_label(anc_raw)
+  anc_curve_sub <- add_label(anc_curve)
+  anc_ic50_sub  <- add_label(anc_ic50)
+  flag_panels   <- labs_i |> filter(poor_fit) |>
+    mutate(facet_label = factor(facet_label, levels = labs_i$facet_label))
+
+  n_rows <- ceiling(nrow(labs_i) / NCOL_ANC)
+
+  p <- ggplot(anc_raw_sub, aes(x = concentration, y = OD)) +
+    # Tint flagged panels; xmin = 0 maps to -Inf on the log scale. An empty
+    # geom_rect layer breaks facet rendering, so only add it when needed.
+    (if (nrow(flag_panels) > 0)
+      geom_rect(data = flag_panels,
+                aes(xmin = 0, xmax = Inf, ymin = -Inf, ymax = Inf),
+                fill = "firebrick", alpha = 0.08, inherit.aes = FALSE)) +
+    geom_point(size = 2.0, alpha = 0.7, color = EVO_COLORS[["fRS585"]]) +
+    geom_line(data = anc_curve_sub, aes(y = od_pred, linetype = poor_fit),
+              linewidth = 1.0, color = EVO_COLORS[["fRS585"]]) +
+    geom_vline(data = anc_ic50_sub, aes(xintercept = ic50),
+               linetype = "dashed", color = "firebrick", linewidth = 0.7) +
+    geom_text(data = anc_ic50_sub,
+              aes(x = ic50, y = Inf, label = ic50_label),
+              vjust = 1.4, hjust = -0.1, size = 3.5, color = "firebrick",
+              inherit.aes = FALSE) +
+    scale_x_log10() +
+    scale_linetype_manual(values = c(`FALSE` = "solid", `TRUE` = "dashed"),
+                          guide = "none") +
+    facet_wrap(~ facet_label, ncol = NCOL_ANC) +
+    labs(
+      title   = paste(drug_i, "— ancestor (fRS585)"),
+      x       = paste(str_to_sentence(drug_i), "concentration (log scale)"),
+      y       = "OD (blank-corrected)",
+      caption = if (nrow(flag_panels) > 0)
+        paste("Shaded panels / dashed curves: poorly constrained fit",
+              "(slope < 1, top > 1.1 × max OD, or ≤ 2 concentrations below IC50).",
+              "Diagnostic only; not excluded from analysis.")
+    ) +
+    theme_evo(base_size = 20) +
+    theme(
+      strip.text       = element_text(size = 11, margin = margin(2, 0, 2, 0)),
+      strip.background = element_blank(),
+      plot.caption     = element_text(size = 14, color = "grey40")
+    )
+
+  out_file <- sprintf("figures/supp-ic50-curves-ancestor-%s.pdf",
+                      gsub("[^a-zA-Z0-9]", "-", tolower(drug_i)))
+  ggsave(out_file, p,
+         width  = NCOL_ANC * 4.1,
+         height = n_rows * 3.0 + 1.2,
          bg     = "white")
   cat("Saved:", out_file, "\n")
 }
