@@ -1,10 +1,10 @@
 Drug,Comparison,n (strains),Fold change,95% CI,p (uncorrected),"p (Holm, within drug)","p (Holm, all 9 tests)"
 Amphotericin,40 evolved vs 35 evolved,18 / 18,0.89,"[0.72, 1.09]",0.251,0.752,1.000
-Amphotericin,35 evolved vs ancestor (fRS585),18,1.06,"[0.95, 1.19]",0.264,0.752,1.000
-Amphotericin,40 evolved vs ancestor (fRS585),18,0.95,"[0.79, 1.13]",0.519,0.752,1.000
+Amphotericin,35 evolved vs ancestor (YL07),18,1.06,"[0.95, 1.19]",0.264,0.752,1.000
+Amphotericin,40 evolved vs ancestor (YL07),18,0.95,"[0.79, 1.13]",0.519,0.752,1.000
 Caspofungin,40 evolved vs 35 evolved,18 / 18,0.90,"[0.74, 1.09]",0.272,0.815,1.000
-Caspofungin,35 evolved vs ancestor (fRS585),18,1.06,"[0.92, 1.21]",0.406,0.815,1.000
-Caspofungin,40 evolved vs ancestor (fRS585),18,0.95,"[0.82, 1.10]",0.474,0.815,1.000
+Caspofungin,35 evolved vs ancestor (YL07),18,1.06,"[0.92, 1.21]",0.406,0.815,1.000
+Caspofungin,40 evolved vs ancestor (YL07),18,0.95,"[0.82, 1.10]",0.474,0.815,1.000
 Fluconazole,40 evolved vs 35 evolved,18 / 18,1.00,"[0.70, 1.44]",0.985,0.985,1.000
-Fluconazole,35 evolved vs ancestor (fRS585),18,1.39,"[1.06, 1.82]",0.021,0.042,0.170
-Fluconazole,40 evolved vs ancestor (fRS585),18,1.39,"[1.08, 1.80]",0.014,0.042,0.126
+Fluconazole,35 evolved vs ancestor (YL07),18,1.39,"[1.06, 1.82]",0.021,0.042,0.170
+Fluconazole,40 evolved vs ancestor (YL07),18,1.39,"[1.08, 1.80]",0.014,0.042,0.126

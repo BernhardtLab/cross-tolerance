@@ -1,6 +1,10 @@
 ## notes from data analysis
 
-Nov 14 -- come back to up to date version of the exclusion of fits based on visual assessment, and re-do the PCA etc.
+
+
+November 16 -- evening -- finished the PCA with the better fitting approach. Now we don't need to drop any of the fits due to poor fitting. Need to update the manuscript with the new results.
+
+
 
 Nov 16
 
@@ -122,6 +126,9 @@ The morning Nov 16 version (six exclusions) was within 0.05 of these values for 
 The first two PCs together explained 60.8% of within-group variance. PC1 (32.4%) was characterized by co-loading of T~h~ (loading = −0.547), fluconazole tolerance (−0.536), amphotericin B tolerance (−0.475), and T~opt~ (−0.396) in the same direction, with caspofungin tolerance (−0.168) and CT~max~ (−0.053) contributing little. PC2 (28.4%) captured an independent axis of TPC shape variation, with CT~max~ (0.694) and T~opt~ (−0.617) loading in opposing directions; amphotericin B (0.285) and caspofungin (0.228) tolerance loaded modestly on this axis, whereas fluconazole tolerance and T~h~ loaded weakly (|loading| ≤ 0.07). The co-loading of T~h~ with fluconazole and amphotericin B tolerance on PC1 indicates a shared axis of within-group variation spanning thermal deactivation and drug tolerance, although this axis partly reflects the correlation between the two drug tolerances themselves (within-group *r* = 0.53); pairwise associations between T~h~ and fluconazole (*r* = 0.30) or amphotericin B (*r* = 0.23) tolerance were weaker. In a stratified bootstrap (2,000 resamples), 95% intervals for the PC1 loadings of T~h~, fluconazole, and amphotericin B excluded zero, whereas those for T~opt~, caspofungin, and CT~max~ did not; the co-loading was also robust to removing the two most influential strains, individually or together (loadings between −0.31 and −0.55), whereas the contribution of T~opt~ depended on a single strain with extreme thermal traits. Because PC1 and PC2 explained similar proportions of variance, the orientation of PC1 was not sharply determined, and we interpret it as a modest shared axis rather than a dominant mode of variation. Notably, fluconazole and amphotericin B both target ergosterol — fluconazole by inhibiting its synthesis and amphotericin B by binding it directly — while caspofungin acts on a mechanistically distinct target, cell wall β-glucan synthesis, and did not consistently contribute to this axis. The co-variation of T~h~ with tolerance to the two ergosterol-targeting drugs is consistent with, though not direct evidence for, a shared dependence on membrane ergosterol composition across thermal adaptation and membrane-active antifungal tolerance.
 
 ---
+
+Nov 14 -- come back to up to date version of the exclusion of fits based on visual assessment, and re-do the PCA etc.
+
 
 
 Nov 13

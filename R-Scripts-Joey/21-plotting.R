@@ -3,9 +3,10 @@
 # Combined multi-panel figure
 #
 # 
-#   Row 1: (A) TPC curves  |  (B) PCA biplot
-#   Row 2: (C) Thermal traits dotplot  [3-panel facet: Topt, Tmax, Th]
-#   Row 3: (D) IC50 dotplot            [3-panel facet: by drug]
+#   Row 1: (A) TPC curves, with (B) trait estimates ± 95% CI underneath on the
+#              same temperature axis  |  (C) PCA biplot
+#   Row 2: (D) Thermal traits dotplot  [3-panel facet: Topt, Tmax, Th]
+#   Row 3: (E) IC50 dotplot            [3-panel facet: by drug]
 #
 # 
 #
@@ -69,6 +70,8 @@ tpc_params  <- read_csv(file.path(OUT_TPC, "tpc-params-auc-gcplyr-17.csv"),
                         show_col_types = FALSE)
 stats_tpc   <- read_csv(file.path(OUT_TPC, "stats-results-auc-gcplyr-17.csv"),
                         show_col_types = FALSE)
+tpc_se      <- read_csv(file.path(OUT_TPC, "tpc-boot-se-19.csv"),
+                        show_col_types = FALSE)
 
 ic50_strains <- read_csv(file.path(OUT, "normalised-ic50-per-strain.csv"),
                          show_col_types = FALSE)
@@ -96,13 +99,6 @@ y_topt <- approx(anc_curve$temp, anc_curve$pred, xout = anc$topt)$y
 y_th   <- approx(anc_curve$temp, anc_curve$pred, xout = anc$th_c)$y
 y_tmax <- approx(anc_curve$temp, anc_curve$pred, xout = anc$tmax)$y
 
-# Evolved group means per trait (for TPC annotations)
-grp_means <- tpc_params |>
-  filter(evolution_history %in% EVO_LEVELS) |>
-  group_by(evolution_history) |>
-  summarise(across(c(topt, tmax, th_c), mean)) |>
-  mutate(evolution_history = factor(evolution_history, levels = EVO_LEVELS))
-
 
 # =============================================================================
 # 3. TPC curves plot
@@ -117,26 +113,6 @@ obs_means <- well_metrics |>
   filter(!is.na(auc_gc), evolution_history %in% c(EVO_LEVELS, "fRS585")) |>
   group_by(strain, evolution_history, test_temperature) |>
   summarise(auc_gc = mean(auc_gc, na.rm = TRUE), .groups = "drop")
-
-# Bracket geometry: one bracket per trait spanning its 3 group ticks
-brac_y <- -0.12   # y of horizontal bar
-tip_h  <-  0.025  # height of end ticks (upward)
-lbl_y  <- -0.155  # y of label
-pad    <-  0.22   # padding beyond outermost tick
-
-trait_brackets <- tibble(
-  label = c("T[opt]", "T[h]", "T[max]"),
-  xs = list(
-    c(grp_means$topt, anc$topt),
-    c(grp_means$th_c, anc$th_c),
-    c(grp_means$tmax, anc$tmax)
-  )
-) |>
-  mutate(
-    xmin = map_dbl(xs, min) - pad,
-    xmax = map_dbl(xs, max) + pad,
-    xmid = (xmin + xmax) / 2
-  )
 
 plot_tpc <- ggplot() +
   geom_line(
@@ -187,33 +163,6 @@ plot_tpc <- ggplot() +
            arrow = arrow(length = unit(0.2, "cm")), color = "grey30") +
   annotate("text", x = anc$tmax + 0.9, y = y_tmax + 0.13,
            label = "T[max]", hjust = 0, size = 3.5, color = "grey20", parse = TRUE) +
-  # Coloured ticks on x-axis
-  annotate("segment",
-           x    = c(grp_means$topt, grp_means$th_c, grp_means$tmax,
-                    anc$topt, anc$th_c, anc$tmax),
-           xend = c(grp_means$topt, grp_means$th_c, grp_means$tmax,
-                    anc$topt, anc$th_c, anc$tmax),
-           y = 0.02, yend = -0.08,
-           color = c(EVO_COLORS[rep(as.character(grp_means$evolution_history), 3)],
-                     rep("#000000", 3)),
-           linewidth = 0.8) +
-  # Grouping brackets under ticks
-  annotate("segment",
-           x    = trait_brackets$xmin, xend = trait_brackets$xmax,
-           y    = brac_y,              yend = brac_y,
-           color = "grey50", linewidth = 0.5) +
-  annotate("segment",
-           x    = trait_brackets$xmin, xend = trait_brackets$xmin,
-           y    = brac_y,              yend = brac_y + tip_h,
-           color = "grey50", linewidth = 0.5) +
-  annotate("segment",
-           x    = trait_brackets$xmax, xend = trait_brackets$xmax,
-           y    = brac_y,              yend = brac_y + tip_h,
-           color = "grey50", linewidth = 0.5) +
-  annotate("text",
-           x = trait_brackets$xmid, y = lbl_y,
-           label = trait_brackets$label,
-           size = 3, color = "grey40", hjust = 0.5, parse = TRUE) +
   coord_cartesian(xlim = c(23, 45), clip = "off") +
   labs(x = "Temperature (\u00b0C)", y = "Growth performance (OD\u00b7day)") +
   theme_evo() +
@@ -224,6 +173,68 @@ plot_tpc <- ggplot() +
     legend.key.size        = unit(0.45, "cm"),
     plot.margin            = margin(5, 5, 20, 5, "pt")
   )
+
+
+# =============================================================================
+# 3b. Thermal trait estimates with 95% CIs, zoomed to the trait range and
+#     placed under the TPC panel (after Bernhardt et al. 2018 Proc B, Fig. 2c)
+# =============================================================================
+# Evolved groups: mean across populations ± t-based 95% CI (among-population
+# variation, n = 18 per group). Ancestor: single-strain estimate ± 1.96 ×
+# bootstrap SE from the residual bootstrap of its TPC fit (Script 19), i.e.
+# fit uncertainty. The two kinds of interval should be distinguished in the
+# figure legend.
+
+CI_ROWS <- c("40 evolved", "35 evolved", "fRS585")  # bottom to top
+
+anc_se <- tpc_se |> filter(evolution_history == "fRS585")
+
+trait_ci <- bind_rows(
+  tpc_params |>
+    filter(evolution_history %in% EVO_LEVELS) |>
+    pivot_longer(c(topt, tmax, th_c), names_to = "trait", values_to = "value") |>
+    summarise(
+      est  = mean(value),
+      half = qt(0.975, n() - 1) * sd(value) / sqrt(n()),
+      .by  = c(evolution_history, trait)
+    ),
+  tibble(
+    evolution_history = "fRS585",
+    trait = c("topt", "tmax", "th_c"),
+    est   = c(anc_se$topt, anc_se$tmax, anc_se$th_c),
+    half  = qnorm(0.975) * c(anc_se$se_topt, anc_se$se_tmax, anc_se$se_th)
+  )
+) |>
+  mutate(lo = est - half, hi = est + half,
+         row = factor(evolution_history, levels = CI_ROWS))
+
+trait_ci_labels <- trait_ci |>
+  summarise(x = mean(est), .by = trait) |>
+  mutate(label = recode(trait, topt = "T[opt]", tmax = "T[max]", th_c = "T[h]"))
+
+# Zoom window for the strip: CI range padded and rounded out to 0.5 °C
+ZOOM   <- c(floor((min(trait_ci$lo) - 0.25) * 2) / 2,
+            ceiling((max(trait_ci$hi) + 0.25) * 2) / 2)
+
+plot_trait_ci <- ggplot(trait_ci, aes(y = row)) +
+  geom_errorbar(aes(xmin = lo, xmax = hi, color = evolution_history),
+                width = 0.4, linewidth = 0.6, orientation = "y") +
+  geom_point(aes(x = est, fill = evolution_history),
+             shape = 24, size = 2, color = "black", stroke = 0.4) +
+  annotate("text", x = trait_ci_labels$x, y = length(CI_ROWS) + 0.85,
+           label = trait_ci_labels$label, parse = TRUE, size = 3, color = "grey20") +
+  scale_color_manual(values = EVO_COLORS, guide = "none") +
+  scale_fill_manual(values = EVO_COLORS, guide = "none") +
+  scale_y_discrete(labels = c("40 evolved" = "40 evolved",
+                              "35 evolved" = "35 evolved",
+                              "fRS585"     = "Ancestor"),
+                   expand = expansion(add = c(0.6, 1.2))) +
+  scale_x_continuous(breaks = seq(ceiling(ZOOM[1]), floor(ZOOM[2]), by = 1)) +
+  coord_cartesian(xlim = ZOOM, ylim = c(1, length(CI_ROWS)), clip = "off") +
+  labs(x = "Temperature (\u00b0C)", y = NULL) +
+  theme_evo() +
+  theme(axis.line.y  = element_blank(),
+        axis.ticks.y = element_blank())
 
 
 # =============================================================================
@@ -481,14 +492,18 @@ plot_ic50 <- ggplot(plot_data_ic50,
 # 7. Combine and save
 # =============================================================================
 
-combined <- ((plot_tpc | plot_pca) + plot_layout(widths = c(3, 2))) /
+# Trait-CI strip (zoomed to the trait range) sits under the TPC panel
+tpc_col <- plot_tpc / plot_trait_ci +
+  plot_layout(heights = c(4, 1.1))
+
+combined <- ((tpc_col | plot_pca) + plot_layout(widths = c(3, 2))) /
   plot_traits /
   plot_ic50 +
-  plot_layout(heights = c(1.1, 1, 1)) +
+  plot_layout(heights = c(1.7, 1, 1)) +
   plot_annotation(tag_levels = "A") &
   theme(axis.title   = element_text(size = 12),
         axis.text    = element_text(size = 11),
         plot.margin  = margin(0, 2, 0, 2, "pt"))
 
 ggsave(file.path(FIGS, "combined-figure-21.png"),
-       combined, width = 7, height = 8, dpi = 300, bg = "transparent")
+       combined, width = 7, height = 9.4, dpi = 300, bg = "transparent")

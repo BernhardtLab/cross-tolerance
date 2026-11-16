@@ -308,7 +308,7 @@ for (pop in all_pops) {
       facet_wrap(~ plate_id) +
       labs(
         title    = paste0(pop, "  |  ", drug_i),
-        subtitle = "Grey: ancestor (fRS585)  |  Black/blue: strain",
+        subtitle = "Grey: ancestor (YL07)  |  Black/blue: strain",
         x        = "Concentration (log scale)",
         y        = "OD (blank-corrected)"
       ) +
@@ -470,7 +470,7 @@ supp_table_p <- results_norm |>
   )) |>
   transmute(
     Drug                       = str_to_sentence(drug),
-    Comparison                 = str_replace(comparison, "vs ancestor", "vs ancestor (fRS585)"),
+    Comparison                 = str_replace(comparison, "vs ancestor", "vs ancestor (YL07)"),
     `n (strains)`              = n,
     `Fold change`              = sprintf("%.2f", 2^diff),
     `95% CI`                   = sprintf("[%.2f, %.2f]", 2^ci_lo, 2^ci_hi),
@@ -804,14 +804,14 @@ for (drug_i in all_drugs) {
     scale_color_manual(
       values = EVO_COLORS, name = NULL,
       breaks = c("35 evolved", "40 evolved", "fRS585"),
-      labels = c("35 evolved", "40 evolved", "Ancestor (fRS585)")
+      labels = c("35 evolved", "40 evolved", "Ancestor (YL07)")
     ) +
     scale_linetype_manual(values = c(`FALSE` = "solid", `TRUE` = "dashed"),
                           guide = "none") +
     facet_wrap(~ facet_label, ncol = NCOL) +
     labs(
       title   = drug_i,
-      x       = paste(str_to_sentence(drug_i), "concentration (log scale)"),
+      x       = paste(str_to_sentence(drug_i), "concentration (\u00b5g/mL, log scale)"),
       y       = "OD (blank-corrected)",
       caption = caption_text
     ) +
@@ -888,8 +888,8 @@ for (drug_i in all_drugs) {
     scale_x_log10() +
     facet_wrap(~ facet_label, ncol = NCOL_ANC) +
     labs(
-      title   = paste(drug_i, "— ancestor (fRS585)"),
-      x       = paste(str_to_sentence(drug_i), "concentration (log scale)"),
+      title   = paste(drug_i, "— ancestor (YL07)"),
+      x       = paste(str_to_sentence(drug_i), "concentration (\u00b5g/mL, log scale)"),
       y       = "OD (blank-corrected)",
       caption = if (any(labs_i$excluded))
         paste("Dashed curve, \"(excluded from analysis)\": poor 4PL fit; evolved",
