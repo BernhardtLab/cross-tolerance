@@ -4,54 +4,122 @@ Nov 14 -- come back to up to date version of the exclusion of fits based on visu
 
 Nov 16
 
-**UPDATE (November 16, 2026) — IC50 and PCA manuscript text after removal of visually assessed bad fits. Supersedes the November 9 IC50 paragraph and the November 9 revised PCA paragraph below.**
+**UPDATE (November 16, 2026; revised late afternoon) — IC50 and PCA results with minimum-RSS 4PL fitting and NO curves excluded. Supersedes the November 9 IC50 and PCA paragraphs below, and an earlier Nov 16 version of this section that excluded six visually assessed bad fits.**
 
-*What was removed:* Six converged but poorly fitting dose-response curves were excluded based on visual assessment of the fitted 4PL curve against the OD data, confirmed by a group-blinded, randomised review of all 441 curves (11e-blind-curve-review.R, Nov 13). Five are evolved-strain curves (40_E9 and 40_G9 fluconazole, 40_C9 caspofungin, 40_D8 and 40_E11 amphotericin B; one plate each). The sixth, new since Nov 9, is an ancestor curve: fRS585, caspofungin, January Set1 Rep3 (IC50 = 0.00444, slope = 0.58). Because each evolved strain is normalised to the same-plate ancestor, removing this curve also dropped the caspofungin observations of the five evolved strains on that plate (40_B2, 40_B6, 40_B8, 40_C5, 40_C7). Matched plate observations went from 369 to 364, and all 36 strains kept at least one observation per drug (40_C7 caspofungin now rests on one plate). Three 40_G11 fluconazole curves flagged in the blind review were retained, because all six 40_G11 fluconazole plates show the same shallow response (likely a strain phenotype). See 11d-MICs.R section 3a.
+*Fitting change (11d section 3):* fit_ic50() used to try up to three starting IC50 values (slope start fixed at 10) and returned the first fit that converged. It now fits from a 5 × 4 grid of starts (IC50 at the 10/25/50/75/90% quantiles of the tested concentrations × slope 1, 5, 10, 30) and keeps the fit with the lowest residual sum of squares (RSS). All 441 curves now converge (previously 437), and no curve gets a worse fit.
 
-*What changed in the IC50 results:* Only caspofungin. The low ancestor IC50 on the excluded plate had inflated the five strains' ratios (1.24–1.88-fold → 0.62–0.98-fold). The marginal 40°C-evolved caspofungin trend disappeared (1.15-fold, p = 0.058 → 0.97-fold, p = 0.625), and 40°C/35°C went from 1.09 to 0.91-fold. Fluconazole and amphotericin B results did not change. Source: `data-processed/supp-table-ic50-pvalues.csv` (11d section 6b).
+*Why the visually assessed bad fits are no longer excluded:* The six curves excluded after visual assessment, confirmed by the group-blinded review (11e-blind-curve-review.R, Nov 13), were all artefacts of the old fitting procedure, not data that cannot be fitted. Five were shallow local optima. In 40_G9, the lower asymptote was stuck at the 0.5 upper bound. With the min-RSS fit, each curve follows the data:
 
-*Still open:* In the sensitivity analysis that also drops fits flagged by the automated rules (11d section 9c), the 35°C-evolved fluconazole effect does not hold (1.39-fold, p = 0.021 → 1.03-fold, p = 0.82). This appears to be driven by three ancestor fluconazole fits that are rule-flagged (shallow slope) but were not excluded by visual assessment. The 40°C-evolved fluconazole effect holds (1.28-fold, p = 0.040). This needs a decision before finalising.
-
-**Manuscript text (plate-normalized IC50 results, uncorrected p-values; updated November 16, 2026, visually assessed bad fits removed):**
-
-Six of 441 fitted dose-response curves (five evolved-strain curves and one ancestor curve, each from a single plate) were excluded after visual assessment showed that the fitted four-parameter logistic curve did not describe the data. This was confirmed by a group-blinded, randomized review of all curves. Where an ancestor curve was excluded, evolved strains on that plate were not normalized for that drug. All 36 populations retained at least one plate-normalized observation per drug.
-
-After plate normalization, both evolved groups showed modestly elevated fluconazole tolerance relative to the ancestor, whereas neither group differed from the ancestor in caspofungin or amphotericin B tolerance, and the two groups did not differ from each other for any drug (Figure 2G). For fluconazole, IC~50~ was 1.39-fold higher than the ancestor in the 35°C-evolved group (one-sample *t*-test on plate-normalized log~2~[IC~50~/ancestor IC~50~], *n* = 18 populations, *p* = 0.021, 95% CI for fold change: [1.06, 1.82]) and 1.37-fold higher in the 40°C-evolved group (*n* = 18, *p* = 0.013, 95% CI: [1.08, 1.74]); the two groups were nearly identical (40°C/35°C: 0.99-fold; Welch *t*-test, *n* = 18 per group, *p* = 0.934, 95% CI: [0.70, 1.40]). Neither group differed from the ancestor in caspofungin tolerance (35°C-evolved: 1.06-fold, *p* = 0.394, 95% CI: [0.92, 1.21]; 40°C-evolved: 0.97-fold, *p* = 0.625, 95% CI: [0.84, 1.11]), and the two groups did not differ from each other (40°C/35°C: 0.91-fold; *p* = 0.341, 95% CI: [0.76, 1.10]). Neither group showed a change in amphotericin B tolerance relative to the ancestor (35°C-evolved: 1.06-fold, *p* = 0.327, 95% CI: [0.94, 1.18]; 40°C-evolved: 0.94-fold, *p* = 0.449, 95% CI: [0.78, 1.12]) or relative to each other (40°C/35°C: 0.89-fold; *p* = 0.241, 95% CI: [0.72, 1.09]). The fluconazole results remained significant after Holm correction within drug (35°C-evolved: *p* = 0.043; 40°C-evolved: *p* = 0.039) but not after Holm correction across all nine tests (*p* = 0.170 and 0.116, respectively; Table SX); we therefore interpret them as suggestive evidence of a modest increase in fluconazole tolerance shared by both selection regimes, rather than a temperature-specific effect.
-
-*PCA update:* 22-pca.R was re-run on Nov 16 with the per-strain IC50 values above (thermal traits unchanged). Outputs: `data-processed/pca-*-within-22.csv`, `figures/pca-biplot-within-22.png`. Panel B of `figures/combined-figure-21.png` has NOT yet been regenerated. PC2 did not flip sign, so the biplot has the same orientation as the Nov 9 version.
-
-| Variable | PC1 Nov 9 | PC1 Nov 16 | PC2 Nov 9 | PC2 Nov 16 |
+| Curve | Old IC50 | New IC50 | RSS old → new | Old problem |
 |---|---|---|---|---|
-| T~opt~ | −0.425 | −0.430 | −0.590 | −0.592 |
-| CT~max~ | 0.045 | −0.012 | 0.701 | 0.704 |
-| T~h~ | −0.470 | −0.543 | 0.035 | 0.039 |
-| Fluconazole | −0.567 | −0.537 | 0.140 | 0.088 |
-| Caspofungin | 0.234 | −0.126 | −0.050 | 0.180 |
-| Amphotericin B | −0.470 | −0.464 | 0.370 | 0.334 |
-| % variance | 33.1 | 32.5 | 27.8 | 28.2 |
+| 40_E11 amphotericin, March Set4 Rep3 | 0.0214 | 0.457 | 0.67 → 0.13 | shallow local optimum |
+| 40_C9 caspofungin, January Set1 Rep3 | 0.00154 | 0.0299 | 0.71 → 0.10 | shallow local optimum |
+| 40_D8 amphotericin, January Set2 Rep3 | 0.0622 | 0.996 | 0.91 → 0.06 | shallow local optimum |
+| 40_E9 fluconazole, February Plate2 Rep1 | 2.49 | 29.9 | 0.48 → 0.10 | shallow local optimum |
+| fRS585 caspofungin, January Set1 Rep3 | 0.00444 | 0.0280 | 0.65 → 0.12 | shallow local optimum |
+| 40_G9 fluconazole, March Set4 Rep3 | 127 | 132 | 0.42 → 0.09 | bottom stuck at 0.5 bound |
 
-- Caspofungin's PC1 loading changed sign (0.234 → −0.126). The Nov 9 "opposite direction" result was probably partly an artefact of the excluded ancestor curve. Caspofungin now loads mainly on PC3 (−0.674) and has weak within-group correlations with all other variables (|r| ≤ 0.12).
-- Within-group correlations not involving caspofungin are unchanged: fluconazole–amphotericin B r = 0.54, T~h~–fluconazole r = 0.29, T~h~–amphotericin B r = 0.24.
+The blind review correctly identified fitting failures, but these are now fixed by the fitting procedure rather than by exclusion. `bad_fits` in 11d section 3a is empty; the mechanism is kept in case it is needed later. Four previously non-converged curves now fit: 35_B8 amphotericin (March Set1 Rep1), 40_C7 caspofungin (January Set1 Rep1), 40_E7 caspofungin (January Set2 Rep2) and 40_E7 amphotericin (March Set4 Rep3). 40_C7 January Set1 Rep1 has one aberrant high-OD well above the MIC, which pulls the fitted bottom up to 0.12, but its IC50 (0.017) still sits at the visible drop. Most of the refitted curves have slopes of 30–40: the OD drop falls between two adjacent concentrations, so the IC50 is only located to within that interval.
 
-*Influential-strain check (re-done Nov 16; replaces the September result):* The PCA was re-run without 35_D4, without 35_B6, and without both, re-centring within groups each time. Unlike in September, the T~h~ + fluconazole + amphotericin B co-loading on PC1 holds in all four analyses (loadings −0.31 to −0.54).
+*Data now:* All 378 evolved-strain plate observations are matched to a same-plate ancestor (364 in the morning version, 369 on Nov 9). All 36 strains have data for all three drugs.
+
+*What changed compared with the morning version (six exclusions):* Nothing substantive. Fluconazole 40°C-evolved vs ancestor went from 1.37- to 1.39-fold, and caspofungin 40°C-evolved vs ancestor from 0.97-fold (p = 0.625) to 0.95-fold (p = 0.474). Every other fold change moved by ≤ 0.01. The September → Nov 9 → Nov 16 morning change in caspofungin (the 40°C-evolved 1.15-fold, p = 0.058 trend disappearing) was caused by the bad ancestor fit on January Set1 Rep3, which inflated five strains' ratios. That curve is now fitted correctly instead of being excluded. Source: `data-processed/supp-table-ic50-pvalues.csv` (11d section 6b).
+
+*40_G9 fluconazole check:* 40_G9 is tolerant on all six plates (2.0–16.5× ancestor). The 16.5× plate (February Plate3 Rep3) is the highest of all 72 fluconazole observations for the 40-evolved strains. It is driven by the shallow ancestor curve on that plate (IC50 4.79), not by 40_G9.
+
+*Still open:* The sensitivity analysis (11d section 9c) drops the 26 of 378 observations where the strain's or the same-plate ancestor's fit is flagged by the automated rules. Under it, the 35°C-evolved fluconazole effect does not hold (1.39-fold, p = 0.021 → 1.03-fold, p = 0.815). The 40°C-evolved effect only just holds (1.28-fold, p = 0.047), and 40°C/35°C becomes 1.25-fold (p = 0.171). The only ancestor fits still flagged are three shallow fluconazole curves: February Plate3 Rep3 (IC50 4.79, slope 0.59) and two March Set2 reps (IC50 1.92 and 4.80, slopes 0.80 and 0.90). Unlike the six previously excluded curves, these are fitted well; the shallow shape is in the data. So this is a question about ancestor behaviour on those plates, not about fitting.
+
+*Decision (Nov 16):* Results and analysis are kept as they are: same-plate ancestor normalisation, min-RSS fits, no exclusions, and the six-variable PCA. The caveats below are recorded for reference and for responding to reviewers; they do not change any reported numbers.
+
+*Caveat — March Set2 ancestor fluconazole (found Nov 16):* The ancestor's fluconazole IC50 varies about 6-fold across the three March Set2 replicates (Rep1 1.92, Rep2 12.1, Rep3 4.80). Rep1 and Rep3 are two of the rule-flagged shallow curves. Five 35-evolved strains measured on these plates (35_D2, 35_D8, 35_E7, 35_E9, 35_E11) have consistent IC50s of about 11–19 on all three plates, but their log2 ratios vary with the ancestor: 2.7–2.9 on Rep1, −0.04 to 0.57 on Rep2, and 1.2–2.0 on Rep3. They form a tight cluster at about +1.05 (group-centred) in per-strain fluconazole tolerance. Compared with the Rep2 ancestor alone, they are close to ancestral. This plate is likely a main driver of the 35°C-evolved fluconazole result not holding in the sensitivity analysis.
+
+**Manuscript text (plate-normalized IC50 results, uncorrected p-values; updated November 16, 2026; min-RSS fitting, no curves excluded):**
+
+Methods: Dose-response curves were fitted with a four-parameter logistic model from a grid of 20 starting values (five IC~50~ × four slope values), retaining the fit with the lowest residual sum of squares. All 441 curves converged and none were excluded. Each of the 378 evolved-strain plate observations was normalized to the ancestor IC~50~ measured on the same plate, and plate-level log~2~ ratios were averaged per population.
+
+After plate normalization, both evolved groups showed modestly elevated fluconazole tolerance relative to the ancestor, whereas neither group differed from the ancestor in caspofungin or amphotericin B tolerance, and the two groups did not differ from each other for any drug (Figure 2G). For fluconazole, IC~50~ was 1.39-fold higher than the ancestor in the 35°C-evolved group (one-sample *t*-test on plate-normalized log~2~[IC~50~/ancestor IC~50~], *n* = 18 populations, *p* = 0.021, 95% CI for fold change: [1.06, 1.82]) and 1.39-fold higher in the 40°C-evolved group (*n* = 18, *p* = 0.014, 95% CI: [1.08, 1.80]); the two groups were indistinguishable (40°C/35°C: 1.00-fold; Welch *t*-test, *n* = 18 per group, *p* = 0.985, 95% CI: [0.70, 1.44]). Neither group differed from the ancestor in caspofungin tolerance (35°C-evolved: 1.06-fold, *p* = 0.406, 95% CI: [0.92, 1.21]; 40°C-evolved: 0.95-fold, *p* = 0.474, 95% CI: [0.82, 1.10]), and the two groups did not differ from each other (40°C/35°C: 0.90-fold; *p* = 0.272, 95% CI: [0.74, 1.09]). Neither group showed a change in amphotericin B tolerance relative to the ancestor (35°C-evolved: 1.06-fold, *p* = 0.264, 95% CI: [0.95, 1.19]; 40°C-evolved: 0.95-fold, *p* = 0.519, 95% CI: [0.79, 1.13]) or relative to each other (40°C/35°C: 0.89-fold; *p* = 0.251, 95% CI: [0.72, 1.09]). The fluconazole results remained significant after Holm correction within drug (both groups: *p* = 0.042) but not after Holm correction across all nine tests (35°C-evolved: *p* = 0.170; 40°C-evolved: *p* = 0.126; Table SX); we therefore interpret them as suggestive evidence of a modest increase in fluconazole tolerance shared by both selection regimes, rather than a temperature-specific effect.
+
+*PCA update:* 22-pca.R was re-run on Nov 16 with the per-strain IC50 values above (thermal traits unchanged). Outputs: `data-processed/pca-*-within-22.csv`, `figures/pca-biplot-within-22.png`. `figures/combined-figure-21.png` was regenerated with 21-plotting.R, which updates both panel B (PCA) and panel D (IC50). In panel B, the Fluc and T~h~ arrows nearly coincide; their labels were nudged apart in 21-plotting.R (Fluc up, T~h~ down, by 0.22 PC2 units each; hard-coded by variable name, so re-check if loadings change). PC2 did not flip sign relative to Nov 9.
+
+| Variable | PC1 Nov 9 | PC1 now | PC2 Nov 9 | PC2 now | PC3 now |
+|---|---|---|---|---|---|
+| T~opt~ | −0.425 | −0.396 | −0.590 | −0.617 | 0.189 |
+| CT~max~ | 0.045 | −0.053 | 0.701 | 0.694 | 0.191 |
+| T~h~ | −0.470 | −0.547 | 0.035 | −0.001 | 0.471 |
+| Fluconazole | −0.567 | −0.536 | 0.140 | 0.064 | −0.456 |
+| Caspofungin | 0.234 | −0.168 | −0.050 | 0.228 | 0.574 |
+| Amphotericin B | −0.470 | −0.475 | 0.370 | 0.285 | −0.411 |
+| % variance | 33.1 | 32.4 | 27.8 | 28.4 | 16.9 |
+
+The morning Nov 16 version (six exclusions) was within 0.05 of these values for every loading.
+
+- Caspofungin's PC1 loading changed sign compared with Nov 9 (0.234 → −0.168). The Nov 9 "opposite direction" result was largely an artefact of the bad ancestor caspofungin fit. Caspofungin now loads mainly on PC3 and has weak within-group correlations with all other variables (|r| ≤ 0.14).
+- Within-group correlations: fluconazole–amphotericin B r = 0.53, T~h~–fluconazole r = 0.30, T~h~–amphotericin B r = 0.23.
+
+*Influential-strain check (re-done Nov 16 on the current data; replaces the September result):* The PCA was re-run without 35_D4, without 35_B6, and without both, re-centring within groups each time. Unlike in September, the T~h~ + fluconazole + amphotericin B co-loading on PC1 holds in all four analyses (loadings −0.31 to −0.55).
 
 | PC1 loading | Full (n=36) | −35_D4 | −35_B6 | −both (n=34) |
 |---|---|---|---|---|
-| T~opt~ | −0.43 | −0.19 | +0.34 | +0.27 |
-| CT~max~ | −0.01 | −0.18 | −0.60 | −0.47 |
-| T~h~ | −0.54 | −0.43 | −0.43 | −0.35 |
-| Fluconazole | −0.54 | −0.48 | −0.31 | −0.36 |
-| Caspofungin | −0.13 | −0.50 | −0.17 | −0.43 |
-| Amphotericin B | −0.46 | −0.52 | −0.46 | −0.52 |
-| % variance PC1 | 32.5 | 36.8 | 32.9 | 37.1 |
+| T~opt~ | −0.40 | −0.14 | +0.35 | +0.27 |
+| CT~max~ | −0.05 | −0.22 | −0.60 | −0.47 |
+| T~h~ | −0.55 | −0.42 | −0.41 | −0.34 |
+| Fluconazole | −0.54 | −0.47 | −0.31 | −0.37 |
+| Caspofungin | −0.17 | −0.51 | −0.23 | −0.46 |
+| Amphotericin B | −0.47 | −0.52 | −0.44 | −0.50 |
+| % variance PC1 | 32.4 | 37.2 | 33.2 | 37.8 |
 
-- 35_B6 is extreme on the thermal traits (T~opt~ −3.3 SD, T~h~ −3.9 SD, group-centred). T~opt~'s co-loading on PC1 depends on this strain. The T~h~–fluconazole correlation does not (r = 0.29 with or without it).
-- 35_D4 is extreme on the drugs (fluconazole −2.4 SD, amphotericin B −2.6 SD, caspofungin +3.6 SD). It contributes to the fluconazole–amphotericin B correlation (0.54 → 0.43 without it) and pushes caspofungin away from the other drugs.
-- The caspofungin loading is unstable (−0.13 to −0.50), so it should not be interpreted.
+- 35_B6 is extreme on the thermal traits (T~opt~ −3.3 SD, T~h~ −3.9 SD, group-centred). T~opt~'s co-loading on PC1 depends on this strain. The T~h~–fluconazole correlation does not (r = 0.30 with or without it).
+- 35_D4 is extreme on the drugs (fluconazole −2.4 SD, amphotericin B −2.6 SD, caspofungin +3.5 SD). It contributes to the fluconazole–amphotericin B correlation (0.53 → 0.42 without it) and pushes caspofungin away from the other drugs.
+- The caspofungin loading is unstable (−0.17 to −0.51), so it should not be interpreted.
 
-**Manuscript text (PCA results; updated November 16, 2026, visually assessed bad fits removed):**
+*Bootstrap of PC1 loadings (Nov 16, current data):* 2,000 resamples of strains with replacement, stratified by group (18 + 18), re-centring within groups in each resample (seed 3391). In each resample, the component among PCs 1–3 with the highest absolute congruence to the full-data PC1 was taken and sign-aligned to it.
 
-The first two PCs together explained 60.6% of within-group variance. PC1 (32.5%) was characterized by co-loading of T~h~ (loading = −0.543), fluconazole tolerance (−0.537), amphotericin B tolerance (−0.464), and T~opt~ (−0.430) in the same direction, with caspofungin tolerance (−0.126) and CT~max~ (−0.012) contributing little. PC2 (28.2%) captured an independent axis of TPC shape variation, with CT~max~ (0.704) and T~opt~ (−0.592) loading in opposing directions; amphotericin B tolerance also loaded moderately on this axis (0.334), whereas caspofungin tolerance, fluconazole tolerance, and T~h~ loaded weakly (|loading| ≤ 0.18). The co-loading of T~h~ with fluconazole and amphotericin B tolerance on PC1 indicates a shared axis of within-group variation spanning thermal deactivation and drug tolerance, although this axis partly reflects the correlation between the two drug tolerances themselves (within-group *r* = 0.54); pairwise associations between T~h~ and fluconazole (*r* = 0.29) or amphotericin B (*r* = 0.24) tolerance were weaker. This co-loading was robust to removing the two most influential strains, individually or together (loadings of T~h~, fluconazole, and amphotericin B between −0.31 and −0.54 in all cases), whereas the contribution of T~opt~ to PC1 depended on a single strain with extreme thermal traits. Notably, fluconazole and amphotericin B both target ergosterol — fluconazole by inhibiting its synthesis and amphotericin B by binding it directly — while caspofungin acts on a mechanistically distinct target, cell wall β-glucan synthesis, and did not consistently contribute to this axis. The co-variation of T~h~ with tolerance to the two ergosterol-targeting drugs is consistent with, though not direct evidence for, a shared dependence on membrane ergosterol composition across thermal adaptation and membrane-active antifungal tolerance.
+| Variable | Full-data PC1 | Bootstrap median | 95% percentile interval | % of resamples negative |
+|---|---|---|---|---|
+| T~opt~ | −0.40 | −0.46 | [−0.71, 0.18] | 86 |
+| CT~max~ | −0.05 | 0.10 | [−0.50, 0.47] | 42 |
+| T~h~ | −0.55 | −0.44 | [−0.62, −0.11] | 99 |
+| Fluconazole | −0.54 | −0.48 | [−0.62, −0.23] | 100 |
+| Caspofungin | −0.17 | −0.14 | [−0.53, 0.41] | 65 |
+| Amphotericin B | −0.47 | −0.44 | [−0.59, −0.03] | 99 |
+
+- The intervals for T~h~, fluconazole and amphotericin B exclude zero; those for T~opt~, caspofungin and CT~max~ do not.
+- The axis itself is not sharply defined. The best-matching component was PC1 in only 73% of resamples (otherwise PC2 or PC3). Median congruence with the full-data PC1 was 0.85, and 51% of resamples fell below 0.85. This fits PC1 and PC2 explaining similar variance (32.4% vs 28.4%). Because matching and sign alignment pull each replicate towards the reference, these intervals are probably somewhat optimistic.
+
+*Eigenvalues (six-variable PCA, correlation matrix):* PC1 1.946, PC2 1.703, PC3 1.013, PC4 0.895, PC5 0.438, PC6 0.005. The PC1–PC2 gap (0.24) is smaller than the North et al. (1982) sampling error λ√(2/n) (≈ 0.46 for PC1 and 0.40 for PC2 at n = 36), so PC1 and PC2 are not well separated.
+
+*Caveat — T~h~ is nearly collinear with T~opt~ and CT~max~ (found Nov 16):* Within groups, T~h~ ≈ 0.51 T~opt~ + 0.53 CT~max~ (R² = 0.98), which is why PC6's eigenvalue is about 0. The six-variable PCA therefore has only about five independent dimensions, and the T~h~ + drugs co-loading on PC1 partly reflects including T~h~ alongside the two variables that almost determine it. Not yet checked: how T~h~ is derived in the TPC fitting script, and so whether this is by construction.
+
+*Parallel analysis (Horn; 5,000 draws each of random-normal and column-permuted data, centred within groups of 18 and scaled like the real data; seed 8126):*
+
+| Variables | PC1 obs / 95% null | PC2 obs / 95% null | PC3 obs / 95% null | Permutation p (PC1, PC2, PC3) |
+|---|---|---|---|---|
+| All 6 | 1.95 / 1.87 | 1.70 / 1.45 | 1.01 / 1.20 | 0.022, < 0.001, 0.75 |
+| 5 (T~h~ dropped) | 1.70 / 1.75 | 1.59 / 1.35 | 0.95 / 1.09 | 0.09, < 0.001, 0.65 |
+
+- With all six variables, PC1 and PC2 exceed the null. Because one eigenvalue is about 0, the other five are inflated relative to a six-independent-variable null, so this comparison is too lenient.
+- With T~h~ dropped, PC1 is the T~opt~ vs CT~max~ trade-off (loadings −0.62 / 0.69) and falls just short of the null. PC2 is fluconazole + amphotericin B (0.68 / 0.62; T~opt~ 0.34) and clearly exceeds it. Thermal and drug variables mostly separate onto different components. The data contain about two correlated pairs (T~opt~–CT~max~ r = −0.64; fluconazole–amphotericin B r = 0.53) and little other structure.
+
+*Direct within-group T~h~–drug correlations (partial r controlling for group, df = 33; seed 5274 for the bootstrap):*
+
+| | T~h~ – fluconazole | T~h~ – amphotericin B |
+|---|---|---|
+| Partial r | 0.30 | 0.23 |
+| 95% CI (Fisher) | [−0.04, 0.58] | [−0.11, 0.52] |
+| t, p | 1.80, 0.082 | 1.35, 0.185 |
+| Holm p (2 tests) | 0.163 | 0.185 |
+| Stratified bootstrap 95% CI (5,000) | [0.02, 0.54] | [0.01, 0.44] |
+| Spearman (ranked within group) | 0.24 | 0.21 |
+| Without 35_D4 and 35_B6 | 0.26 | 0.19 |
+| 35-evolved / 40-evolved only | 0.32 / 0.28 | 0.18 / 0.34 |
+
+- Both correlations are consistently positive but not statistically significant. Percentile bootstrap intervals for correlations tend to be too narrow at n = 36, so more weight goes to the Fisher intervals, which include zero.
+- With the rule-flagged ancestor plates dropped (sensitivity data set), T~h~–fluconazole falls to r = 0.18. This is partly the March Set2 ancestor effect described above.
+- If a reviewer questions the PC1 interpretation: the evidence supports at most a weak, non-significant positive association between T~h~ and tolerance to the two ergosterol-targeting drugs. The manuscript text below was kept as is (decision Nov 16).
+
+**Manuscript text (PCA results; updated November 16, 2026; min-RSS fitting, no curves excluded):**
+
+The first two PCs together explained 60.8% of within-group variance. PC1 (32.4%) was characterized by co-loading of T~h~ (loading = −0.547), fluconazole tolerance (−0.536), amphotericin B tolerance (−0.475), and T~opt~ (−0.396) in the same direction, with caspofungin tolerance (−0.168) and CT~max~ (−0.053) contributing little. PC2 (28.4%) captured an independent axis of TPC shape variation, with CT~max~ (0.694) and T~opt~ (−0.617) loading in opposing directions; amphotericin B (0.285) and caspofungin (0.228) tolerance loaded modestly on this axis, whereas fluconazole tolerance and T~h~ loaded weakly (|loading| ≤ 0.07). The co-loading of T~h~ with fluconazole and amphotericin B tolerance on PC1 indicates a shared axis of within-group variation spanning thermal deactivation and drug tolerance, although this axis partly reflects the correlation between the two drug tolerances themselves (within-group *r* = 0.53); pairwise associations between T~h~ and fluconazole (*r* = 0.30) or amphotericin B (*r* = 0.23) tolerance were weaker. In a stratified bootstrap (2,000 resamples), 95% intervals for the PC1 loadings of T~h~, fluconazole, and amphotericin B excluded zero, whereas those for T~opt~, caspofungin, and CT~max~ did not; the co-loading was also robust to removing the two most influential strains, individually or together (loadings between −0.31 and −0.55), whereas the contribution of T~opt~ depended on a single strain with extreme thermal traits. Because PC1 and PC2 explained similar proportions of variance, the orientation of PC1 was not sharply determined, and we interpret it as a modest shared axis rather than a dominant mode of variation. Notably, fluconazole and amphotericin B both target ergosterol — fluconazole by inhibiting its synthesis and amphotericin B by binding it directly — while caspofungin acts on a mechanistically distinct target, cell wall β-glucan synthesis, and did not consistently contribute to this axis. The co-variation of T~h~ with tolerance to the two ergosterol-targeting drugs is consistent with, though not direct evidence for, a shared dependence on membrane ergosterol composition across thermal adaptation and membrane-active antifungal tolerance.
 
 ---
 

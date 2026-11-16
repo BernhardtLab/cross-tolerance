@@ -250,17 +250,29 @@ plot_pca <- ggplot(pca_scores, aes(x = PC1, y = PC2, fill = evolution_history)) 
   ) +
   geom_text(
     data        = pca_loadings |>
-      mutate(label = recode(variable,
-                            topt         = "T[opt]",
-                            tmax         = "T[max]",
-                            th_c         = "T[h]",
-                            caspofungin  = "Casp",
-                            fluconazole  = "Fluc",
-                            amphotericin = "Amph")),
-    aes(x = PC1_scaled * 1.12, y = PC2_scaled * 1.12, label = label),
+      mutate(
+        label = recode(variable,
+                       topt         = "T[opt]",
+                       tmax         = "T[max]",
+                       th_c         = "T[h]",
+                       caspofungin  = "Casp",
+                       fluconazole  = "Fluc",
+                       amphotericin = "Amph"),
+        # Fluc and T_h arrows nearly coincide; separate their labels vertically
+        y_nudge = case_when(variable == "fluconazole" ~  0.22,
+                            variable == "th_c"        ~ -0.22,
+                            TRUE                      ~  0),
+        # Anchor labels so text extends away from the arrow tip
+        hjust = case_when(PC1_scaled < -0.5 ~ 1,
+                          PC1_scaled >  0.5 ~ 0,
+                          TRUE              ~ 0.5)
+      ),
+    aes(x = PC1_scaled * 1.08, y = PC2_scaled * 1.08 + y_nudge,
+        label = label, hjust = hjust),
     inherit.aes = FALSE,
     size = 3.2, color = "grey20", parse = TRUE
   ) +
+  scale_x_continuous(expand = expansion(mult = c(0.12, 0.05))) +
   scale_fill_manual(values = EVO_COLORS, name = NULL) +
   labs(
     x = sprintf("PC1 (%.1f%%)", pc1_pct),
