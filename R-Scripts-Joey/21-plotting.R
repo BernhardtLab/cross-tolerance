@@ -496,7 +496,7 @@ plot_ic50 <- ggplot(plot_data_ic50,
 tpc_col <- plot_tpc / plot_trait_ci +
   plot_layout(heights = c(4, 1.1))
 
-combined <- ((tpc_col | plot_pca) + plot_layout(widths = c(3, 2))) /
+combined <- ((tpc_col | plot_pca) + plot_layout(widths = c(1, 1))) /
   plot_traits /
   plot_ic50 +
   plot_layout(heights = c(1.7, 1, 1)) +
@@ -506,4 +506,4 @@ combined <- ((tpc_col | plot_pca) + plot_layout(widths = c(3, 2))) /
         plot.margin  = margin(0, 2, 0, 2, "pt"))
 
 ggsave(file.path(FIGS, "combined-figure-21.png"),
-       combined, width = 7, height = 9.4, dpi = 300, bg = "transparent")
+       combined, width = 8.5, height = 9.4, dpi = 300, bg = "transparent")
