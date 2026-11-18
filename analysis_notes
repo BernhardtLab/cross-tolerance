@@ -2,6 +2,69 @@
 
 
 
+**November 18, 2026 — Thermal performance above T~opt~ vs drug tolerance (Script 32: `R-Scripts-Joey/32-above-topt-vs-high-drug.R`)**
+
+*Question:* Do strains that perform better at supra-optimal temperatures also tolerate antifungal drugs better?
+
+*Thermal metrics (per strain, from the fitted Sharpe-Schoolfield TPCs; gcplyr AUC growth response; `data-processed/gcplyr/tpc-params-auc-gcplyr-17.csv` and `tpc-predictions-auc-gcplyr-17.csv`, which match the Script 19 fits):*
+- **Mean performance above T~opt~ (primary; `mean_above_topt`):** integral of the fitted TPC from the strain's own T~opt~ to its own T~max~, divided by (T~max~ − T~opt~). This is the average fitted performance across all temperatures between the optimum and the upper limit. Range 0.533–0.626.
+- **Area above T~opt~ (secondary; `auc_above_topt`):** the integral itself, not divided by window width.
+- Integration: trapezoid rule on the 500-point prediction grid (15–50°C), with T~opt~ and T~max~ added as endpoints by linear interpolation.
+- What they capture (within-group correlations): the area is almost entirely window width (r = 0.99 with T~max~ − T~opt~). Mean performance largely tracks peak growth (r = 0.77 with r~max~), so it reflects overall growth level as well as how well growth holds up above the optimum.
+- The window is strain-specific: T~opt~ ranges 37.0–40.1°C and T~max~ 42.0–44.0°C, so strains are averaged over different temperature ranges.
+
+*Drug metrics (per strain; all normalized to the same-plate ancestor):*
+- **log~2~ IC~50~ ratio:** `log_ratio` from `normalised-ic50-per-strain.csv` (11d; min-RSS fits, no exclusions), i.e. log~2~(IC~50~ / same-plate ancestor IC~50~), averaged over plates.
+- **Growth at high drug (`high_drug_lfc`):** relative growth (OD / zero-drug OD in the same row) as log~2~ fold change vs the same-plate ancestor at the same concentration, log~2~((rel + 0.05) / (rel~anc~ + 0.05)). Averaged over plates, then over the four doubling steps above the ancestor's median IC~50~ (pooled across plates): fluconazole 32–256 µg/mL (ancestor IC~50~ 16.4), caspofungin 0.031–0.25 µg/mL (0.016), amphotericin B 0.5–4 µg/mL (0.35). Source: `dr-difference-curves-29.csv` (`log2_fc`).
+- The two drug metrics are strongly related within groups: r = 0.68 (fluconazole), 0.82 (caspofungin), 0.81 (amphotericin B); all p < 0.001.
+
+*Model:* drug metric ~ thermal metric + evolution history (shared slope, group intercepts); within-group partial r = t / √(t² + df). Unadjusted p-values (no multiple-comparison correction). Run on all 36 strains and without the six 40-evolved strains re-tested in March ("40C-ev_Res": 40_C9, 40_E7, 40_E11, 40_F6, 40_G9, 40_G11), which are more resistant to all three drugs than the other twelve 40-evolved strains in both test months.
+
+*Results — mean performance above T~opt~ (within-group partial r, p):*
+
+| Drug | IC~50~, all (n = 36) | IC~50~, without six (n = 30) | High-drug growth, all | High-drug growth, without six |
+|---|---|---|---|---|
+| Fluconazole | 0.46, 0.005 | 0.37, 0.049 | 0.54, 0.001 | 0.18, 0.36 |
+| Caspofungin | 0.47, 0.005 | 0.11, 0.56 | 0.11, 0.53 | −0.15, 0.45 |
+| Amphotericin B | 0.48, 0.003 | 0.32, 0.091 | 0.47, 0.004 | 0.26, 0.18 |
+
+*Results — other thermal metrics vs log~2~ IC~50~ (all strains):* T~h~: r = 0.30 (fluconazole, p = 0.08), 0.14 (caspofungin, p = 0.43), 0.23 (amphotericin B, p = 0.19). T~opt~: 0.22, −0.03, 0.02 (all p ≥ 0.21). T~max~: 0.03, 0.14, 0.21 (all p ≥ 0.23). The only nominal result among these is fluconazole vs T~opt~ without the six (r = 0.38, p = 0.043), which is not present with all strains. Area above T~opt~ vs high-drug growth: r = 0.17–0.21, all p ≥ 0.22 (with or without the six).
+
+*Interpretation:*
+- Performance across supra-optimal temperatures is positively associated with fluconazole and amphotericin B tolerance (by both drug metrics) and with caspofungin IC~50~. Thermal limits (T~opt~, T~max~, T~h~) and the width of the above-optimum window are not.
+- The difference from the earlier null IC~50~ results comes from the thermal metric, not the drug metric: the earlier tests used T~opt~, T~max~ and T~h~ (where the curve sits), whereas mean performance above T~opt~ reflects how high the curve is.
+- Because the metric tracks r~max~ (r = 0.77), the safer reading is that better-performing strains are more drug-tolerant (general vigour), not that heat-tolerant strains specifically are. This matches Script 31: fluconazole tolerance at high drug correlates with growth at 25–38°C (r = 0.48–0.61) and more weakly at 41–42°C (r ≈ 0.3, n.s.), and the partial correlation with 42°C growth adjusting for 25°C growth is about 0 (r = −0.05 to 0.06 across subsets).
+- Robustness to the six re-tested strains: fluconazole IC~50~ holds without them (r = 0.37, p = 0.049); amphotericin B IC~50~ weakens (r = 0.32, p = 0.09); caspofungin IC~50~ disappears (r = 0.11). All high-drug-growth associations are no longer significant without the six.
+- In the IC~50~ figure, amphotericin B trends positively within both evolution groups. For caspofungin, the 35-evolved strains trend upward but the twelve non-retested 40-evolved strains show no clear trend. The fluconazole panel includes the March Set2 35-evolved cluster (35_D2, D8, E7, E9, E11; ≈ +1.5 log~2~). These strains have stable IC~50~s across the three Set2 plates (≈ 11–19), but the same-plate ancestor IC~50~ varies ~6-fold (Rep1 1.92, Rep2 12.1, Rep3 4.80), so their same-plate ratios are high on Rep1/Rep3 and near 0 on Rep2 (see Nov 16 caveat). 35_D4 (−1.3) is different: its own IC~50~ is consistently low on all three plates (1.7–2.2), so it is a genuinely fluconazole-sensitive strain, not an ancestor artefact.
+
+*Caveats:*
+- This metric was chosen after many exploratory cross-tolerance analyses (Scripts 23–31), so these associations should be treated as findings to confirm rather than pre-specified tests.
+- At high caspofungin and amphotericin B, the 35-evolved strains sit close to the ancestor (log~2~ FC ≈ 0) because most strains are fully inhibited, so the high-drug-growth tests are effectively tested within the 40-evolved strains. For caspofungin, IC~50~ is the more informative drug metric.
+- Not yet checked: fluconazole IC~50~ association without the March Set2 strains; pseudocount sensitivity (0.02, 0.1) of the high-drug metric.
+
+*r~max~ vs mean performance above T~opt~ (Script 32 section 3c; `ic50-rmax-vs-above-topt-32.csv`):* log~2~ IC~50~ ~ r~max~ + group, ~ mean above T~opt~ + group, and both together. The two thermal metrics correlate within groups at r = 0.77 (0.70 without the six). Within-group partial r (p):
+
+| Drug | Subset | r~max~ alone | Mean above T~opt~ alone | Both: mean above T~opt~ | Both: r~max~ |
+|---|---|---|---|---|---|
+| Fluconazole | all | 0.43 (0.010) | 0.46 (0.005) | 0.23 (0.20) | 0.13 (0.48) |
+| Fluconazole | without six | 0.14 (0.48) | 0.37 (0.049) | 0.37 (0.052) | −0.15 (0.46) |
+| Caspofungin | all | 0.53 (0.001) | 0.47 (0.005) | 0.10 (0.56) | 0.31 (0.076) |
+| Caspofungin | without six | 0.18 (0.35) | 0.11 (0.56) | −0.01 (0.97) | 0.14 (0.47) |
+| Amphotericin B | all | 0.64 (< 0.001) | 0.48 (0.003) | −0.02 (0.92) | 0.48 (0.004) |
+| Amphotericin B | without six | 0.58 (0.001) | 0.32 (0.091) | −0.09 (0.64) | 0.52 (0.005) |
+
+- Amphotericin B: the association is with peak growth, not performance above T~opt~. r~max~ is the stronger predictor, holds without the six (r = 0.58), and carries the whole association in the joint model.
+- Caspofungin: also mainly r~max~ (joint model r = 0.31, p = 0.076), and driven by the six re-tested strains.
+- Fluconazole: with all strains the two metrics can't be separated (both n.s. in the joint model). Without the six, only mean performance above T~opt~ is associated (r = 0.37, p = 0.05, unchanged when r~max~ is added; r~max~ alone r = 0.14). Fluconazole is the only drug where above-optimum performance carries something beyond peak growth; borderline and post hoc.
+
+*Figures:*
+- `figures/ic50-vs-above-topt-32.png`: log~2~ IC~50~ ratio vs mean performance above T~opt~, one panel per drug; colour = evolution history, triangles = six re-tested strains; lines = shared-slope model fit (parallel lines per group); r and p printed for all strains and without the six.
+- `figures/above-topt-vs-high-drug-32.png`: growth at high drug vs area above T~opt~ (left) and mean performance above T~opt~ (right), rows = drugs, free axes; lines are separate per-group OLS fits (not the shared-slope model behind the reported r).
+
+*Outputs:* `data-processed/above-topt-vs-high-drug-32.csv` (high-drug growth vs both thermal summaries), `drug-vs-thermal-metric-comparison-32.csv` (both drug metrics × mean performance above T~opt~, T~opt~, T~max~, T~h~ × both subsets; slope, 95% CI, r, p), `ic50-vs-high-drug-32.csv`.
+
+---
+
 November 16 -- evening -- finished the PCA with the better fitting approach. Now we don't need to drop any of the fits due to poor fitting. Need to update the manuscript with the new results.
 
 
@@ -48,7 +111,7 @@ After plate normalization, both evolved groups showed modestly elevated fluconaz
 | Variable | PC1 Nov 9 | PC1 now | PC2 Nov 9 | PC2 now | PC3 now |
 |---|---|---|---|---|---|
 | T~opt~ | −0.425 | −0.396 | −0.590 | −0.617 | 0.189 |
-| CT~max~ | 0.045 | −0.053 | 0.701 | 0.694 | 0.191 |
+| T~max~ | 0.045 | −0.053 | 0.701 | 0.694 | 0.191 |
 | T~h~ | −0.470 | −0.547 | 0.035 | −0.001 | 0.471 |
 | Fluconazole | −0.567 | −0.536 | 0.140 | 0.064 | −0.456 |
 | Caspofungin | 0.234 | −0.168 | −0.050 | 0.228 | 0.574 |
@@ -65,7 +128,7 @@ The morning Nov 16 version (six exclusions) was within 0.05 of these values for 
 | PC1 loading | Full (n=36) | −35_D4 | −35_B6 | −both (n=34) |
 |---|---|---|---|---|
 | T~opt~ | −0.40 | −0.14 | +0.35 | +0.27 |
-| CT~max~ | −0.05 | −0.22 | −0.60 | −0.47 |
+| T~max~ | −0.05 | −0.22 | −0.60 | −0.47 |
 | T~h~ | −0.55 | −0.42 | −0.41 | −0.34 |
 | Fluconazole | −0.54 | −0.47 | −0.31 | −0.37 |
 | Caspofungin | −0.17 | −0.51 | −0.23 | −0.46 |
@@ -81,13 +144,13 @@ The morning Nov 16 version (six exclusions) was within 0.05 of these values for 
 | Variable | Full-data PC1 | Bootstrap median | 95% percentile interval | % of resamples negative |
 |---|---|---|---|---|
 | T~opt~ | −0.40 | −0.46 | [−0.71, 0.18] | 86 |
-| CT~max~ | −0.05 | 0.10 | [−0.50, 0.47] | 42 |
+| T~max~ | −0.05 | 0.10 | [−0.50, 0.47] | 42 |
 | T~h~ | −0.55 | −0.44 | [−0.62, −0.11] | 99 |
 | Fluconazole | −0.54 | −0.48 | [−0.62, −0.23] | 100 |
 | Caspofungin | −0.17 | −0.14 | [−0.53, 0.41] | 65 |
 | Amphotericin B | −0.47 | −0.44 | [−0.59, −0.03] | 99 |
 
-- The intervals for T~h~, fluconazole and amphotericin B exclude zero; those for T~opt~, caspofungin and CT~max~ do not.
+- The intervals for T~h~, fluconazole and amphotericin B exclude zero; those for T~opt~, caspofungin and T~max~ do not.
 - The axis itself is not sharply defined. The best-matching component was PC1 in only 73% of resamples (otherwise PC2 or PC3). Median congruence with the full-data PC1 was 0.85, and 51% of resamples fell below 0.85. This fits PC1 and PC2 explaining similar variance (32.4% vs 28.4%). Because matching and sign alignment pull each replicate towards the reference, these intervals are probably somewhat optimistic.
 
 *Eigenvalues and within-group variance explained (six-variable PCA, correlation matrix; added Nov 17 from `data-processed/pca-pct-within-22.csv`):*
@@ -103,7 +166,7 @@ The morning Nov 16 version (six exclusions) was within 0.05 of these values for 
 
 Eigenvalues sum to 6 (number of scaled variables), so % variance = eigenvalue / 6. The PC1–PC2 gap (0.24) is smaller than the North et al. (1982) sampling error λ√(2/n) (≈ 0.46 for PC1 and 0.40 for PC2 at n = 36), so PC1 and PC2 are not well separated.
 
-*Caveat — T~h~ is nearly collinear with T~opt~ and CT~max~ (found Nov 16):* Within groups, T~h~ ≈ 0.51 T~opt~ + 0.53 CT~max~ (R² = 0.98), which is why PC6's eigenvalue is about 0. The six-variable PCA therefore has only about five independent dimensions, and the T~h~ + drugs co-loading on PC1 partly reflects including T~h~ alongside the two variables that almost determine it. Not yet checked: how T~h~ is derived in the TPC fitting script, and so whether this is by construction.
+*Caveat — T~h~ is nearly collinear with T~opt~ and T~max~ (found Nov 16):* Within groups, T~h~ ≈ 0.51 T~opt~ + 0.53 T~max~ (R² = 0.98), which is why PC6's eigenvalue is about 0. The six-variable PCA therefore has only about five independent dimensions, and the T~h~ + drugs co-loading on PC1 partly reflects including T~h~ alongside the two variables that almost determine it. Not yet checked: how T~h~ is derived in the TPC fitting script, and so whether this is by construction.
 
 *Parallel analysis (Horn; 5,000 draws each of random-normal and column-permuted data, centred within groups of 18 and scaled like the real data; seed 8126):*
 
@@ -113,7 +176,7 @@ Eigenvalues sum to 6 (number of scaled variables), so % variance = eigenvalue / 
 | 5 (T~h~ dropped) | 1.70 / 1.75 | 1.59 / 1.35 | 0.95 / 1.09 | 0.09, < 0.001, 0.65 |
 
 - With all six variables, PC1 and PC2 exceed the null. Because one eigenvalue is about 0, the other five are inflated relative to a six-independent-variable null, so this comparison is too lenient.
-- With T~h~ dropped, PC1 is the T~opt~ vs CT~max~ trade-off (loadings −0.62 / 0.69) and falls just short of the null. PC2 is fluconazole + amphotericin B (0.68 / 0.62; T~opt~ 0.34) and clearly exceeds it. Thermal and drug variables mostly separate onto different components. The data contain about two correlated pairs (T~opt~–CT~max~ r = −0.64; fluconazole–amphotericin B r = 0.53) and little other structure.
+- With T~h~ dropped, PC1 is the T~opt~ vs T~max~ trade-off (loadings −0.62 / 0.69) and falls just short of the null. PC2 is fluconazole + amphotericin B (0.68 / 0.62; T~opt~ 0.34) and clearly exceeds it. Thermal and drug variables mostly separate onto different components. The data contain about two correlated pairs (T~opt~–T~max~ r = −0.64; fluconazole–amphotericin B r = 0.53) and little other structure.
 
 *Direct within-group T~h~–drug correlations (partial r controlling for group, df = 33; seed 5274 for the bootstrap):*
 
@@ -134,7 +197,7 @@ Eigenvalues sum to 6 (number of scaled variables), so % variance = eigenvalue / 
 
 **Manuscript text (PCA results; updated November 16, 2026; min-RSS fitting, no curves excluded):**
 
-The first two PCs together explained 60.8% of within-group variance. PC1 (32.4%) was characterized by co-loading of T~h~ (loading = −0.547), fluconazole tolerance (−0.536), amphotericin B tolerance (−0.475), and T~opt~ (−0.396) in the same direction, with caspofungin tolerance (−0.168) and CT~max~ (−0.053) contributing little. PC2 (28.4%) captured an independent axis of TPC shape variation, with CT~max~ (0.694) and T~opt~ (−0.617) loading in opposing directions; amphotericin B (0.285) and caspofungin (0.228) tolerance loaded modestly on this axis, whereas fluconazole tolerance and T~h~ loaded weakly (|loading| ≤ 0.07). The co-loading of T~h~ with fluconazole and amphotericin B tolerance on PC1 indicates a shared axis of within-group variation spanning thermal deactivation and drug tolerance, although this axis partly reflects the correlation between the two drug tolerances themselves (within-group *r* = 0.53); pairwise associations between T~h~ and fluconazole (*r* = 0.30) or amphotericin B (*r* = 0.23) tolerance were weaker. In a stratified bootstrap (2,000 resamples), 95% intervals for the PC1 loadings of T~h~, fluconazole, and amphotericin B excluded zero, whereas those for T~opt~, caspofungin, and CT~max~ did not; the co-loading was also robust to removing the two most influential strains, individually or together (loadings between −0.31 and −0.55), whereas the contribution of T~opt~ depended on a single strain with extreme thermal traits. Because PC1 and PC2 explained similar proportions of variance, the orientation of PC1 was not sharply determined, and we interpret it as a modest shared axis rather than a dominant mode of variation. Notably, fluconazole and amphotericin B both target ergosterol — fluconazole by inhibiting its synthesis and amphotericin B by binding it directly — while caspofungin acts on a mechanistically distinct target, cell wall β-glucan synthesis, and did not consistently contribute to this axis. The co-variation of T~h~ with tolerance to the two ergosterol-targeting drugs is consistent with, though not direct evidence for, a shared dependence on membrane ergosterol composition across thermal adaptation and membrane-active antifungal tolerance.
+The first two PCs together explained 60.8% of within-group variance. PC1 (32.4%) was characterized by co-loading of T~h~ (loading = −0.547), fluconazole tolerance (−0.536), amphotericin B tolerance (−0.475), and T~opt~ (−0.396) in the same direction, with caspofungin tolerance (−0.168) and T~max~ (−0.053) contributing little. PC2 (28.4%) captured an independent axis of TPC shape variation, with T~max~ (0.694) and T~opt~ (−0.617) loading in opposing directions; amphotericin B (0.285) and caspofungin (0.228) tolerance loaded modestly on this axis, whereas fluconazole tolerance and T~h~ loaded weakly (|loading| ≤ 0.07). The co-loading of T~h~ with fluconazole and amphotericin B tolerance on PC1 indicates a shared axis of within-group variation spanning thermal deactivation and drug tolerance, although this axis partly reflects the correlation between the two drug tolerances themselves (within-group *r* = 0.53); pairwise associations between T~h~ and fluconazole (*r* = 0.30) or amphotericin B (*r* = 0.23) tolerance were weaker. In a stratified bootstrap (2,000 resamples), 95% intervals for the PC1 loadings of T~h~, fluconazole, and amphotericin B excluded zero, whereas those for T~opt~, caspofungin, and T~max~ did not; the co-loading was also robust to removing the two most influential strains, individually or together (loadings between −0.31 and −0.55), whereas the contribution of T~opt~ depended on a single strain with extreme thermal traits. Because PC1 and PC2 explained similar proportions of variance, the orientation of PC1 was not sharply determined, and we interpret it as a modest shared axis rather than a dominant mode of variation. Notably, fluconazole and amphotericin B both target ergosterol — fluconazole by inhibiting its synthesis and amphotericin B by binding it directly — while caspofungin acts on a mechanistically distinct target, cell wall β-glucan synthesis, and did not consistently contribute to this axis. The co-variation of T~h~ with tolerance to the two ergosterol-targeting drugs is consistent with, though not direct evidence for, a shared dependence on membrane ergosterol composition across thermal adaptation and membrane-active antifungal tolerance.
 
 ---
 
@@ -279,7 +342,7 @@ After plate normalization, both evolved groups showed modestly elevated fluconaz
 
 **Manuscript text (PCA results):**
 
-The first two PCs together explained 60.3% of within-group variance. PC1 (31.3%) was characterized by co-loading of T~h~ (loading = −0.570), fluconazole tolerance (−0.544), and amphotericin B tolerance (−0.497) in the same direction, with caspofungin contributing negligibly (loading = 0.078). PC2 (29.0%) captured an independent axis of TPC shape variation, with T~opt~ (0.667) and CT~max~ (−0.679) loading in opposing directions and drug tolerance variables near zero. The co-loading of T~h~ with fluconazole and amphotericin B tolerance on PC1 reveals a shared axis of within-group variation spanning thermal deactivation and drug tolerance. Notably, fluconazole and amphotericin B both target ergosterol — fluconazole by inhibiting its synthesis and amphotericin B by binding it directly — while caspofungin acts on a mechanistically distinct target, cell wall β-glucan synthesis. The drug-specific pattern of co-variation with T~h~ therefore maps onto this mechanistic distinction, suggesting that the cross-tolerance signal on PC1 may reflect a shared dependence on membrane ergosterol composition across thermal adaptation and membrane-active antifungal resistance.
+The first two PCs together explained 60.3% of within-group variance. PC1 (31.3%) was characterized by co-loading of T~h~ (loading = −0.570), fluconazole tolerance (−0.544), and amphotericin B tolerance (−0.497) in the same direction, with caspofungin contributing negligibly (loading = 0.078). PC2 (29.0%) captured an independent axis of TPC shape variation, with T~opt~ (0.667) and T~max~ (−0.679) loading in opposing directions and drug tolerance variables near zero. The co-loading of T~h~ with fluconazole and amphotericin B tolerance on PC1 reveals a shared axis of within-group variation spanning thermal deactivation and drug tolerance. Notably, fluconazole and amphotericin B both target ergosterol — fluconazole by inhibiting its synthesis and amphotericin B by binding it directly — while caspofungin acts on a mechanistically distinct target, cell wall β-glucan synthesis. The drug-specific pattern of co-variation with T~h~ therefore maps onto this mechanistic distinction, suggesting that the cross-tolerance signal on PC1 may reflect a shared dependence on membrane ergosterol composition across thermal adaptation and membrane-active antifungal resistance.
 
 ---
 
@@ -292,7 +355,7 @@ The first two PCs together explained 60.3% of within-group variance. PC1 (31.3%)
 | Variable | PC1 before | PC1 after | PC2 before | PC2 after |
 |---|---|---|---|---|
 | T~opt~ | −0.311 | −0.425 | 0.667 | −0.590 |
-| CT~max~ | −0.171 | 0.045 | −0.679 | 0.701 |
+| T~max~ | −0.171 | 0.045 | −0.679 | 0.701 |
 | T~h~ | −0.570 | −0.470 | 0.083 | 0.035 |
 | Fluconazole | −0.544 | −0.567 | −0.008 | 0.140 |
 | Caspofungin | 0.078 | 0.234 | −0.089 | −0.050 |
@@ -308,4 +371,4 @@ The first two PCs together explained 60.3% of within-group variance. PC1 (31.3%)
 
 *Revised manuscript text:*
 
-The first two PCs together explained 60.9% of within-group variance. PC1 (33.1%) was characterized by co-loading of fluconazole tolerance (loading = −0.567), T~h~ (−0.470), amphotericin B tolerance (−0.470), and T~opt~ (−0.425) in the same direction, with caspofungin tolerance loading weakly in the opposite direction (0.234) and CT~max~ contributing negligibly (0.045). PC2 (27.8%) captured an independent axis of TPC shape variation, with CT~max~ (0.701) and T~opt~ (−0.590) loading in opposing directions; amphotericin B tolerance also loaded moderately on this axis (0.370), whereas fluconazole tolerance, caspofungin tolerance, and T~h~ loaded weakly (|loading| ≤ 0.14). The co-loading of T~h~ and T~opt~ with fluconazole and amphotericin B tolerance on PC1 reveals a shared axis of within-group variation spanning thermal performance and drug tolerance, although this axis partly reflects the correlation between the two drug tolerances themselves (within-group *r* = 0.54); pairwise associations between T~h~ and fluconazole (*r* = 0.29) or amphotericin B (*r* = 0.24) tolerance were weaker. Notably, fluconazole and amphotericin B both target ergosterol — fluconazole by inhibiting its synthesis and amphotericin B by binding it directly — while caspofungin, which loaded in the opposite direction on PC1, acts on a mechanistically distinct target, cell wall β-glucan synthesis. This drug-specific pattern maps onto the mechanistic distinction and is consistent with, though not direct evidence for, a shared dependence on membrane ergosterol composition across thermal adaptation and membrane-active antifungal tolerance.
+The first two PCs together explained 60.9% of within-group variance. PC1 (33.1%) was characterized by co-loading of fluconazole tolerance (loading = −0.567), T~h~ (−0.470), amphotericin B tolerance (−0.470), and T~opt~ (−0.425) in the same direction, with caspofungin tolerance loading weakly in the opposite direction (0.234) and T~max~ contributing negligibly (0.045). PC2 (27.8%) captured an independent axis of TPC shape variation, with T~max~ (0.701) and T~opt~ (−0.590) loading in opposing directions; amphotericin B tolerance also loaded moderately on this axis (0.370), whereas fluconazole tolerance, caspofungin tolerance, and T~h~ loaded weakly (|loading| ≤ 0.14). The co-loading of T~h~ and T~opt~ with fluconazole and amphotericin B tolerance on PC1 reveals a shared axis of within-group variation spanning thermal performance and drug tolerance, although this axis partly reflects the correlation between the two drug tolerances themselves (within-group *r* = 0.54); pairwise associations between T~h~ and fluconazole (*r* = 0.29) or amphotericin B (*r* = 0.24) tolerance were weaker. Notably, fluconazole and amphotericin B both target ergosterol — fluconazole by inhibiting its synthesis and amphotericin B by binding it directly — while caspofungin, which loaded in the opposite direction on PC1, acts on a mechanistically distinct target, cell wall β-glucan synthesis. This drug-specific pattern maps onto the mechanistic distinction and is consistent with, though not direct evidence for, a shared dependence on membrane ergosterol composition across thermal adaptation and membrane-active antifungal tolerance.

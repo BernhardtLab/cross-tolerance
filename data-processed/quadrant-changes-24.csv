@@ -1,0 +1,325 @@
+strain,drug,d_drug,evolution_history,trait,d_th,quadrant
+35_B2,Amphotericin B,0.00863131305504993,35 evolved,topt,0.08153358959894774,both up
+35_B2,Amphotericin B,0.00863131305504993,35 evolved,tmax,-0.08555595912712022,"thermal down, drug up"
+35_B2,Amphotericin B,0.00863131305504993,35 evolved,th_c,-0.03178738270963777,"thermal down, drug up"
+35_B2,Caspofungin,0.3224010787211089,35 evolved,topt,0.08153358959894774,both up
+35_B2,Caspofungin,0.3224010787211089,35 evolved,tmax,-0.08555595912712022,"thermal down, drug up"
+35_B2,Caspofungin,0.3224010787211089,35 evolved,th_c,-0.03178738270963777,"thermal down, drug up"
+35_B2,Fluconazole,0.17424333432816694,35 evolved,topt,0.08153358959894774,both up
+35_B2,Fluconazole,0.17424333432816694,35 evolved,tmax,-0.08555595912712022,"thermal down, drug up"
+35_B2,Fluconazole,0.17424333432816694,35 evolved,th_c,-0.03178738270963777,"thermal down, drug up"
+35_B6,Amphotericin B,-0.1287860325378057,35 evolved,topt,-2.4266698708676344,both down
+35_B6,Amphotericin B,-0.1287860325378057,35 evolved,tmax,0.23657721362452122,"thermal up, drug down"
+35_B6,Amphotericin B,-0.1287860325378057,35 evolved,th_c,-1.1599767274747634,both down
+35_B6,Caspofungin,-0.29795739298740553,35 evolved,topt,-2.4266698708676344,both down
+35_B6,Caspofungin,-0.29795739298740553,35 evolved,tmax,0.23657721362452122,"thermal up, drug down"
+35_B6,Caspofungin,-0.29795739298740553,35 evolved,th_c,-1.1599767274747634,both down
+35_B6,Fluconazole,-0.06426800730463222,35 evolved,topt,-2.4266698708676344,both down
+35_B6,Fluconazole,-0.06426800730463222,35 evolved,tmax,0.23657721362452122,"thermal up, drug down"
+35_B6,Fluconazole,-0.06426800730463222,35 evolved,th_c,-1.1599767274747634,both down
+35_B8,Amphotericin B,0.17212682350261294,35 evolved,topt,-0.8756166741121234,"thermal down, drug up"
+35_B8,Amphotericin B,0.17212682350261294,35 evolved,tmax,0.23814018233101564,both up
+35_B8,Amphotericin B,0.17212682350261294,35 evolved,th_c,-0.2693332138806568,"thermal down, drug up"
+35_B8,Caspofungin,-0.15299765403910648,35 evolved,topt,-0.8756166741121234,both down
+35_B8,Caspofungin,-0.15299765403910648,35 evolved,tmax,0.23814018233101564,"thermal up, drug down"
+35_B8,Caspofungin,-0.15299765403910648,35 evolved,th_c,-0.2693332138806568,both down
+35_B8,Fluconazole,-0.15476814097746833,35 evolved,topt,-0.8756166741121234,both down
+35_B8,Fluconazole,-0.15476814097746833,35 evolved,tmax,0.23814018233101564,"thermal up, drug down"
+35_B8,Fluconazole,-0.15476814097746833,35 evolved,th_c,-0.2693332138806568,both down
+35_C5,Amphotericin B,-0.09182905401865742,35 evolved,topt,-0.7903878888590654,both down
+35_C5,Amphotericin B,-0.09182905401865742,35 evolved,tmax,0.2993971173936174,"thermal up, drug down"
+35_C5,Amphotericin B,-0.09182905401865742,35 evolved,th_c,-0.22553742281377254,both down
+35_C5,Caspofungin,0.00531010141893162,35 evolved,topt,-0.7903878888590654,"thermal down, drug up"
+35_C5,Caspofungin,0.00531010141893162,35 evolved,tmax,0.2993971173936174,both up
+35_C5,Caspofungin,0.00531010141893162,35 evolved,th_c,-0.22553742281377254,"thermal down, drug up"
+35_C5,Fluconazole,0.07768674247318566,35 evolved,topt,-0.7903878888590654,"thermal down, drug up"
+35_C5,Fluconazole,0.07768674247318566,35 evolved,tmax,0.2993971173936174,both up
+35_C5,Fluconazole,0.07768674247318566,35 evolved,th_c,-0.22553742281377254,"thermal down, drug up"
+35_C7,Amphotericin B,0.26151288786680954,35 evolved,topt,-0.5785306695405765,"thermal down, drug up"
+35_C7,Amphotericin B,0.26151288786680954,35 evolved,tmax,0.2989630455389829,both up
+35_C7,Amphotericin B,0.26151288786680954,35 evolved,th_c,-0.12298398566338165,"thermal down, drug up"
+35_C7,Caspofungin,0.08689136094168681,35 evolved,topt,-0.5785306695405765,"thermal down, drug up"
+35_C7,Caspofungin,0.08689136094168681,35 evolved,tmax,0.2989630455389829,both up
+35_C7,Caspofungin,0.08689136094168681,35 evolved,th_c,-0.12298398566338165,"thermal down, drug up"
+35_C7,Fluconazole,0.03564099202245963,35 evolved,topt,-0.5785306695405765,"thermal down, drug up"
+35_C7,Fluconazole,0.03564099202245963,35 evolved,tmax,0.2989630455389829,both up
+35_C7,Fluconazole,0.03564099202245963,35 evolved,th_c,-0.12298398566338165,"thermal down, drug up"
+35_C9,Amphotericin B,0.14784696124438912,35 evolved,topt,-0.015191876334725407,"thermal down, drug up"
+35_C9,Amphotericin B,0.14784696124438912,35 evolved,tmax,-0.10416320077686692,"thermal down, drug up"
+35_C9,Amphotericin B,0.14784696124438912,35 evolved,th_c,-0.08121863803313545,"thermal down, drug up"
+35_C9,Caspofungin,0.09063650964565954,35 evolved,topt,-0.015191876334725407,"thermal down, drug up"
+35_C9,Caspofungin,0.09063650964565954,35 evolved,tmax,-0.10416320077686692,"thermal down, drug up"
+35_C9,Caspofungin,0.09063650964565954,35 evolved,th_c,-0.08121863803313545,"thermal down, drug up"
+35_C9,Fluconazole,0.08542342412319659,35 evolved,topt,-0.015191876334725407,"thermal down, drug up"
+35_C9,Fluconazole,0.08542342412319659,35 evolved,tmax,-0.10416320077686692,"thermal down, drug up"
+35_C9,Fluconazole,0.08542342412319659,35 evolved,th_c,-0.08121863803313545,"thermal down, drug up"
+35_D2,Amphotericin B,0.33838882074872223,35 evolved,topt,-0.2855261080022018,"thermal down, drug up"
+35_D2,Amphotericin B,0.33838882074872223,35 evolved,tmax,-0.11123659315713041,"thermal down, drug up"
+35_D2,Amphotericin B,0.33838882074872223,35 evolved,th_c,-0.1836164776961482,"thermal down, drug up"
+35_D2,Caspofungin,-0.01185718310021144,35 evolved,topt,-0.2855261080022018,both down
+35_D2,Caspofungin,-0.01185718310021144,35 evolved,tmax,-0.11123659315713041,both down
+35_D2,Caspofungin,-0.01185718310021144,35 evolved,th_c,-0.1836164776961482,both down
+35_D2,Fluconazole,1.5119665154561486,35 evolved,topt,-0.2855261080022018,"thermal down, drug up"
+35_D2,Fluconazole,1.5119665154561486,35 evolved,tmax,-0.11123659315713041,"thermal down, drug up"
+35_D2,Fluconazole,1.5119665154561486,35 evolved,th_c,-0.1836164776961482,"thermal down, drug up"
+35_D4,Amphotericin B,-1.0198132545603948,35 evolved,topt,-0.998380728350476,both down
+35_D4,Amphotericin B,-1.0198132545603948,35 evolved,tmax,0.12900032866385658,"thermal up, drug down"
+35_D4,Amphotericin B,-1.0198132545603948,35 evolved,th_c,-0.3717331041547709,both down
+35_D4,Caspofungin,1.4819054433833587,35 evolved,topt,-0.998380728350476,"thermal down, drug up"
+35_D4,Caspofungin,1.4819054433833587,35 evolved,tmax,0.12900032866385658,both up
+35_D4,Caspofungin,1.4819054433833587,35 evolved,th_c,-0.3717331041547709,"thermal down, drug up"
+35_D4,Fluconazole,-1.3108815997367265,35 evolved,topt,-0.998380728350476,both down
+35_D4,Fluconazole,-1.3108815997367265,35 evolved,tmax,0.12900032866385658,"thermal up, drug down"
+35_D4,Fluconazole,-1.3108815997367265,35 evolved,th_c,-0.3717331041547709,both down
+35_D8,Amphotericin B,0.07352790430859754,35 evolved,topt,-0.26226369772949454,"thermal down, drug up"
+35_D8,Amphotericin B,0.07352790430859754,35 evolved,tmax,0.05151534019763915,both up
+35_D8,Amphotericin B,0.07352790430859754,35 evolved,th_c,-0.10177956493578222,"thermal down, drug up"
+35_D8,Caspofungin,-0.29192955016716216,35 evolved,topt,-0.26226369772949454,both down
+35_D8,Caspofungin,-0.29192955016716216,35 evolved,tmax,0.05151534019763915,"thermal up, drug down"
+35_D8,Caspofungin,-0.29192955016716216,35 evolved,th_c,-0.10177956493578222,both down
+35_D8,Fluconazole,1.542489929608073,35 evolved,topt,-0.26226369772949454,"thermal down, drug up"
+35_D8,Fluconazole,1.542489929608073,35 evolved,tmax,0.05151534019763915,both up
+35_D8,Fluconazole,1.542489929608073,35 evolved,th_c,-0.10177956493578222,"thermal down, drug up"
+35_E11,Amphotericin B,0.17096534653758133,35 evolved,topt,-0.14767749182868073,"thermal down, drug up"
+35_E11,Amphotericin B,0.17096534653758133,35 evolved,tmax,-0.04180728712861992,"thermal down, drug up"
+35_E11,Amphotericin B,0.17096534653758133,35 evolved,th_c,-0.08504201470611861,"thermal down, drug up"
+35_E11,Caspofungin,0.03756934364205152,35 evolved,topt,-0.14767749182868073,"thermal down, drug up"
+35_E11,Caspofungin,0.03756934364205152,35 evolved,tmax,-0.04180728712861992,"thermal down, drug up"
+35_E11,Caspofungin,0.03756934364205152,35 evolved,th_c,-0.08504201470611861,"thermal down, drug up"
+35_E11,Fluconazole,1.5355829644867007,35 evolved,topt,-0.14767749182868073,"thermal down, drug up"
+35_E11,Fluconazole,1.5355829644867007,35 evolved,tmax,-0.04180728712861992,"thermal down, drug up"
+35_E11,Fluconazole,1.5355829644867007,35 evolved,th_c,-0.08504201470611861,"thermal down, drug up"
+35_E7,Amphotericin B,0.0812420404658345,35 evolved,topt,-0.15094108446866272,"thermal down, drug up"
+35_E7,Amphotericin B,0.0812420404658345,35 evolved,tmax,-0.1496320765699508,"thermal down, drug up"
+35_E7,Amphotericin B,0.0812420404658345,35 evolved,th_c,-0.14757621853783576,"thermal down, drug up"
+35_E7,Caspofungin,-0.34172103729546305,35 evolved,topt,-0.15094108446866272,both down
+35_E7,Caspofungin,-0.34172103729546305,35 evolved,tmax,-0.1496320765699508,both down
+35_E7,Caspofungin,-0.34172103729546305,35 evolved,th_c,-0.14757621853783576,both down
+35_E7,Fluconazole,1.5149613669555475,35 evolved,topt,-0.15094108446866272,"thermal down, drug up"
+35_E7,Fluconazole,1.5149613669555475,35 evolved,tmax,-0.1496320765699508,"thermal down, drug up"
+35_E7,Fluconazole,1.5149613669555475,35 evolved,th_c,-0.14757621853783576,"thermal down, drug up"
+35_E9,Amphotericin B,0.2346050589476068,35 evolved,topt,-0.2909798839264184,"thermal down, drug up"
+35_E9,Amphotericin B,0.2346050589476068,35 evolved,tmax,-0.06914448079692193,"thermal down, drug up"
+35_E9,Amphotericin B,0.2346050589476068,35 evolved,th_c,-0.17342298914195453,"thermal down, drug up"
+35_E9,Caspofungin,-0.08368095558344399,35 evolved,topt,-0.2909798839264184,both down
+35_E9,Caspofungin,-0.08368095558344399,35 evolved,tmax,-0.06914448079692193,both down
+35_E9,Caspofungin,-0.08368095558344399,35 evolved,th_c,-0.17342298914195453,both down
+35_E9,Fluconazole,1.5953474258088542,35 evolved,topt,-0.2909798839264184,"thermal down, drug up"
+35_E9,Fluconazole,1.5953474258088542,35 evolved,tmax,-0.06914448079692193,"thermal down, drug up"
+35_E9,Fluconazole,1.5953474258088542,35 evolved,th_c,-0.17342298914195453,"thermal down, drug up"
+35_F2,Amphotericin B,0.398714330262496,35 evolved,topt,0.11611606650546236,both up
+35_F2,Amphotericin B,0.398714330262496,35 evolved,tmax,-0.05689566659210499,"thermal down, drug up"
+35_F2,Amphotericin B,0.398714330262496,35 evolved,th_c,0.01843532313864671,both up
+35_F2,Caspofungin,0.19976570673257163,35 evolved,topt,0.11611606650546236,both up
+35_F2,Caspofungin,0.19976570673257163,35 evolved,tmax,-0.05689566659210499,"thermal down, drug up"
+35_F2,Caspofungin,0.19976570673257163,35 evolved,th_c,0.01843532313864671,both up
+35_F2,Fluconazole,0.48975151710784515,35 evolved,topt,0.11611606650546236,both up
+35_F2,Fluconazole,0.48975151710784515,35 evolved,tmax,-0.05689566659210499,"thermal down, drug up"
+35_F2,Fluconazole,0.48975151710784515,35 evolved,th_c,0.01843532313864671,both up
+35_F4,Amphotericin B,0.4155217222433295,35 evolved,topt,-1.5928828484077755,"thermal down, drug up"
+35_F4,Amphotericin B,0.4155217222433295,35 evolved,tmax,0.4600425113334481,both up
+35_F4,Amphotericin B,0.4155217222433295,35 evolved,th_c,-0.6190422650215055,"thermal down, drug up"
+35_F4,Caspofungin,0.04761434916281892,35 evolved,topt,-1.5928828484077755,"thermal down, drug up"
+35_F4,Caspofungin,0.04761434916281892,35 evolved,tmax,0.4600425113334481,both up
+35_F4,Caspofungin,0.04761434916281892,35 evolved,th_c,-0.6190422650215055,"thermal down, drug up"
+35_F4,Fluconazole,0.5144645592552293,35 evolved,topt,-1.5928828484077755,"thermal down, drug up"
+35_F4,Fluconazole,0.5144645592552293,35 evolved,tmax,0.4600425113334481,both up
+35_F4,Fluconazole,0.5144645592552293,35 evolved,th_c,-0.6190422650215055,"thermal down, drug up"
+35_F6,Amphotericin B,0.17967412879366468,35 evolved,topt,-0.6538582158151556,"thermal down, drug up"
+35_F6,Amphotericin B,0.17967412879366468,35 evolved,tmax,-0.14142984091989774,"thermal down, drug up"
+35_F6,Amphotericin B,0.17967412879366468,35 evolved,th_c,-0.3665535287639159,"thermal down, drug up"
+35_F6,Caspofungin,-0.00442904143027908,35 evolved,topt,-0.6538582158151556,both down
+35_F6,Caspofungin,-0.00442904143027908,35 evolved,tmax,-0.14142984091989774,both down
+35_F6,Caspofungin,-0.00442904143027908,35 evolved,th_c,-0.3665535287639159,both down
+35_F6,Fluconazole,0.05455129400772781,35 evolved,topt,-0.6538582158151556,"thermal down, drug up"
+35_F6,Fluconazole,0.05455129400772781,35 evolved,tmax,-0.14142984091989774,"thermal down, drug up"
+35_F6,Fluconazole,0.05455129400772781,35 evolved,th_c,-0.3665535287639159,"thermal down, drug up"
+35_G11,Amphotericin B,-0.19777723232822184,35 evolved,topt,-1.018397406068324,both down
+35_G11,Amphotericin B,-0.19777723232822184,35 evolved,tmax,0.3311005583951214,"thermal up, drug down"
+35_G11,Amphotericin B,-0.19777723232822184,35 evolved,th_c,-0.31617110562098105,both down
+35_G11,Caspofungin,0.05051477517600133,35 evolved,topt,-1.018397406068324,"thermal down, drug up"
+35_G11,Caspofungin,0.05051477517600133,35 evolved,tmax,0.3311005583951214,both up
+35_G11,Caspofungin,0.05051477517600133,35 evolved,th_c,-0.31617110562098105,"thermal down, drug up"
+35_G11,Fluconazole,-0.03705368139442493,35 evolved,topt,-1.018397406068324,both down
+35_G11,Fluconazole,-0.03705368139442493,35 evolved,tmax,0.3311005583951214,"thermal up, drug down"
+35_G11,Fluconazole,-0.03705368139442493,35 evolved,th_c,-0.31617110562098105,both down
+35_G5,Amphotericin B,0.4144822333271515,35 evolved,topt,-1.1050679464152822,"thermal down, drug up"
+35_G5,Amphotericin B,0.4144822333271515,35 evolved,tmax,0.06602968640919471,both up
+35_G5,Amphotericin B,0.4144822333271515,35 evolved,th_c,-0.4674660987154766,"thermal down, drug up"
+35_G5,Caspofungin,0.19157238867045864,35 evolved,topt,-1.1050679464152822,"thermal down, drug up"
+35_G5,Caspofungin,0.19157238867045864,35 evolved,tmax,0.06602968640919471,both up
+35_G5,Caspofungin,0.19157238867045864,35 evolved,th_c,-0.4674660987154766,"thermal down, drug up"
+35_G5,Fluconazole,0.6460620026275962,35 evolved,topt,-1.1050679464152822,"thermal down, drug up"
+35_G5,Fluconazole,0.6460620026275962,35 evolved,tmax,0.06602968640919471,both up
+35_G5,Fluconazole,0.6460620026275962,35 evolved,th_c,-0.4674660987154766,"thermal down, drug up"
+35_G9,Amphotericin B,0.15807387314009494,35 evolved,topt,-0.6864764210834409,"thermal down, drug up"
+35_G9,Amphotericin B,0.15807387314009494,35 evolved,tmax,-0.12390383056717269,"thermal down, drug up"
+35_G9,Amphotericin B,0.15807387314009494,35 evolved,th_c,-0.3672541678477046,"thermal down, drug up"
+35_G9,Caspofungin,0.08929473792930556,35 evolved,topt,-0.6864764210834409,"thermal down, drug up"
+35_G9,Caspofungin,0.08929473792930556,35 evolved,tmax,-0.12390383056717269,"thermal down, drug up"
+35_G9,Caspofungin,0.08929473792930556,35 evolved,th_c,-0.3672541678477046,"thermal down, drug up"
+35_G9,Fluconazole,0.30919699135588086,35 evolved,topt,-0.6864764210834409,"thermal down, drug up"
+35_G9,Fluconazole,0.30919699135588086,35 evolved,tmax,-0.12390383056717269,"thermal down, drug up"
+35_G9,Fluconazole,0.30919699135588086,35 evolved,th_c,-0.3672541678477046,"thermal down, drug up"
+40_B2,Amphotericin B,0.06932181931573692,40 evolved,topt,-0.6392345875645233,"thermal down, drug up"
+40_B2,Amphotericin B,0.06932181931573692,40 evolved,tmax,1.7140093967354204,both up
+40_B2,Amphotericin B,0.06932181931573692,40 evolved,th_c,0.4902581710398408,both up
+40_B2,Caspofungin,0.0247763528248391,40 evolved,topt,-0.6392345875645233,"thermal down, drug up"
+40_B2,Caspofungin,0.0247763528248391,40 evolved,tmax,1.7140093967354204,both up
+40_B2,Caspofungin,0.0247763528248391,40 evolved,th_c,0.4902581710398408,both up
+40_B2,Fluconazole,-0.5026046875613703,40 evolved,topt,-0.6392345875645233,both down
+40_B2,Fluconazole,-0.5026046875613703,40 evolved,tmax,1.7140093967354204,"thermal up, drug down"
+40_B2,Fluconazole,-0.5026046875613703,40 evolved,th_c,0.4902581710398408,"thermal up, drug down"
+40_B6,Amphotericin B,-1.1862232126422312,40 evolved,topt,0.6427464547589281,"thermal up, drug down"
+40_B6,Amphotericin B,-1.1862232126422312,40 evolved,tmax,-0.0838755830712472,both down
+40_B6,Amphotericin B,-1.1862232126422312,40 evolved,th_c,0.2225528299417192,"thermal up, drug down"
+40_B6,Caspofungin,-0.3711673308315685,40 evolved,topt,0.6427464547589281,"thermal up, drug down"
+40_B6,Caspofungin,-0.3711673308315685,40 evolved,tmax,-0.0838755830712472,both down
+40_B6,Caspofungin,-0.3711673308315685,40 evolved,th_c,0.2225528299417192,"thermal up, drug down"
+40_B6,Fluconazole,-0.11313368474536804,40 evolved,topt,0.6427464547589281,"thermal up, drug down"
+40_B6,Fluconazole,-0.11313368474536804,40 evolved,tmax,-0.0838755830712472,both down
+40_B6,Fluconazole,-0.11313368474536804,40 evolved,th_c,0.2225528299417192,"thermal up, drug down"
+40_B8,Amphotericin B,-0.2703029114057034,40 evolved,topt,0.12449585708430533,"thermal up, drug down"
+40_B8,Amphotericin B,-0.2703029114057034,40 evolved,tmax,0.6330979486897377,"thermal up, drug down"
+40_B8,Amphotericin B,-0.2703029114057034,40 evolved,th_c,0.3751242438149234,"thermal up, drug down"
+40_B8,Caspofungin,-0.5825455959331082,40 evolved,topt,0.12449585708430533,"thermal up, drug down"
+40_B8,Caspofungin,-0.5825455959331082,40 evolved,tmax,0.6330979486897377,"thermal up, drug down"
+40_B8,Caspofungin,-0.5825455959331082,40 evolved,th_c,0.3751242438149234,"thermal up, drug down"
+40_B8,Fluconazole,-0.28008331463341,40 evolved,topt,0.12449585708430533,"thermal up, drug down"
+40_B8,Fluconazole,-0.28008331463341,40 evolved,tmax,0.6330979486897377,"thermal up, drug down"
+40_B8,Fluconazole,-0.28008331463341,40 evolved,th_c,0.3751242438149234,"thermal up, drug down"
+40_C5,Amphotericin B,0.03720279820314868,40 evolved,topt,0.30250933525322665,both up
+40_C5,Amphotericin B,0.03720279820314868,40 evolved,tmax,0.1922518303028582,both up
+40_C5,Amphotericin B,0.03720279820314868,40 evolved,th_c,0.21957374665686302,both up
+40_C5,Caspofungin,-0.35027593868937945,40 evolved,topt,0.30250933525322665,"thermal up, drug down"
+40_C5,Caspofungin,-0.35027593868937945,40 evolved,tmax,0.1922518303028582,"thermal up, drug down"
+40_C5,Caspofungin,-0.35027593868937945,40 evolved,th_c,0.21957374665686302,"thermal up, drug down"
+40_C5,Fluconazole,-0.19381912517612676,40 evolved,topt,0.30250933525322665,"thermal up, drug down"
+40_C5,Fluconazole,-0.19381912517612676,40 evolved,tmax,0.1922518303028582,"thermal up, drug down"
+40_C5,Fluconazole,-0.19381912517612676,40 evolved,th_c,0.21957374665686302,"thermal up, drug down"
+40_C7,Amphotericin B,-1.1778147823034522,40 evolved,topt,0.046479176015111534,"thermal up, drug down"
+40_C7,Amphotericin B,-1.1778147823034522,40 evolved,tmax,0.232547449655776,"thermal up, drug down"
+40_C7,Amphotericin B,-1.1778147823034522,40 evolved,th_c,0.1824573197820314,"thermal up, drug down"
+40_C7,Caspofungin,-0.6952560006276531,40 evolved,topt,0.046479176015111534,"thermal up, drug down"
+40_C7,Caspofungin,-0.6952560006276531,40 evolved,tmax,0.232547449655776,"thermal up, drug down"
+40_C7,Caspofungin,-0.6952560006276531,40 evolved,th_c,0.1824573197820314,"thermal up, drug down"
+40_C7,Fluconazole,-0.070901652061614,40 evolved,topt,0.046479176015111534,"thermal up, drug down"
+40_C7,Fluconazole,-0.070901652061614,40 evolved,tmax,0.232547449655776,"thermal up, drug down"
+40_C7,Fluconazole,-0.070901652061614,40 evolved,th_c,0.1824573197820314,"thermal up, drug down"
+40_C9,Amphotericin B,0.2119231387443637,40 evolved,topt,0.2734845997241635,both up
+40_C9,Amphotericin B,0.2119231387443637,40 evolved,tmax,0.1678475854492163,both up
+40_C9,Amphotericin B,0.2119231387443637,40 evolved,th_c,0.19884704216707405,both up
+40_C9,Caspofungin,0.3401918320763744,40 evolved,topt,0.2734845997241635,both up
+40_C9,Caspofungin,0.3401918320763744,40 evolved,tmax,0.1678475854492163,both up
+40_C9,Caspofungin,0.3401918320763744,40 evolved,th_c,0.19884704216707405,both up
+40_C9,Fluconazole,0.6263728969606225,40 evolved,topt,0.2734845997241635,both up
+40_C9,Fluconazole,0.6263728969606225,40 evolved,tmax,0.1678475854492163,both up
+40_C9,Fluconazole,0.6263728969606225,40 evolved,th_c,0.19884704216707405,both up
+40_D2,Amphotericin B,-0.5542710129140087,40 evolved,topt,-0.4568388682655211,both down
+40_D2,Amphotericin B,-0.5542710129140087,40 evolved,tmax,0.6850842911692823,"thermal up, drug down"
+40_D2,Amphotericin B,-0.5542710129140087,40 evolved,th_c,0.11951740740335026,"thermal up, drug down"
+40_D2,Caspofungin,-0.14233940164622777,40 evolved,topt,-0.4568388682655211,both down
+40_D2,Caspofungin,-0.14233940164622777,40 evolved,tmax,0.6850842911692823,"thermal up, drug down"
+40_D2,Caspofungin,-0.14233940164622777,40 evolved,th_c,0.11951740740335026,"thermal up, drug down"
+40_D2,Fluconazole,0.2353867265915553,40 evolved,topt,-0.4568388682655211,"thermal down, drug up"
+40_D2,Fluconazole,0.2353867265915553,40 evolved,tmax,0.6850842911692823,both up
+40_D2,Fluconazole,0.2353867265915553,40 evolved,th_c,0.11951740740335026,both up
+40_D4,Amphotericin B,-0.1910843094534725,40 evolved,topt,-0.724100658941822,both down
+40_D4,Amphotericin B,-0.1910843094534725,40 evolved,tmax,1.855610084792282,"thermal up, drug down"
+40_D4,Amphotericin B,-0.1910843094534725,40 evolved,th_c,0.6045641087975469,"thermal up, drug down"
+40_D4,Caspofungin,-0.39211378908160616,40 evolved,topt,-0.724100658941822,both down
+40_D4,Caspofungin,-0.39211378908160616,40 evolved,tmax,1.855610084792282,"thermal up, drug down"
+40_D4,Caspofungin,-0.39211378908160616,40 evolved,th_c,0.6045641087975469,"thermal up, drug down"
+40_D4,Fluconazole,0.01126011217993587,40 evolved,topt,-0.724100658941822,"thermal down, drug up"
+40_D4,Fluconazole,0.01126011217993587,40 evolved,tmax,1.855610084792282,both up
+40_D4,Fluconazole,0.01126011217993587,40 evolved,th_c,0.6045641087975469,both up
+40_D8,Amphotericin B,-0.5014004039213071,40 evolved,topt,0.29536184836339174,"thermal up, drug down"
+40_D8,Amphotericin B,-0.5014004039213071,40 evolved,tmax,0.03478978840231406,"thermal up, drug down"
+40_D8,Amphotericin B,-0.5014004039213071,40 evolved,th_c,0.14210600128842543,"thermal up, drug down"
+40_D8,Caspofungin,-0.4340925286644162,40 evolved,topt,0.29536184836339174,"thermal up, drug down"
+40_D8,Caspofungin,-0.4340925286644162,40 evolved,tmax,0.03478978840231406,"thermal up, drug down"
+40_D8,Caspofungin,-0.4340925286644162,40 evolved,th_c,0.14210600128842543,"thermal up, drug down"
+40_D8,Fluconazole,0.00726071086831962,40 evolved,topt,0.29536184836339174,both up
+40_D8,Fluconazole,0.00726071086831962,40 evolved,tmax,0.03478978840231406,both up
+40_D8,Fluconazole,0.00726071086831962,40 evolved,th_c,0.14210600128842543,both up
+40_E11,Amphotericin B,0.4716944134869443,40 evolved,topt,0.38406018115197327,both up
+40_E11,Amphotericin B,0.4716944134869443,40 evolved,tmax,0.15959231721478773,both up
+40_E11,Amphotericin B,0.4716944134869443,40 evolved,th_c,0.26337247801097874,both up
+40_E11,Caspofungin,0.16152786406331793,40 evolved,topt,0.38406018115197327,both up
+40_E11,Caspofungin,0.16152786406331793,40 evolved,tmax,0.15959231721478773,both up
+40_E11,Caspofungin,0.16152786406331793,40 evolved,th_c,0.26337247801097874,both up
+40_E11,Fluconazole,0.5744192753293452,40 evolved,topt,0.38406018115197327,both up
+40_E11,Fluconazole,0.5744192753293452,40 evolved,tmax,0.15959231721478773,both up
+40_E11,Fluconazole,0.5744192753293452,40 evolved,th_c,0.26337247801097874,both up
+40_E7,Amphotericin B,0.41946486724560866,40 evolved,topt,0.4353036680875775,both up
+40_E7,Amphotericin B,0.41946486724560866,40 evolved,tmax,0.0032975167497539815,both up
+40_E7,Amphotericin B,0.41946486724560866,40 evolved,th_c,0.19404689464721514,both up
+40_E7,Caspofungin,0.4633680369158334,40 evolved,topt,0.4353036680875775,both up
+40_E7,Caspofungin,0.4633680369158334,40 evolved,tmax,0.0032975167497539815,both up
+40_E7,Caspofungin,0.4633680369158334,40 evolved,th_c,0.19404689464721514,both up
+40_E7,Fluconazole,0.39895190221540466,40 evolved,topt,0.4353036680875775,both up
+40_E7,Fluconazole,0.39895190221540466,40 evolved,tmax,0.0032975167497539815,both up
+40_E7,Fluconazole,0.39895190221540466,40 evolved,th_c,0.19404689464721514,both up
+40_E9,Amphotericin B,0.084485350130862,40 evolved,topt,0.4018820913094032,both up
+40_E9,Amphotericin B,0.084485350130862,40 evolved,tmax,0.11178045859985986,both up
+40_E9,Amphotericin B,0.084485350130862,40 evolved,th_c,0.20659467008869115,both up
+40_E9,Caspofungin,-0.5327289274691301,40 evolved,topt,0.4018820913094032,"thermal up, drug down"
+40_E9,Caspofungin,-0.5327289274691301,40 evolved,tmax,0.11178045859985986,"thermal up, drug down"
+40_E9,Caspofungin,-0.5327289274691301,40 evolved,th_c,0.20659467008869115,"thermal up, drug down"
+40_E9,Fluconazole,0.21247471938608192,40 evolved,topt,0.4018820913094032,both up
+40_E9,Fluconazole,0.21247471938608192,40 evolved,tmax,0.11178045859985986,both up
+40_E9,Fluconazole,0.21247471938608192,40 evolved,th_c,0.20659467008869115,both up
+40_F2,Amphotericin B,-0.30680538126218426,40 evolved,topt,0.5325622069966016,"thermal up, drug down"
+40_F2,Amphotericin B,-0.30680538126218426,40 evolved,tmax,0.3892342183895323,"thermal up, drug down"
+40_F2,Amphotericin B,-0.30680538126218426,40 evolved,th_c,0.45751416318813654,"thermal up, drug down"
+40_F2,Caspofungin,0.07630429984317352,40 evolved,topt,0.5325622069966016,both up
+40_F2,Caspofungin,0.07630429984317352,40 evolved,tmax,0.3892342183895323,both up
+40_F2,Caspofungin,0.07630429984317352,40 evolved,th_c,0.45751416318813654,both up
+40_F2,Fluconazole,1.272034095085355,40 evolved,topt,0.5325622069966016,both up
+40_F2,Fluconazole,1.272034095085355,40 evolved,tmax,0.3892342183895323,both up
+40_F2,Fluconazole,1.272034095085355,40 evolved,th_c,0.45751416318813654,both up
+40_F4,Amphotericin B,0.5073446302074723,40 evolved,topt,-0.04440105867895028,"thermal down, drug up"
+40_F4,Amphotericin B,0.5073446302074723,40 evolved,tmax,0.7563926178095102,both up
+40_F4,Amphotericin B,0.5073446302074723,40 evolved,th_c,0.38372053100243875,both up
+40_F4,Caspofungin,-0.38721729340017885,40 evolved,topt,-0.04440105867895028,both down
+40_F4,Caspofungin,-0.38721729340017885,40 evolved,tmax,0.7563926178095102,"thermal up, drug down"
+40_F4,Caspofungin,-0.38721729340017885,40 evolved,th_c,0.38372053100243875,"thermal up, drug down"
+40_F4,Fluconazole,0.5883350428713019,40 evolved,topt,-0.04440105867895028,"thermal down, drug up"
+40_F4,Fluconazole,0.5883350428713019,40 evolved,tmax,0.7563926178095102,both up
+40_F4,Fluconazole,0.5883350428713019,40 evolved,th_c,0.38372053100243875,both up
+40_F6,Amphotericin B,-0.06402946335772594,40 evolved,topt,0.3863218694421562,"thermal up, drug down"
+40_F6,Amphotericin B,-0.06402946335772594,40 evolved,tmax,0.08735029081243084,"thermal up, drug down"
+40_F6,Amphotericin B,-0.06402946335772594,40 evolved,th_c,0.22108515137091445,"thermal up, drug down"
+40_F6,Caspofungin,0.3397120700046572,40 evolved,topt,0.3863218694421562,both up
+40_F6,Caspofungin,0.3397120700046572,40 evolved,tmax,0.08735029081243084,both up
+40_F6,Caspofungin,0.3397120700046572,40 evolved,th_c,0.22108515137091445,both up
+40_F6,Fluconazole,0.5083021357652554,40 evolved,topt,0.3863218694421562,both up
+40_F6,Fluconazole,0.5083021357652554,40 evolved,tmax,0.08735029081243084,both up
+40_F6,Fluconazole,0.5083021357652554,40 evolved,th_c,0.22108515137091445,both up
+40_G11,Amphotericin B,0.42797070588343633,40 evolved,topt,-0.4508813177922235,"thermal down, drug up"
+40_G11,Amphotericin B,0.42797070588343633,40 evolved,tmax,1.4387932235283785,both up
+40_G11,Amphotericin B,0.42797070588343633,40 evolved,th_c,0.4974085396081591,both up
+40_G11,Caspofungin,0.5190638144469478,40 evolved,topt,-0.4508813177922235,"thermal down, drug up"
+40_G11,Caspofungin,0.5190638144469478,40 evolved,tmax,1.4387932235283785,both up
+40_G11,Caspofungin,0.5190638144469478,40 evolved,th_c,0.4974085396081591,both up
+40_G11,Fluconazole,1.8654283751140477,40 evolved,topt,-0.4508813177922235,"thermal down, drug up"
+40_G11,Fluconazole,1.8654283751140477,40 evolved,tmax,1.4387932235283785,both up
+40_G11,Fluconazole,1.8654283751140477,40 evolved,th_c,0.4974085396081591,both up
+40_G5,Amphotericin B,-0.01440849516739547,40 evolved,topt,0.04353652588878276,"thermal up, drug down"
+40_G5,Amphotericin B,-0.01440849516739547,40 evolved,tmax,0.14168072289091782,"thermal up, drug down"
+40_G5,Amphotericin B,-0.01440849516739547,40 evolved,th_c,0.05940609564453325,"thermal up, drug down"
+40_G5,Caspofungin,-0.02872358387730297,40 evolved,topt,0.04353652588878276,"thermal up, drug down"
+40_G5,Caspofungin,-0.02872358387730297,40 evolved,tmax,0.14168072289091782,"thermal up, drug down"
+40_G5,Caspofungin,-0.02872358387730297,40 evolved,th_c,0.05940609564453325,"thermal up, drug down"
+40_G5,Fluconazole,1.3177472761099565,40 evolved,topt,0.04353652588878276,both up
+40_G5,Fluconazole,1.3177472761099565,40 evolved,tmax,0.14168072289091782,both up
+40_G5,Fluconazole,1.3177472761099565,40 evolved,th_c,0.05940609564453325,both up
+40_G9,Amphotericin B,0.5730270600974215,40 evolved,topt,-0.341400719754688,"thermal down, drug up"
+40_G9,Amphotericin B,0.5730270600974215,40 evolved,tmax,1.3966892666117872,both up
+40_G9,Amphotericin B,0.5730270600974215,40 evolved,th_c,0.5818477054770028,both up
+40_G9,Caspofungin,0.6846095987135103,40 evolved,topt,-0.341400719754688,"thermal down, drug up"
+40_G9,Caspofungin,0.6846095987135103,40 evolved,tmax,1.3966892666117872,both up
+40_G9,Caspofungin,0.6846095987135103,40 evolved,th_c,0.5818477054770028,both up
+40_G9,Fluconazole,2.1527290502546608,40 evolved,topt,-0.341400719754688,"thermal down, drug up"
+40_G9,Fluconazole,2.1527290502546608,40 evolved,tmax,1.3966892666117872,both up
+40_G9,Fluconazole,2.1527290502546608,40 evolved,th_c,0.5818477054770028,both up

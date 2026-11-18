@@ -10,7 +10,7 @@
 #   tmax  = flexTPC Tmax parameter (temperature where the fitted rate reaches 0)
 #   topt  = tmin + alpha * (tmax - tmin)  (exact optimum of flexTPC)
 #   beta  = flexTPC breadth parameter
-# Note: tmax here is NOT the same quantity as the SSH CTmax in scripts 17/19
+# Note: tmax here is NOT the same quantity as the SSH Tmax in scripts 17/19
 # (5% of Rmax), and tmin is extrapolated (coldest test temperature is 25 C).
 #
 # Inputs:
@@ -238,7 +238,7 @@ trait_compare <- flex_params |>
 trait_pairs <- tribble(
   ~flex,       ~ssh,       ~label,
   "topt_flex", "topt_ssh", "Topt (flexTPC) vs Topt (SSH)",
-  "tmax_flex", "tmax_ssh", "Tmax (flexTPC, rate = 0) vs CTmax (SSH, 5% Rmax)",
+  "tmax_flex", "tmax_ssh", "Tmax (flexTPC, rate = 0) vs Tmax (SSH, 5% Rmax)",
   "tmax_flex", "th_ssh",   "Tmax (flexTPC) vs Th (SSH)",
   "beta_flex", "b80_ssh",  "beta (flexTPC) vs B80 (SSH)"
 )

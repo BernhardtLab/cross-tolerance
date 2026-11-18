@@ -698,7 +698,7 @@ ggplot(deming_dat, aes(x = tmax, y = mean_log_ratio, color = evolution_history))
   facet_wrap(~ drug, scales = "free") +
   scale_color_manual(values = EVO_COLORS, name = NULL) +
   labs(
-    x       = "CTmax (\u00b0C)",
+    x       = "Tmax (\u00b0C)",
     y       = "log(IC50 / ancestor IC50)",
     caption = paste(
       "Error bars: \u00b11 bootstrap SE on each axis",

@@ -1,0 +1,37 @@
+trait,drug,quadrant,35 evolved,40 evolved
+topt,Fluconazole,both down,4,1
+topt,Fluconazole,both up,2,8
+topt,Fluconazole,"thermal down, drug up",12,5
+topt,Fluconazole,"thermal up, drug down",0,4
+topt,Caspofungin,both down,7,3
+topt,Caspofungin,both up,2,5
+topt,Caspofungin,"thermal down, drug up",9,3
+topt,Caspofungin,"thermal up, drug down",0,7
+topt,Amphotericin B,both down,4,2
+topt,Amphotericin B,both up,2,5
+topt,Amphotericin B,"thermal down, drug up",12,4
+topt,Amphotericin B,"thermal up, drug down",0,7
+tmax,Fluconazole,both up,5,13
+tmax,Fluconazole,"thermal down, drug up",9,0
+tmax,Fluconazole,"thermal up, drug down",4,4
+tmax,Fluconazole,both down,0,1
+tmax,Caspofungin,both down,4,1
+tmax,Caspofungin,both up,6,8
+tmax,Caspofungin,"thermal down, drug up",5,0
+tmax,Caspofungin,"thermal up, drug down",3,9
+tmax,Amphotericin B,both up,5,9
+tmax,Amphotericin B,"thermal down, drug up",9,0
+tmax,Amphotericin B,"thermal up, drug down",4,8
+tmax,Amphotericin B,both down,0,1
+th_c,Fluconazole,both down,4,0
+th_c,Fluconazole,both up,1,13
+th_c,Fluconazole,"thermal down, drug up",13,0
+th_c,Fluconazole,"thermal up, drug down",0,5
+th_c,Caspofungin,both down,7,0
+th_c,Caspofungin,both up,1,8
+th_c,Caspofungin,"thermal down, drug up",10,0
+th_c,Caspofungin,"thermal up, drug down",0,10
+th_c,Amphotericin B,both down,4,0
+th_c,Amphotericin B,both up,1,9
+th_c,Amphotericin B,"thermal down, drug up",13,0
+th_c,Amphotericin B,"thermal up, drug down",0,9
