@@ -169,3 +169,114 @@ write_csv(
 )
 
 cat("\nAll outputs written.\n")
+
+
+# =============================================================================
+# 7. Variant: add supra-optimal mean over the ancestor window
+# =============================================================================
+# Mean fitted growth for each strain over the ancestor's T_opt to T_max (same
+# temperatures for every strain; Script 32 `mean_fixed_window`). The original
+# PCA above is unchanged; this run writes its own outputs with suffix -supra.
+
+integrate_window <- function(temp, pred, lo, hi) {
+  x <- sort(unique(c(lo, hi, temp[temp > lo & temp < hi])))
+  y <- approx(temp, pred, xout = x)$y
+  sum(diff(x) * (head(y, -1) + tail(y, -1)) / 2)
+}
+
+tpc_par  <- read_csv(file.path(OUT, "gcplyr/tpc-params-auc-gcplyr-17.csv"), show_col_types = FALSE)
+tpc_pred <- read_csv(file.path(OUT, "gcplyr/tpc-predictions-auc-gcplyr-17.csv"), show_col_types = FALSE)
+
+anc_window <- tpc_par |> filter(evolution_history == "fRS585") |> select(topt, tmax)
+stopifnot(nrow(anc_window) == 1)
+
+supra_fixed <- tpc_pred |>
+  filter(evolution_history %in% EVO_LEVELS) |>
+  group_by(strain) |>
+  summarise(supra_fixed = integrate_window(temp, pred, anc_window$topt, anc_window$tmax) /
+              (anc_window$tmax - anc_window$topt),
+            .groups = "drop")
+
+PCA_VARS_SUPRA <- c(PCA_VARS, "supra_fixed")
+
+pca_input_supra <- pca_input |>
+  inner_join(supra_fixed, by = "strain") |>
+  drop_na(all_of(PCA_VARS_SUPRA))
+
+cat(sprintf("\nSupra PCA input: %d strains × %d variables\n",
+            nrow(pca_input_supra), length(PCA_VARS_SUPRA)))
+
+wide_centered_supra <- pca_input_supra |>
+  group_by(evolution_history) |>
+  mutate(across(all_of(PCA_VARS_SUPRA), ~ . - mean(., na.rm = TRUE))) |>
+  ungroup()
+
+pca_s <- prcomp(wide_centered_supra[, PCA_VARS_SUPRA], center = FALSE, scale. = TRUE)
+
+cat("\n=== Within-group PCA + supra (ancestor window): variance explained ===\n")
+print(round(summary(pca_s)$importance[, 1:5], 3))
+cat("\n=== Loadings (PC1–PC3) ===\n")
+print(round(pca_s$rotation[, 1:3], 3))
+
+pct_s <- summary(pca_s)$importance["Proportion of Variance", ] * 100
+
+scores_s <- as.data.frame(pca_s$x) |>
+  bind_cols(pca_input_supra |> select(strain, evolution_history)) |>
+  mutate(evolution_history = factor(evolution_history, levels = EVO_LEVELS))
+
+loadings_s <- as.data.frame(pca_s$rotation[, 1:2]) |>
+  rownames_to_column("variable") |>
+  mutate(
+    PC1_scaled = PC1 * max(abs(scores_s$PC1)),
+    PC2_scaled = PC2 * max(abs(scores_s$PC2)),
+    label      = recode(variable, supra_fixed = "supra (ancestor window)")
+  )
+
+ggplot(scores_s, aes(x = PC1, y = PC2, color = evolution_history)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  geom_segment(
+    data        = loadings_s,
+    aes(x = 0, y = 0, xend = PC1_scaled, yend = PC2_scaled),
+    inherit.aes = FALSE,
+    arrow       = arrow(length = unit(0.25, "cm")),
+    color = "grey30", linewidth = 0.6
+  ) +
+  geom_text(
+    data        = loadings_s,
+    aes(x = PC1_scaled * 1.12, y = PC2_scaled * 1.12, label = label),
+    inherit.aes = FALSE,
+    size = 3.5, color = "grey20"
+  ) +
+  scale_color_manual(values = EVO_COLORS, name = NULL) +
+  labs(
+    x       = sprintf("PC1 (%.1f%%)", pct_s[1]),
+    y       = sprintf("PC2 (%.1f%%)", pct_s[2]),
+    caption = paste(
+      "Variables group\u2013mean centered within each evolution history before PCA.",
+      "Supra = mean fitted growth over the ancestor's T_opt to T_max (39.4\u201342.2 \u00b0C).",
+      sep = "\n"
+    )
+  ) +
+  theme_evo() +
+  theme(
+    legend.position = "bottom",
+    plot.caption    = element_text(size = 9, color = "grey40")
+  )
+
+ggsave(file.path(FIGS, "pca-biplot-within-22-supra.png"),
+       width = 5.5, height = 5, dpi = 300, bg = "transparent")
+
+write_csv(
+  scores_s |> select(strain, evolution_history, PC1, PC2, PC3),
+  file.path(OUT, "pca-scores-within-22-supra.csv")
+)
+write_csv(
+  loadings_s |> select(variable, PC1, PC2),
+  file.path(OUT, "pca-loadings-within-22-supra.csv")
+)
+write_csv(
+  tibble(PC = names(pct_s), pct = as.numeric(pct_s)),
+  file.path(OUT, "pca-pct-within-22-supra.csv")
+)
+
+cat("\nSupra variant written.\n")

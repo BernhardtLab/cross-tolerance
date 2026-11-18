@@ -285,15 +285,27 @@ SUPRA_METRICS <- c(mean_above_topt   = "Supra-optimal mean (growth units)",
 ic50_long <- cmp_dat |>
   pivot_longer(names(SUPRA_METRICS), names_to = "thermal", values_to = "x")
 
+# Fitted lines with 95% confidence bands (predict, interval = "confidence")
 ic50_fit_lines <- ic50_long |>
   group_by(drug, thermal) |>
   group_modify(\(d, k) {
-    m <- lm(log2_ic50 ~ x + evolution_history, data = d)
-    d |>
+    m  <- lm(log2_ic50 ~ x + evolution_history, data = d)
+    nd <- d |>
       group_by(evolution_history) |>
       summarise(x = list(seq(min(x), max(x), length.out = 50)), .groups = "drop") |>
-      unnest(x) |>
-      mutate(pred = predict(m, newdata = pick(everything())))
+      unnest(x)
+    pr <- predict(m, newdata = nd, interval = "confidence")
+    nd |> mutate(pred = pr[, "fit"], lo = pr[, "lwr"], hi = pr[, "upr"])
+  }) |>
+  ungroup()
+
+# Shared-slope coefficient on the metric with its 95% CI
+ic50_slopes <- ic50_long |>
+  group_by(drug, thermal) |>
+  group_modify(\(d, k) {
+    m  <- lm(log2_ic50 ~ x + evolution_history, data = d)
+    ci <- confint(m)["x", ]
+    tibble(slope_txt = sprintf("slope = %.2f [%.2f, %.2f]", coef(m)[["x"]], ci[1], ci[2]))
   }) |>
   ungroup()
 
@@ -303,7 +315,9 @@ ic50_labels <- metric_comparison |>
   mutate(txt = sprintf("%s: r = %.2f, p = %.3f",
                        if_else(subset == "all", "all strains", "without six"), r_within, p)) |>
   group_by(drug, thermal) |>
-  summarise(label = paste(txt, collapse = "\n"), .groups = "drop")
+  summarise(label = paste(txt, collapse = "\n"), .groups = "drop") |>
+  left_join(ic50_slopes, by = c("drug", "thermal")) |>
+  mutate(label = paste0(slope_txt, "\n", label))
 
 relabel <- \(d) mutate(d,
   drug    = factor(drug, levels = names(DRUG_LABELS), labels = DRUG_LABELS),
@@ -311,13 +325,17 @@ relabel <- \(d) mutate(d,
 
 ggplot(relabel(ic50_long), aes(x = x, y = log2_ic50, color = evolution_history)) +
   geom_hline(yintercept = 0, color = "grey80") +
+  geom_ribbon(data = relabel(ic50_fit_lines),
+              aes(x = x, ymin = lo, ymax = hi, fill = evolution_history, group = evolution_history),
+              alpha = 0.2, color = NA, inherit.aes = FALSE) +
   geom_line(data = relabel(ic50_fit_lines), aes(y = pred), linewidth = 0.7) +
   geom_point(aes(shape = retested), size = 2.2, alpha = 0.85) +
   geom_text(data = relabel(ic50_labels), aes(label = label), x = -Inf, y = Inf,
             hjust = -0.05, vjust = 1.2, size = 3, color = "black", inherit.aes = FALSE) +
   facet_grid(drug ~ thermal, scales = "free", switch = "x") +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.35))) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.4))) +
   scale_color_manual(values = EVO_COLORS, name = NULL) +
+  scale_fill_manual(values = EVO_COLORS, guide = "none") +
   scale_shape_manual(values = c(`FALSE` = 16, `TRUE` = 17),
                      labels = c("other strains", "re-tested 40C-ev_Res"), name = NULL) +
   labs(
@@ -327,7 +345,8 @@ ggplot(relabel(ic50_long), aes(x = x, y = log2_ic50, color = evolution_history))
       "Supra-optimal AUC = integral of fitted TPC from the strain's T_opt to T_max; mean = AUC / (T_max - T_opt).",
       sprintf("Ancestor window = mean fitted growth from %.1f to %.1f \u00b0C (ancestor T_opt to T_max) for every strain.",
               anc_window$topt, anc_window$tmax),
-      "Lines: log2 IC50 ~ metric + evolution history (shared slope).",
+      "Lines: log2 IC50 ~ metric + evolution history (shared slope); bands: 95% CI of fitted lines.",
+      "Slope: change in log2 IC50 per unit of metric, 95% CI.",
       "r = within-group partial correlation; unadjusted p-values.",
       sep = "\n")
   ) +
