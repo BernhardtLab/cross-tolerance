@@ -1,5 +1,12 @@
 ## notes from data analysis
 
+November 19 2026
+
+- consider an RMA for the analsysis of IC50 vs supraoptimal growth performance
+The first two PC axes explain 64.2% of the variation in the seven-variable supra PCA (PC1 39.9% + PC2 24.4%). The first three explain 80.0% (adding PC3's 15.8%).
+
+These figures come from the eigenvalues: 2.79 + 1.71 = 4.50 of 7 total, and 4.50 + 1.10 = 5.60 of 7.
+
 
 
 **November 18, 2026 — Thermal performance above T~opt~ vs drug tolerance (Script 32: `R-Scripts-Joey/32-above-topt-vs-high-drug.R`)**
@@ -33,7 +40,7 @@
 *Interpretation:*
 - Performance across supra-optimal temperatures is positively associated with fluconazole and amphotericin B tolerance (by both drug metrics) and with caspofungin IC~50~. Thermal limits (T~opt~, T~max~, T~h~) and the width of the above-optimum window are not.
 - The difference from the earlier null IC~50~ results comes from the thermal metric, not the drug metric: the earlier tests used T~opt~, T~max~ and T~h~ (where the curve sits), whereas mean performance above T~opt~ reflects how high the curve is.
-- Because the metric tracks r~max~ (r = 0.77), the safer reading is that better-performing strains are more drug-tolerant (general vigour), not that heat-tolerant strains specifically are. This matches Script 31: fluconazole tolerance at high drug correlates with growth at 25–38°C (r = 0.48–0.61) and more weakly at 41–42°C (r ≈ 0.3, n.s.), and the partial correlation with 42°C growth adjusting for 25°C growth is about 0 (r = −0.05 to 0.06 across subsets).
+- The window lies between each strain's T~opt~ and T~max~, so the metric is a measure of heat-stress performance: how well a strain grows across the range where growth declines because of temperature. Strains with better heat-stress performance are more drug-tolerant. The metric also tracks r~max~ (r = 0.77), so it reflects overall growth level within that range. This matches Script 31: fluconazole tolerance at high drug correlates with growth at 25–38°C (r = 0.48–0.61) and more weakly at 41–42°C (r ≈ 0.3, n.s.).
 - Robustness to the six re-tested strains: fluconazole IC~50~ holds without them (r = 0.37, p = 0.049); amphotericin B IC~50~ weakens (r = 0.32, p = 0.09); caspofungin IC~50~ disappears (r = 0.11). All high-drug-growth associations are no longer significant without the six.
 - In the IC~50~ figure, amphotericin B trends positively within both evolution groups. For caspofungin, the 35-evolved strains trend upward but the twelve non-retested 40-evolved strains show no clear trend. The fluconazole panel includes the March Set2 35-evolved cluster (35_D2, D8, E7, E9, E11; ≈ +1.5 log~2~). These strains have stable IC~50~s across the three Set2 plates (≈ 11–19), but the same-plate ancestor IC~50~ varies ~6-fold (Rep1 1.92, Rep2 12.1, Rep3 4.80), so their same-plate ratios are high on Rep1/Rep3 and near 0 on Rep2 (see Nov 16 caveat). 35_D4 (−1.3) is different: its own IC~50~ is consistently low on all three plates (1.7–2.2), so it is a genuinely fluconazole-sensitive strain, not an ancestor artefact.
 
@@ -74,9 +81,16 @@
 - **Caveat:** the fixed window is a choice (the ancestor's T~opt~ to T~max~). Other windows could give different results, and the association was not checked after adjusting for r~max~.
 
 *Figures:*
-- `figures/ic50-vs-above-topt-32.png`: log~2~ IC~50~ ratio vs three supra-optimal metrics (strain-specific mean, strain-specific AUC, and the ancestor-window mean), rows = drugs; colour = evolution history, triangles = six re-tested strains; lines = shared-slope model fit (parallel lines per group); r and p printed for all strains and without the six.
+- `figures/ic50-vs-above-topt-32.png`: log~2~ IC~50~ ratio vs three supra-optimal metrics (strain-specific mean, strain-specific AUC, and the ancestor-window mean), rows = drugs; colour = evolution history, triangles = six re-tested strains; lines = shared-slope model fit (parallel lines per group); shaded bands = 95% confidence intervals of the fitted lines (pointwise, not simultaneous); each panel prints the slope with its 95% CI (change in log~2~ IC~50~ per unit of the metric), and r and p for all strains and without the six.
 - `figures/supraoptimal-dotplot-33.png`: T~opt~, T~max~ and T~h~ (°C), then r~max~, strain-specific mean, ancestor-window mean (growth units), and strain-specific AUC (growth × °C); same Welch/one-sample tests and stars as the combined figure, unadjusted.
 - `figures/above-topt-vs-high-drug-32.png`: growth at high drug vs area above T~opt~ (left) and mean performance above T~opt~ (right), rows = drugs, free axes; lines are separate per-group OLS fits (not the shared-slope model behind the reported r).
+
+*Supra-optimal PCA variant (Script 22, section 7; `R-Scripts-Joey/22-pca.R`):* the within-group PCA (variables group-mean centred within evolution history, then scaled) rerun with the ancestor-window mean added as a seventh variable (`supra_fixed`, the same metric as `mean_fixed_window`). The original six-variable PCA is unchanged.
+- Variance explained: PC1 32.4% → 39.9%, PC2 28.4% → 24.4%, PC3 16.9% → 15.8%.
+- PC1 loadings: `supra_fixed` −0.57, T~h~ −0.53, fluconazole −0.37, amphotericin B −0.34, T~opt~ −0.31, caspofungin −0.17, T~max~ −0.13. PC1 separates 40-evolved strains (high window mean and T~h~) from 35-evolved strains, and is also the main drug axis.
+- Within-group correlations: `supra_fixed` vs T~h~ r = 0.93 (so it largely duplicates T~h~ here), vs T~opt~ 0.49, vs T~max~ 0.29, vs fluconazole 0.42, vs amphotericin B 0.42, vs caspofungin 0.28.
+- Interpretation: the ancestor-window mean carries the same heat-adaptation signal as T~h~, and adds little independent information in the PCA. Its drug correlations (0.28–0.42) are in the same range as the IC~50~ associations in section 4b.
+- Outputs: `figures/pca-biplot-within-22-supra.png`; `data-processed/pca-scores-within-22-supra.csv`, `pca-loadings-within-22-supra.csv`, `pca-pct-within-22-supra.csv`. Arrow labels for the drug variables overlap near the origin in the figure.
 
 *Outputs:* `data-processed/above-topt-vs-high-drug-32.csv` (high-drug growth vs both thermal summaries), `drug-vs-thermal-metric-comparison-32.csv` (both drug metrics × mean above T~opt~, AUC above T~opt~, ancestor-window mean, T~opt~, T~max~, T~h~ × both subsets; slope, 95% CI, r, p), `ic50-vs-high-drug-32.csv`, `ic50-rmax-vs-above-topt-32.csv`, `stats-supraoptimal-33.csv` (r~max~, strain-specific mean, ancestor-window mean and AUC: group tests).
 
