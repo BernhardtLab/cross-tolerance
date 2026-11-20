@@ -1,0 +1,94 @@
+# =============================================================================
+# 35-conceptual-extremes-figure.R
+# Companion to Script 34: fitted TPCs of the ancestor and the two most extreme
+# strains in each evolution group, on the shared ancestor window (39.4-42.2 C).
+# "Most extreme" = highest and lowest shared-window mean within each group.
+# The dashed line for each curve is its mean fitted growth over the shared
+# window (same definition as Script 34 and Script 32 mean_fixed_window).
+#
+# Inputs:  data-processed/gcplyr/tpc-params-auc-gcplyr-17.csv
+#          data-processed/gcplyr/tpc-predictions-auc-gcplyr-17.csv
+# Outputs: figures/conceptual-extremes-35.png
+# =============================================================================
+
+library(tidyverse)
+
+OUT  <- "data-processed"
+FIGS <- "figures"
+
+GROUP_COLORS <- c("ancestor" = "black", "35 evolved" = "#0E63FF", "40 evolved" = "#FA3208")
+
+tpc_par  <- read_csv(file.path(OUT, "gcplyr/tpc-params-auc-gcplyr-17.csv"), show_col_types = FALSE)
+tpc_pred <- read_csv(file.path(OUT, "gcplyr/tpc-predictions-auc-gcplyr-17.csv"), show_col_types = FALSE)
+
+# Trapezoid mean of a fitted curve over [lo, hi]
+window_mean <- function(temp, pred, lo, hi) {
+  x <- sort(unique(c(lo, hi, temp[temp > lo & temp < hi])))
+  y <- approx(temp, pred, xout = x)$y
+  sum(diff(x) * (head(y, -1) + tail(y, -1)) / 2) / (hi - lo)
+}
+
+anc_win <- tpc_par |> filter(evolution_history == "fRS585") |> select(topt, tmax)
+stopifnot(nrow(anc_win) == 1)
+anc_topt <- anc_win$topt
+anc_tmax <- anc_win$tmax
+
+strain_win <- tpc_pred |>
+  group_by(strain, evolution_history) |>
+  summarise(wmean_shared = window_mean(temp, pred, anc_topt, anc_tmax), .groups = "drop")
+
+extremes <- strain_win |>
+  filter(evolution_history %in% c("35 evolved", "40 evolved")) |>
+  group_by(evolution_history) |>
+  summarise(
+    lowest  = strain[which.min(wmean_shared)],
+    highest = strain[which.max(wmean_shared)],
+    .groups = "drop"
+  )
+print(extremes)
+
+curves <- bind_rows(
+  tibble(label = "ancestor", strain = "fRS585", extreme = "reference"),
+  extremes |>
+    pivot_longer(c(lowest, highest), names_to = "extreme", values_to = "strain") |>
+    transmute(label = evolution_history, strain, extreme)
+) |>
+  mutate(
+    curve = map(strain, \(s) tpc_pred |> filter(strain == s) |> arrange(temp)),
+    wmean = map_dbl(curve, \(cv) window_mean(cv$temp, cv$pred, anc_topt, anc_tmax)),
+    line_name = if_else(extreme == "reference", "ancestor",
+                        paste0(label, " (", extreme, ")"))
+  )
+
+curve_dat <- curves |>
+  select(line_name, label, extreme, curve) |>
+  unnest(curve)
+
+print(curves |> select(line_name, strain, wmean) |> mutate(wmean = round(wmean, 3)))
+
+LINE_TYPES <- c(lowest = "dotted", highest = "solid", reference = "solid")
+
+ggplot() +
+  annotate("rect", xmin = anc_topt, xmax = anc_tmax, ymin = -Inf, ymax = Inf,
+           fill = "grey90") +
+  geom_line(data = curve_dat, aes(x = temp, y = pred, color = label, linetype = extreme),
+            linewidth = 1) +
+  geom_segment(data = curves,
+               aes(x = anc_topt, xend = anc_tmax, y = wmean, yend = wmean,
+                   color = label, linetype = extreme),
+               linewidth = 0.5) +
+  annotate("text", x = (anc_topt + anc_tmax) / 2, y = 1.02,
+           label = "ancestor window", size = 3, color = "grey30", vjust = 1) +
+  scale_color_manual(values = GROUP_COLORS, name = NULL) +
+  scale_linetype_manual(values = LINE_TYPES,
+                        breaks = c("lowest", "highest"),
+                        labels = c(lowest = "lowest in group", highest = "highest in group"),
+                        name = NULL) +
+  scale_x_continuous(breaks = seq(20, 50, 5)) +
+  coord_cartesian(xlim = c(20, 46), ylim = c(0, max(curve_dat$pred) * 1.1), expand = FALSE) +
+  labs(x = "Temperature (\u00b0C)", y = "Growth rate (AUC)") +
+  theme_classic(base_size = 12) +
+  theme(legend.position = "top", legend.box = "vertical")
+
+ggsave(file.path(FIGS, "conceptual-extremes-35.png"),
+       width = 6, height = 5, dpi = 300, bg = "white")
