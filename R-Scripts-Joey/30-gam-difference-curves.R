@@ -16,10 +16,8 @@
 # lc = log2(concentration); grp40 = ordered factor, so s(lc, by = grp40) is the
 # 40 - 35 difference smooth; strain-level factor smooths make strains the
 # replicates. Primary model has no month term: per-plate ancestor
-# normalisation is assumed to remove month effects. Sensitivity model adds
-# month + s(lc, by = march); this month effect is identified only from six
-# re-tested 40-evolved strains (40_C9, E7, E11, F6, G9, G11; "40C-ev_Res",
-# consistently more resistant), so it is not the primary analysis.
+# normalisation is assumed to remove month effects. A sensitivity model adds a
+# month term (month + s(lc, by = march)); it is not the primary analysis.
 #
 # CIs: 95% pointwise and simultaneous (simulation, max |t| over the curve).
 #

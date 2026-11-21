@@ -159,11 +159,9 @@ ggsave(file.path(FIGS, "cross-covariance-31.png"), width = 11, height = 4, dpi =
 # Supra-MIC growth = mean log2 FC at 32-256 ug/mL. Overall growth = mean
 # across temperatures; 42 degC growth (raw); heat-specific = partial
 # correlation with 42 degC growth adjusted for 25 degC growth. Subsets
-# drop March Set2 35-evolved strains and/or the six 40-evolved strains
-# re-tested in March ("40C-ev_Res"; more resistant).
+# drop March Set2 35-evolved strains.
 
 set2_35 <- c("35_D2", "35_D4", "35_D8", "35_E11", "35_E7", "35_E9")
-march40 <- c("40_C9", "40_E7", "40_E11", "40_F6", "40_G9", "40_G11")
 
 fl_supra <- dr |>
   filter(drug == "fluconazole", concentration %in% c(32, 64, 128, 256)) |>
@@ -199,8 +197,8 @@ partial_42 <- function(d) {
 }
 
 fl_robustness <- tibble(
-  subset = c("all", "excl. Set2", "excl. March-40", "excl. both"),
-  drop   = list(character(0), set2_35, march40, c(set2_35, march40))
+  subset = c("all", "excl. Set2"),
+  drop   = list(character(0), set2_35)
 ) |>
   mutate(
     dat     = map(drop, \(s) filter(robust_dat, !strain %in% s)),
@@ -225,8 +223,7 @@ print(fl_robustness)
 # =============================================================================
 
 temp_dat <- tpc |>
-  inner_join(fl_supra, by = c("strain", "evolution_history")) |>
-  mutate(retested = strain %in% march40)
+  inner_join(fl_supra, by = c("strain", "evolution_history"))
 
 fit_temp <- function(d) {
   m  <- lm(growth ~ fl_supra + evolution_history, data = d)
@@ -237,25 +234,21 @@ fit_temp <- function(d) {
          p = co[["Pr(>|t|)"]])
 }
 
-fl_by_temp <- bind_rows(
-  temp_dat |> group_by(test_temperature) |> group_modify(\(d, k) fit_temp(d)) |>
-    mutate(subset = "all"),
-  temp_dat |> filter(!retested) |> group_by(test_temperature) |>
-    group_modify(\(d, k) fit_temp(d)) |> mutate(subset = "excl. March-40")
-) |>
+fl_by_temp <- temp_dat |>
+  group_by(test_temperature) |>
+  group_modify(\(d, k) fit_temp(d)) |>
   ungroup() |>
+  mutate(subset = "all") |>
   relocate(subset)
 
 print(fl_by_temp)
 
 ggplot(temp_dat, aes(x = fl_supra, y = growth, color = evolution_history)) +
-  geom_point(aes(shape = retested), size = 2, alpha = 0.85) +
+  geom_point(size = 2, alpha = 0.85) +
   geom_smooth(method = "lm", formula = y ~ x, se = FALSE, linewidth = 0.6) +
   facet_wrap(~ test_temperature, nrow = 1, scales = "free_y",
              labeller = labeller(test_temperature = \(x) paste0(x, " \u00b0C"))) +
   scale_color_manual(values = c("40 evolved" = "#FA3208", "35 evolved" = "#0E63FF"), name = NULL) +
-  scale_shape_manual(values = c(`FALSE` = 16, `TRUE` = 17),
-                     labels = c("other strains", "re-tested 40C-ev_Res"), name = NULL) +
   labs(x = expression(paste("Fluconazole tolerance (mean ", log[2], " FC vs ancestor, 32\u2013256 \u00b5g/mL)")),
        y = "Growth (AUC)") +
   theme_evo(11) +

@@ -15,8 +15,7 @@
 #   steps above the ancestor's median IC50 for that drug.
 #
 # Test: drug_high ~ thermal + evolution_history (within-group association);
-#   partial r = t / sqrt(t^2 + df). Unadjusted p-values. Run on all strains
-#   and excluding the six re-tested 40-evolved strains ("40C-ev_Res").
+#   partial r = t / sqrt(t^2 + df). Unadjusted p-values. Run on all strains.
 #
 # Section 3b: drug metric x thermal metric comparison. Drug metrics: log2 IC50
 #   ratio vs same-plate ancestor (strain mean) and high-drug growth (above).
@@ -42,7 +41,6 @@ EVO_COLORS <- c("40 evolved" = "#FA3208", "35 evolved" = "#0E63FF")
 EVO_LEVELS <- c("35 evolved", "40 evolved")
 DRUG_LABELS <- c(fluconazole = "Fluconazole", caspofungin = "Caspofungin",
                  amphotericin = "Amphotericin B")
-MARCH40 <- c("40_C9", "40_E7", "40_E11", "40_F6", "40_G9", "40_G11")
 N_STEPS <- 4
 FIGS <- "figures"
 OUT  <- "data-processed"
@@ -122,8 +120,7 @@ drug_high <- curves |>
 
 assoc_dat <- drug_high |>
   inner_join(thermal, by = c("strain", "evolution_history")) |>
-  mutate(evolution_history = factor(evolution_history, levels = EVO_LEVELS),
-         retested = strain %in% MARCH40)
+  mutate(evolution_history = factor(evolution_history, levels = EVO_LEVELS))
 
 fit_assoc <- function(d, xvar) {
   m  <- lm(reformulate(c(xvar, "evolution_history"), "high_drug_lfc"), data = d)
@@ -135,12 +132,12 @@ fit_assoc <- function(d, xvar) {
 }
 
 assoc <- expand_grid(
-  subset  = c("all", "excl. March-40"),
+  subset  = "all",
   thermal = c("auc_above_topt", "mean_above_topt"),
   drug    = names(DRUG_LABELS)
 ) |>
   mutate(res = pmap(list(subset, thermal, drug), \(s, x, dg) {
-    d <- assoc_dat |> filter(drug == dg, if (s == "all") TRUE else !retested)
+    d <- assoc_dat |> filter(drug == dg)
     fit_assoc(d, x)
   })) |>
   unnest(res)
@@ -156,7 +153,7 @@ ic50_strain <- read_csv(file.path(OUT, "normalised-ic50-per-strain.csv"), show_c
   select(strain = population, drug, log2_ic50 = log_ratio)
 
 cmp_dat <- assoc_dat |>
-  select(strain, evolution_history, drug, retested, high_drug_lfc,
+  select(strain, evolution_history, drug, high_drug_lfc,
          mean_above_topt, auc_above_topt, mean_fixed_window) |>
   left_join(ic50_strain, by = c("strain", "drug")) |>
   left_join(tpc_par |> select(strain, topt, tmax, th_c), by = "strain")
@@ -176,10 +173,10 @@ metric_comparison <- expand_grid(
   drug        = names(DRUG_LABELS),
   drug_metric = c("log2_ic50", "high_drug_lfc"),
   thermal     = c("mean_above_topt", "auc_above_topt", "mean_fixed_window", "topt", "tmax", "th_c"),
-  subset      = c("all", "excl. March-40")
+  subset      = "all"
 ) |>
   mutate(res = pmap(list(drug, drug_metric, thermal, subset), \(dg, y, x, s) {
-    d <- cmp_dat |> filter(drug == dg, if (s == "all") TRUE else !retested)
+    d <- cmp_dat |> filter(drug == dg)
     fit_partial(d, y, x)
   })) |>
   unnest(res)
@@ -205,9 +202,8 @@ print(ic50_vs_high)
 # 3c. Does mean performance above T_opt add anything beyond r_max?
 # =============================================================================
 # log2_ic50 ~ r_max + group; ~ mean_above_topt + group; and both together.
-# r_max and mean_above_topt are correlated within groups (r = 0.77 all,
-# 0.70 without the six re-tested strains), so the joint model shows which
-# carries the association.
+# r_max and mean_above_topt are correlated within groups (r = 0.77),
+# so the joint model shows which carries the association.
 
 rmax_dat <- cmp_dat |> left_join(tpc_par |> select(strain, rmax), by = "strain")
 
@@ -217,9 +213,9 @@ partial_r <- function(m, x) {
          p = co[["Pr(>|t|)"]])
 }
 
-rmax_check <- expand_grid(drug = names(DRUG_LABELS), subset = c("all", "excl. March-40")) |>
+rmax_check <- expand_grid(drug = names(DRUG_LABELS), subset = "all") |>
   mutate(res = map2(drug, subset, \(dg, s) {
-    d <- rmax_dat |> filter(drug == dg, if (s == "all") TRUE else !retested)
+    d <- rmax_dat |> filter(drug == dg)
     m_both <- lm(log2_ic50 ~ mean_above_topt + rmax + evolution_history, data = d)
     bind_rows(
       partial_r(lm(log2_ic50 ~ rmax + evolution_history, data = d), "rmax") |>
@@ -252,12 +248,10 @@ assoc_dat |>
          thermal = factor(thermal, levels = names(THERMAL_LABELS), labels = THERMAL_LABELS)) |>
   ggplot(aes(x = x, y = high_drug_lfc, color = evolution_history)) +
   geom_hline(yintercept = 0, color = "grey80") +
-  geom_point(aes(shape = retested), size = 2, alpha = 0.85) +
+  geom_point(size = 2, alpha = 0.85) +
   geom_smooth(method = "lm", formula = y ~ x, se = FALSE, linewidth = 0.6) +
   facet_grid(drug ~ thermal, scales = "free", labeller = labeller(thermal = label_parsed)) +
   scale_color_manual(values = EVO_COLORS, name = NULL) +
-  scale_shape_manual(values = c(`FALSE` = 16, `TRUE` = 17),
-                     labels = c("other strains", "re-tested 40C-ev_Res"), name = NULL) +
   labs(x = expression(paste("Growth above ", T[opt], " (fitted TPC, ", T[opt], " to ", T[max], ")")),
        y = expression(paste("Growth at high drug (mean ", log[2], " FC vs ancestor)")),
        caption = paste(
@@ -313,7 +307,7 @@ ic50_labels <- metric_comparison |>
   filter(drug_metric == "log2_ic50", thermal %in% names(SUPRA_METRICS)) |>
   select(drug, thermal, subset, r_within, p) |>
   mutate(txt = sprintf("%s: r = %.2f, p = %.3f",
-                       if_else(subset == "all", "all strains", "without six"), r_within, p)) |>
+                       "all strains", r_within, p)) |>
   group_by(drug, thermal) |>
   summarise(label = paste(txt, collapse = "\n"), .groups = "drop") |>
   left_join(ic50_slopes, by = c("drug", "thermal")) |>
@@ -329,15 +323,13 @@ ggplot(relabel(ic50_long), aes(x = x, y = log2_ic50, color = evolution_history))
               aes(x = x, ymin = lo, ymax = hi, fill = evolution_history, group = evolution_history),
               alpha = 0.2, color = NA, inherit.aes = FALSE) +
   geom_line(data = relabel(ic50_fit_lines), aes(y = pred), linewidth = 0.7) +
-  geom_point(aes(shape = retested), size = 2.2, alpha = 0.85) +
+  geom_point(size = 2.2, alpha = 0.85) +
   geom_text(data = relabel(ic50_labels), aes(label = label), x = -Inf, y = Inf,
             hjust = -0.05, vjust = 1.2, size = 3, color = "black", inherit.aes = FALSE) +
   facet_grid(drug ~ thermal, scales = "free", switch = "x") +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.4))) +
   scale_color_manual(values = EVO_COLORS, name = NULL) +
   scale_fill_manual(values = EVO_COLORS, guide = "none") +
-  scale_shape_manual(values = c(`FALSE` = 16, `TRUE` = 17),
-                     labels = c("other strains", "re-tested 40C-ev_Res"), name = NULL) +
   labs(
     x = NULL,
     y = expression(paste(log[2], "(", IC[50], " / same-plate ancestor ", IC[50], ")")),

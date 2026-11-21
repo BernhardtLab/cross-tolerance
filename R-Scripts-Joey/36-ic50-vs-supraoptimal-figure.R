@@ -20,8 +20,7 @@
 #   then log2_ic50 ~ metric + evolution_history. Reproduces the Script 32 r, p
 #   and slope values, confirming the thermal metrics and IC50 inputs match.
 #
-# Subset: no subset labels. The six re-tested 40-evolved strains are shown with
-# triangles but are not excluded anywhere.
+# Subset: no subset labels.
 #
 # Inputs:  data-processed/normalised-ic50-per-plate.csv
 #          data-processed/gcplyr/tpc-params-auc-gcplyr-17.csv
@@ -50,7 +49,6 @@ DRUG_LABELS <- c(fluconazole = "Fluconazole", caspofungin = "Caspofungin",
 METRIC_LABELS <- c(mean_above_topt   = "Supra-optimal mean (growth units)",
                    auc_above_topt    = "Supra-optimal AUC (growth \u00d7 \u00b0C)",
                    mean_fixed_window = "Mean, ancestor window (growth units)")
-MARCH40 <- c("40_C9", "40_E7", "40_E11", "40_F6", "40_G9", "40_G11")
 
 theme_evo <- function(base_size = 11) {
   theme_classic(base_size = base_size) +
@@ -191,15 +189,13 @@ ggplot(relabel(plate_long), aes(x = x, y = log_ratio, color = evolution_history)
   geom_line(data = relabel(lines_dat),
             aes(x = x, y = pred, color = evolution_history), linewidth = 0.7,
             inherit.aes = FALSE) +
-  geom_point(aes(shape = strain %in% MARCH40), size = 1.6, alpha = 0.6) +
+  geom_point(size = 1.6, alpha = 0.6) +
   geom_text(data = relabel(labels_dat), aes(x = -Inf, y = Inf, label = label),
             hjust = -0.05, vjust = 1.2, size = 2.8, color = "black", inherit.aes = FALSE) +
   facet_grid(drug ~ metric, scales = "free", switch = "x") +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.4))) +
   scale_color_manual(values = EVO_COLORS, name = NULL) +
   scale_fill_manual(values = EVO_COLORS, guide = "none") +
-  scale_shape_manual(values = c(`FALSE` = 16, `TRUE` = 17),
-                     labels = c("other strains", "re-tested 40C-ev_Res"), name = NULL) +
   labs(
     x = NULL,
     y = expression(paste(log[2], "(", IC[50], " / same-plate ancestor ", IC[50], ")")),

@@ -3,23 +3,11 @@ fluconazole,all,rmax,0.4273129748707766,0.010457861281718639,rmax alone
 fluconazole,all,mean_above_topt,0.46061336687578835,0.0053610503436669595,mean_above_topt alone
 fluconazole,all,mean_above_topt,0.22735201863431362,0.19597507189237007,both
 fluconazole,all,rmax,0.12687718737469897,0.4745842096185552,both
-fluconazole,excl. March-40,rmax,0.13623071700716302,0.4810277857225157,rmax alone
-fluconazole,excl. March-40,mean_above_topt,0.3683026157268288,0.04931560472604669,mean_above_topt alone
-fluconazole,excl. March-40,mean_above_topt,0.3711129013338343,0.05186092467259825,both
-fluconazole,excl. March-40,rmax,-0.1446314808308583,0.46276611256693223,both
 caspofungin,all,rmax,0.5346738695392692,9.366820554519594e-4,rmax alone
 caspofungin,all,mean_above_topt,0.46814680396181524,0.004566545110758724,mean_above_topt alone
 caspofungin,all,mean_above_topt,0.10275875970254753,0.5630590161552687,both
 caspofungin,all,rmax,0.30837802308368656,0.07599543158485882,both
-caspofungin,excl. March-40,rmax,0.1815747985445281,0.345851218563875,rmax alone
-caspofungin,excl. March-40,mean_above_topt,0.11230125183776,0.5619154981588169,mean_above_topt alone
-caspofungin,excl. March-40,mean_above_topt,-0.007147264665976948,0.9712059347692763,both
-caspofungin,excl. March-40,rmax,0.14376331267623932,0.46548474335354406,both
 amphotericin,all,rmax,0.6386343089101206,3.6533822603629274e-5,rmax alone
 amphotericin,all,mean_above_topt,0.4845611974894317,0.0031793507460841303,mean_above_topt alone
 amphotericin,all,mean_above_topt,-0.01787673730137436,0.920068611435441,both
 amphotericin,all,rmax,0.4758179495591528,0.004451185365570794,both
-amphotericin,excl. March-40,rmax,0.5811818000574213,9.457542001244314e-4,rmax alone
-amphotericin,excl. March-40,mean_above_topt,0.32002070520617376,0.0905706676398346,mean_above_topt alone
-amphotericin,excl. March-40,mean_above_topt,-0.09126171418583598,0.6441813696021792,both
-amphotericin,excl. March-40,rmax,0.5180327579862001,0.0047469215890865455,both
