@@ -539,17 +539,19 @@ plot_ic50 <- ggplot(plot_data_ic50,
 # annotation_custom rather than inset_element, so the inset does not get its own tag letter.
 top_tpc <- plot_tpc +
   annotation_custom(ggplotGrob(plot_window + theme(plot.background = element_rect(fill = "white", colour = NA))),
-                    xmin = 23.2, xmax = 35.0, ymin = -0.03, ymax = 0.45)
+                    xmin = 23.2, xmax = 35.0, ymin = -0.03, ymax = 0.52)
 
 combined <- ((top_tpc | plot_pca) + plot_layout(widths = c(1, 1))) /
   plot_traits /
   plot_ic50 /
   plot_york +
-  plot_layout(heights = c(1.7, 1, 1, 1.1)) +
+  plot_layout(heights = c(1.35, 1, 1, 1.1)) +
   plot_annotation(tag_levels = "A") &
   theme(axis.title  = element_text(size = 12),
         axis.text   = element_text(size = 11),
-        plot.margin = margin(0, 2, 0, 2, "pt"))
+        plot.margin = margin(0, 2, 0, 2, "pt"),
+        plot.tag.position = c(0.005, 0.94),
+        plot.tag = element_text(hjust = 0, vjust = 1))
 
 ggsave(file.path(FIGS, "combined-figure-21-v2.png"),
-       combined, width = 8.5, height = 13, dpi = 300, bg = "transparent")
+       combined, width = 8.5, height = 11.5, dpi = 300, bg = "transparent")
