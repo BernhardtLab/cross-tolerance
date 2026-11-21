@@ -199,6 +199,9 @@ theme_y <- theme_classic(base_size = 11) +
 
 # 95% CI band for each York line. The slope CI is pivoted at the York
 # weighted centroid, so the band half-width at x is (CI width / 2) * |x - x_centroid|.
+# 95% CI band for each York line (analytic York standard error). The slope CI
+# is pivoted at the York weighted centroid, so the half-width at x is
+# (CI width / 2) * |x - x_centroid|.
 band_dat <- pmap_dfr(
   list(results$drug, results$evolution_history, results$york_slope,
        results$york_pivot_x, results$york_pivot_y, results$york_hi - results$york_lo),

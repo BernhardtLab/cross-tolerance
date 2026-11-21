@@ -1,0 +1,13 @@
+drug,evolution_history,x_error,york
+Amphotericin B,35 evolved,band-width bound (Script 39),"4.22 [2.61, 5.82]"
+Amphotericin B,35 evolved,replicate SD (Script 40),"2.85 [1.55, 4.16]"
+Amphotericin B,40 evolved,band-width bound (Script 39),"19.45 [13.53, 25.36]"
+Amphotericin B,40 evolved,replicate SD (Script 40),"16.78 [13.20, 20.36]"
+Caspofungin,35 evolved,band-width bound (Script 39),"4.05 [1.89, 6.22]"
+Caspofungin,35 evolved,replicate SD (Script 40),"0.39 [-1.50, 2.28]"
+Caspofungin,40 evolved,band-width bound (Script 39),"8.82 [5.38, 12.26]"
+Caspofungin,40 evolved,replicate SD (Script 40),"5.64 [3.29, 7.99]"
+Fluconazole,35 evolved,band-width bound (Script 39),"8.19 [3.91, 12.48]"
+Fluconazole,35 evolved,replicate SD (Script 40),"5.72 [1.86, 9.58]"
+Fluconazole,40 evolved,band-width bound (Script 39),"11.40 [6.00, 16.80]"
+Fluconazole,40 evolved,replicate SD (Script 40),"9.90 [5.40, 14.39]"
