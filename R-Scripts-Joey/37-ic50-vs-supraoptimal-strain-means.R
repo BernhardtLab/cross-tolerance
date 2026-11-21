@@ -45,6 +45,11 @@ METRIC_LABELS <- c(mean_above_topt   = "Supra-optimal mean (growth units)",
                    auc_above_topt    = "Supra-optimal AUC (growth \u00d7 \u00b0C)",
                    mean_fixed_window = "Mean, ancestor window (growth units)")
 MARCH40 <- c("40_C9", "40_E7", "40_E11", "40_F6", "40_G9", "40_G11")
+N_BOOT <- 2000
+
+# Standardized major axis (= reduced major axis) slope: sign(r) * sd(y) / sd(x).
+# Descriptive line; does not correct for measurement error.
+sma_slope <- function(x, y) sign(cor(x, y)) * sd(y) / sd(x)
 
 theme_evo <- function(base_size = 11) {
   theme_classic(base_size = base_size) +
@@ -174,8 +179,41 @@ relabel <- \(d) d |>
   mutate(drug   = factor(drug, levels = names(DRUG_LABELS), labels = DRUG_LABELS),
          metric = factor(metric, levels = names(METRIC_LABELS), labels = METRIC_LABELS))
 
+# RMA/SMA slope per drug x metric x treatment, through the treatment centroid,
+# with a strain-bootstrap 95% CI
+rma_fit <- strain_long |>
+  group_by(drug, metric, evolution_history) |>
+  group_modify(\(d, k) {
+    bs <- replicate(N_BOOT, {
+      s <- d[sample(nrow(d), replace = TRUE), ]
+      sma_slope(s$x, s$log2_ic50)
+    })
+    tibble(rma = sma_slope(d$x, d$log2_ic50),
+           rma_lo = unname(quantile(bs, 0.025)), rma_hi = unname(quantile(bs, 0.975)),
+           mx = mean(d$x), my = mean(d$log2_ic50), xmin = min(d$x), xmax = max(d$x))
+  }) |>
+  ungroup()
+
+write_csv(rma_fit, file.path(OUT, "rma-slopes-37.csv"))
+
+rma_seg <- rma_fit |>
+  mutate(x1 = xmin, x2 = xmax,
+         y1 = my + rma * (xmin - mx), y2 = my + rma * (xmax - mx))
+
+rma_lab <- rma_fit |>
+  mutate(txt = sprintf("RMA %s: %.2f [%.2f, %.2f]",
+                       if_else(evolution_history == "35 evolved", "35 C", "40 C"),
+                       rma, rma_lo, rma_hi)) |>
+  group_by(drug, metric) |>
+  summarise(txt = paste(txt, collapse = "\n"), .groups = "drop")
+
 ggplot(relabel(strain_long), aes(x = x, y = log2_ic50, color = evolution_history)) +
   geom_hline(yintercept = 0, color = "grey80") +
+  geom_segment(data = relabel(rma_seg),
+               aes(x = x1, xend = x2, y = y1, yend = y2, color = evolution_history),
+               linetype = "dashed", linewidth = 0.7, inherit.aes = FALSE) +
+  geom_text(data = relabel(rma_lab), aes(x = Inf, y = -Inf, label = txt),
+            hjust = 1.05, vjust = -0.3, size = 2.6, color = "black", inherit.aes = FALSE) +
   geom_ribbon(data = relabel(lines_dat),
               aes(x = x, ymin = lo, ymax = hi, fill = evolution_history,
                   group = evolution_history),
@@ -202,12 +240,13 @@ ggplot(relabel(strain_long), aes(x = x, y = log2_ic50, color = evolution_history
               anc$topt, anc$tmax),
       "Lines: OLS, log2 IC50 ~ metric + evolution history (shared slope); bands: 95% CI.",
       "Slope: change in log2 IC50 per unit of metric, 95% CI. r = within-group partial correlation; unadjusted p.",
+      "Dashed: RMA/SMA slope through each treatment's centroid, bootstrap 95% CI (descriptive; not an error-corrected slope).",
       sep = "\n")
   ) +
   theme_evo(11) +
   theme(legend.position = "bottom", strip.placement = "outside")
 
-ggsave(file.path(FIGS, "ic50-vs-above-topt-37.png"),
+ggsave(file.path(FIGS, "ic50-vs-above-topt-37-rma.png"),
        width = 12, height = 10, dpi = 300, bg = "transparent")
 
 
