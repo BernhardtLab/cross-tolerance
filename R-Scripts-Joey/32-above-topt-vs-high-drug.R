@@ -17,6 +17,14 @@
 # Test: drug_high ~ thermal + evolution_history (within-group association);
 #   partial r = t / sqrt(t^2 + df). Unadjusted p-values. Run on all strains.
 #
+# Section 3d: low-temperature control. Mean fitted growth from 25 C to the upper
+#   limit, two versions:
+#   low_fixed   = 25 C to the ancestor's T_opt (same temperatures for every strain)
+#   low_own_cap = 25 C to min(strain's own T_opt, 37 C). Every strain's T_opt is
+#                 >= 37.0 C, so this is 25-37 C for all strains.
+#   Group tests follow Script 33 (Welch 35 vs 40; one-sample vs ancestor).
+#   Associations use the same model as Section 3 and 3b, for both drug metrics.
+#
 # Section 3b: drug metric x thermal metric comparison. Drug metrics: log2 IC50
 #   ratio vs same-plate ancestor (strain mean) and high-drug growth (above).
 #   Thermal metrics: mean_above_topt, auc_above_topt, T_opt, T_max, T_h. Same model and
@@ -31,8 +39,13 @@
 #          data-processed/drug-vs-thermal-metric-comparison-32.csv
 #          data-processed/ic50-vs-high-drug-32.csv
 #          data-processed/ic50-rmax-vs-above-topt-32.csv
+#          data-processed/stats-low-temp-32.csv
+#          data-processed/low-temp-vs-drug-32.csv
+#          data-processed/low-temp-rmax-check-32.csv
+#          data-processed/low-temp-slope-interaction-32.csv
 #          figures/above-topt-vs-high-drug-32.png
 #          figures/ic50-vs-above-topt-32.png
+#          figures/low-temp-vs-high-drug-32.png
 # =============================================================================
 
 library(tidyverse)
@@ -236,6 +249,203 @@ rmax_check |>
 
 
 # =============================================================================
+# 3d. Low-temperature control (25 C to T_opt)
+# =============================================================================
+
+LOW_TEMP    <- 25
+LOW_CAP     <- 37
+LOW_TRAITS  <- c("low_fixed", "low_own_cap")
+
+low_growth <- tpc_pred |>
+  left_join(tpc_par |> select(strain, topt), by = "strain") |>
+  group_by(strain, evolution_history, topt) |>
+  summarise(
+    low_fixed = integrate_window(temp, pred, LOW_TEMP, anc_window$topt) /
+      (anc_window$topt - LOW_TEMP),
+    low_own_cap = integrate_window(temp, pred, LOW_TEMP, min(first(topt), LOW_CAP)) /
+      (min(first(topt), LOW_CAP) - LOW_TEMP),
+    .groups = "drop"
+  )
+
+low_anc     <- low_growth |> filter(evolution_history == "fRS585")
+low_strains <- low_growth |> filter(evolution_history %in% EVO_LEVELS)
+stopifnot(nrow(low_anc) == 1)
+
+group_tests <- function(x35, x40, anc) {
+  tt_groups <- t.test(x35, x40)
+  tt_35     <- t.test(x35, mu = anc)
+  tt_40     <- t.test(x40, mu = anc)
+  tibble(
+    comparison = c("35 evolved vs 40 evolved", "35 evolved vs ancestor", "40 evolved vs ancestor"),
+    mean_x     = c(mean(x35), mean(x35), mean(x40)),
+    ref        = c(mean(x40), anc, anc),
+    diff       = mean_x - ref,
+    ci_lo      = c(tt_groups$conf.int[1], tt_35$conf.int[1], tt_40$conf.int[1]),
+    ci_hi      = c(tt_groups$conf.int[2], tt_35$conf.int[2], tt_40$conf.int[2]),
+    p_welch    = c(tt_groups$p.value, tt_35$p.value, tt_40$p.value),
+    p_wilcox   = c(wilcox.test(x35, x40)$p.value,
+                   wilcox.test(x35, mu = anc)$p.value,
+                   wilcox.test(x40, mu = anc)$p.value)
+  )
+}
+
+low_stats <- map_dfr(LOW_TRAITS, \(tr) {
+  group_tests(
+    low_strains |> filter(evolution_history == "35 evolved") |> pull(all_of(tr)),
+    low_strains |> filter(evolution_history == "40 evolved") |> pull(all_of(tr)),
+    low_anc |> pull(all_of(tr))
+  ) |>
+    mutate(trait = tr, .before = 1)
+})
+
+print(low_stats, n = Inf)
+
+low_assoc_dat <- cmp_dat |>
+  left_join(low_strains |> select(strain, all_of(LOW_TRAITS)), by = "strain")
+
+low_assoc <- expand_grid(
+  drug        = names(DRUG_LABELS),
+  drug_metric = c("log2_ic50", "high_drug_lfc"),
+  low_metric  = LOW_TRAITS
+) |>
+  mutate(res = pmap(list(drug, drug_metric, low_metric), \(dg, y, x) {
+    fit_partial(low_assoc_dat |> filter(drug == dg), y, x)
+  })) |>
+  unnest(res)
+
+# Side by side with the supra-optimal metrics (Section 3b), same drugs and models
+control_compare <- bind_rows(
+  low_assoc |> rename(thermal = low_metric),
+  metric_comparison |>
+    filter(thermal %in% c("mean_above_topt", "mean_fixed_window")) |>
+    select(-subset)
+) |>
+  mutate(cell = sprintf("%.2f (%.3f)", r_within, p)) |>
+  select(drug, drug_metric, thermal, cell) |>
+  pivot_wider(names_from = thermal, values_from = cell) |>
+  arrange(drug, drug_metric)
+
+print(control_compare, n = Inf)
+
+
+# =============================================================================
+# 3e. Low-temperature metrics vs r_max, and drug models adjusted for r_max
+# =============================================================================
+# As in 3c: within-group partial r, unadjusted p-values, all strains.
+
+low_rmax_dat <- low_assoc_dat |>
+  left_join(tpc_par |> select(strain, rmax), by = "strain")
+
+low_rmax_strain <- low_rmax_dat |> distinct(strain, evolution_history, rmax, low_fixed, low_own_cap)
+
+# Low-temperature metric vs r_max, within groups (partial r, pooled model)
+low_vs_rmax <- map_dfr(LOW_TRAITS, \(lt) {
+  partial_r(lm(reformulate(c("rmax", "evolution_history"), lt), data = low_rmax_strain), "rmax") |>
+    mutate(low_metric = lt, .before = 1)
+})
+
+# Per-group Pearson correlations, for reference
+low_vs_rmax_group <- low_rmax_strain |>
+  group_by(evolution_history) |>
+  summarise(n = n(),
+            r_low_fixed    = cor(low_fixed, rmax),
+            r_low_own_cap  = cor(low_own_cap, rmax),
+            .groups = "drop")
+
+print(low_vs_rmax)
+print(low_vs_rmax_group)
+
+low_rmax_check <- expand_grid(
+  drug        = names(DRUG_LABELS),
+  drug_metric = c("log2_ic50", "high_drug_lfc"),
+  low_metric  = LOW_TRAITS
+) |>
+  mutate(res = pmap(list(drug, drug_metric, low_metric), \(dg, y, x) {
+    d <- low_rmax_dat |> filter(drug == dg)
+    m_both <- lm(reformulate(c(x, "rmax", "evolution_history"), y), data = d)
+    bind_rows(
+      partial_r(lm(reformulate(c("rmax", "evolution_history"), y), data = d), "rmax") |>
+        mutate(model = "rmax alone"),
+      partial_r(lm(reformulate(c(x, "evolution_history"), y), data = d), x) |>
+        mutate(model = "low alone"),
+      partial_r(m_both, x) |> mutate(model = "both"),
+      partial_r(m_both, "rmax") |> mutate(model = "both")
+    )
+  })) |>
+  unnest(res)
+
+low_rmax_check |>
+  mutate(term = if_else(term == low_metric, "low", term),
+         cell = sprintf("%.2f (%.3f)", r_within, p),
+         col = paste(model, term, sep = ": ")) |>
+  select(drug, drug_metric, low_metric, col, cell) |>
+  pivot_wider(names_from = col, values_from = cell) |>
+  print(n = Inf, width = Inf)
+
+# 40-evolved strains only: same r_max-adjusted models, no group term
+low_rmax_40 <- expand_grid(
+  drug        = names(DRUG_LABELS),
+  drug_metric = c("log2_ic50", "high_drug_lfc"),
+  low_metric  = LOW_TRAITS
+) |>
+  mutate(res = pmap(list(drug, drug_metric, low_metric), \(dg, y, x) {
+    d <- low_rmax_dat |> filter(drug == dg, evolution_history == "40 evolved")
+    m_both <- lm(reformulate(c(x, "rmax"), y), data = d)
+    bind_rows(
+      partial_r(lm(reformulate("rmax", y), data = d), "rmax") |> mutate(model = "rmax alone"),
+      partial_r(lm(reformulate(x, y), data = d), x) |> mutate(model = "low alone"),
+      partial_r(m_both, x) |> mutate(model = "both"),
+      partial_r(m_both, "rmax") |> mutate(model = "both")
+    ) |>
+      mutate(n = nrow(d))
+  })) |>
+  unnest(res)
+
+low_rmax_40 |>
+  mutate(term = if_else(term == low_metric, "low", term),
+         cell = sprintf("%.2f (%.3f)", r_within, p),
+         col = paste(model, term, sep = ": ")) |>
+  select(drug, drug_metric, low_metric, col, cell) |>
+  pivot_wider(names_from = col, values_from = cell) |>
+  print(n = Inf, width = Inf)
+
+
+# =============================================================================
+# 3f. Do low-temperature slopes differ between evolution groups?
+# =============================================================================
+# Interaction test: y ~ x + group vs y ~ x * group (F test on the interaction).
+# Slopes are per group, in units of y per unit of the low-temperature metric.
+
+interaction_test <- function(d, y, x) {
+  m0 <- lm(reformulate(c(x, "evolution_history"), y), data = d)
+  m1 <- lm(as.formula(paste(y, "~", x, "* evolution_history")), data = d)
+  b  <- coef(m1)
+  ia <- grep(":", names(b), value = TRUE)
+  tibble(
+    n                = nrow(d),
+    slope_35         = b[[x]],
+    slope_40         = b[[x]] + b[[ia]],
+    diff_40_minus_35 = b[[ia]],
+    ci95_lo          = confint(m1)[ia, 1],
+    ci95_hi          = confint(m1)[ia, 2],
+    p_interaction    = anova(m0, m1)[["Pr(>F)"]][2]
+  )
+}
+
+slope_interaction <- expand_grid(
+  drug        = names(DRUG_LABELS),
+  drug_metric = c("high_drug_lfc", "log2_ic50"),
+  low_metric  = LOW_TRAITS
+) |>
+  mutate(res = pmap(list(drug, drug_metric, low_metric), \(dg, y, x) {
+    interaction_test(low_assoc_dat |> filter(drug == dg), y, x)
+  })) |>
+  unnest(res)
+
+print(slope_interaction, n = Inf)
+
+
+# =============================================================================
 # 4. Plot (both thermal summaries vs high-drug growth)
 # =============================================================================
 
@@ -351,9 +561,45 @@ ggsave(file.path(FIGS, "ic50-vs-above-topt-32.png"),
 
 
 # =============================================================================
+# 4c. Plot: low-temperature control vs high-drug growth
+# =============================================================================
+
+LOW_LABELS <- c(low_fixed   = "25 °C to ancestor T_opt",
+                low_own_cap = "25 °C to min(own T_opt, 37 °C)")
+
+low_assoc_dat |>
+  pivot_longer(all_of(LOW_TRAITS), names_to = "low_metric", values_to = "x") |>
+  mutate(drug = factor(drug, levels = names(DRUG_LABELS), labels = DRUG_LABELS),
+         low_metric = factor(low_metric, levels = names(LOW_LABELS), labels = LOW_LABELS)) |>
+  ggplot(aes(x = x, y = log2_ic50, color = evolution_history)) +
+  geom_hline(yintercept = 0, color = "grey80") +
+  geom_point(size = 2, alpha = 0.85) +
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, linewidth = 0.6) +
+  facet_grid(drug ~ low_metric, scales = "free") +
+  scale_color_manual(values = EVO_COLORS, name = NULL) +
+  labs(x = "Mean fitted growth, 25 °C to upper limit",
+       y = expression(paste(log[2], " fold change in IC50 vs ancestor")),
+       caption = paste(
+         "Control: low-temperature range below the optimum. Same IC50 metric as Section 3.",
+         "Lines are separate per-group OLS fits (not the shared-slope model behind the reported r).",
+         sep = "\n")) +
+  theme_evo(11) +
+  theme(legend.position = "bottom", plot.caption = element_text(size = 9, color = "grey40"))
+
+ggsave(file.path(FIGS, "low-temp-vs-high-drug-32.png"),
+       width = 9, height = 9, dpi = 300, bg = "transparent")
+
+
+# =============================================================================
 # 5. Export
 # =============================================================================
 
+write_csv(low_stats, file.path(OUT, "stats-low-temp-32.csv"))
+write_csv(low_assoc, file.path(OUT, "low-temp-vs-drug-32.csv"))
+write_csv(low_rmax_check, file.path(OUT, "low-temp-rmax-check-32.csv"))
+write_csv(low_rmax_40, file.path(OUT, "low-temp-rmax-check-40only-32.csv"))
+write_csv(slope_interaction, file.path(OUT, "low-temp-slope-interaction-32.csv"))
+write_csv(cmp_dat, file.path(OUT, "strain-drug-metrics-32.csv"))
 write_csv(assoc, file.path(OUT, "above-topt-vs-high-drug-32.csv"))
 write_csv(metric_comparison, file.path(OUT, "drug-vs-thermal-metric-comparison-32.csv"))
 write_csv(ic50_vs_high, file.path(OUT, "ic50-vs-high-drug-32.csv"))

@@ -1,0 +1,49 @@
+drug,drug_metric,low_metric,term,r_within,p,model
+fluconazole,log2_ic50,low_fixed,rmax,0.4273129748707766,0.010457861281718639,rmax alone
+fluconazole,log2_ic50,low_fixed,low_fixed,0.3522383312347529,0.03796579525051735,low alone
+fluconazole,log2_ic50,low_fixed,low_fixed,-0.030358349084808188,0.8646673240106222,both
+fluconazole,log2_ic50,low_fixed,rmax,0.2601429654768135,0.13731562174468986,both
+fluconazole,log2_ic50,low_own_cap,rmax,0.4273129748707766,0.010457861281718639,rmax alone
+fluconazole,log2_ic50,low_own_cap,low_own_cap,0.32420414240625095,0.05742794044458762,low alone
+fluconazole,log2_ic50,low_own_cap,low_own_cap,-0.04409403423033024,0.8044334825886059,both
+fluconazole,log2_ic50,low_own_cap,rmax,0.29726291327992016,0.0877609022229717,both
+fluconazole,high_drug_lfc,low_fixed,rmax,0.647815829012522,2.5872606788309264e-5,rmax alone
+fluconazole,high_drug_lfc,low_fixed,low_fixed,0.6015388582140864,1.3231846350501863e-4,low alone
+fluconazole,high_drug_lfc,low_fixed,low_fixed,0.11762628770361032,0.507635125156943,both
+fluconazole,high_drug_lfc,low_fixed,rmax,0.32121987103189253,0.06396953837277929,both
+fluconazole,high_drug_lfc,low_own_cap,rmax,0.647815829012522,2.5872606788309264e-5,rmax alone
+fluconazole,high_drug_lfc,low_own_cap,low_own_cap,0.5815223774366904,2.485784172689832e-4,low alone
+fluconazole,high_drug_lfc,low_own_cap,low_own_cap,0.12362599222795656,0.48606982958171463,both
+fluconazole,high_drug_lfc,low_own_cap,rmax,0.36951329070131383,0.031492279590324856,both
+caspofungin,log2_ic50,low_fixed,rmax,0.5346738695392692,9.366820554519594e-4,rmax alone
+caspofungin,log2_ic50,low_fixed,low_fixed,0.5687732977806058,3.6375582305850417e-4,low alone
+caspofungin,log2_ic50,low_fixed,low_fixed,0.2537289694468706,0.14762816260221467,both
+caspofungin,log2_ic50,low_fixed,rmax,0.11108059036106124,0.5316961846579908,both
+caspofungin,log2_ic50,low_own_cap,rmax,0.5346738695392692,9.366820554519594e-4,rmax alone
+caspofungin,log2_ic50,low_own_cap,low_own_cap,0.5507236493520541,6.077233401041495e-4,low alone
+caspofungin,log2_ic50,low_own_cap,low_own_cap,0.23580673557185697,0.17941100023403103,both
+caspofungin,log2_ic50,low_own_cap,rmax,0.17886065865633038,0.3114858410825411,both
+caspofungin,high_drug_lfc,low_fixed,rmax,0.21486284537297398,0.21515310377354274,rmax alone
+caspofungin,high_drug_lfc,low_fixed,low_fixed,0.31953731917435657,0.06132497004884888,low alone
+caspofungin,high_drug_lfc,low_fixed,low_fixed,0.26919821131344557,0.12367084797951373,both
+caspofungin,high_drug_lfc,low_fixed,rmax,-0.12117466831246905,0.49482339600611724,both
+caspofungin,high_drug_lfc,low_own_cap,rmax,0.21486284537297398,0.21515310377354274,rmax alone
+caspofungin,high_drug_lfc,low_own_cap,low_own_cap,0.3208649654227916,0.060195666655802844,low alone
+caspofungin,high_drug_lfc,low_own_cap,low_own_cap,0.25706644819352914,0.14219399718502604,both
+caspofungin,high_drug_lfc,low_own_cap,rmax,-0.08343088544903027,0.6389950779145378,both
+amphotericin,log2_ic50,low_fixed,rmax,0.6386343089101206,3.6533822603629274e-5,rmax alone
+amphotericin,log2_ic50,low_fixed,low_fixed,0.5158123328684281,0.001516521154702986,low alone
+amphotericin,log2_ic50,low_fixed,low_fixed,-0.08012179044361122,0.652395436611248,both
+amphotericin,log2_ic50,low_fixed,rmax,0.44538975404696934,0.008298495655147382,both
+amphotericin,log2_ic50,low_own_cap,rmax,0.6386343089101206,3.6533822603629274e-5,rmax alone
+amphotericin,log2_ic50,low_own_cap,low_own_cap,0.4757177634227505,0.003872622433568691,low alone
+amphotericin,log2_ic50,low_own_cap,low_own_cap,-0.09710532448568314,0.5848381119108856,both
+amphotericin,log2_ic50,low_own_cap,rmax,0.4917988221332083,0.0031362007296480464,both
+amphotericin,high_drug_lfc,low_fixed,rmax,0.6257998404874419,5.810254363913629e-5,rmax alone
+amphotericin,high_drug_lfc,low_fixed,low_fixed,0.5270721792433007,0.0011412531946289927,low alone
+amphotericin,high_drug_lfc,low_fixed,low_fixed,-0.023588739949720543,0.8946534560405328,both
+amphotericin,high_drug_lfc,low_fixed,rmax,0.39758283545919687,0.01988646735546322,both
+amphotericin,high_drug_lfc,low_own_cap,rmax,0.6257998404874419,5.810254363913629e-5,rmax alone
+amphotericin,high_drug_lfc,low_own_cap,low_own_cap,0.49261337288130475,0.002644580172688351,low alone
+amphotericin,high_drug_lfc,low_own_cap,low_own_cap,-0.03561990317086545,0.8414865067527997,both
+amphotericin,high_drug_lfc,low_own_cap,rmax,0.44464187988239817,0.008420746409874159,both
